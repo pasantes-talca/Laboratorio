@@ -77,21 +77,22 @@ class RegistroCalidad(Base):
     control_videojet = Column(String(20), nullable=False)  # "okey" / "no okey"
     responsable = Column(String(100), nullable=False)       # Nombre + Apellido combinados
 
-# Nuevo modelo para el Control de Jarabe
+# Modelo para la tabla control_jarabe (con FKs a tablas maestras)
 class ControlJarabe(Base):
     __tablename__ = "control_jarabe"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    fecha_registro = Column(DateTime, default=datetime.utcnow)
-    hora = Column(String(50), nullable=False)
-    sabor = Column(String(100), nullable=False)        # marca (sin Soda ni Sifon)
-    concentrado = Column(String(50), nullable=False)   # código de tipos_concentrado
-    tanque = Column(String(10), nullable=False)        # número de tanque
-    bx_patron = Column(Float, nullable=False)          # °Bx Patr.
-    ta = Column(Float, nullable=False)                 # T.A.
-    responsable = Column(String(100), nullable=False)
-    observacion = Column(String(500), nullable=True) 
-    
-  # opcional
+
+    id                 = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    turno              = Column(String(20), nullable=True)
+    fecha              = Column(Date, nullable=True)
+    hora               = Column(Time, nullable=False)
+    marca_id           = Column(Integer, nullable=False)
+    concentrado_id     = Column(Integer, nullable=False)
+    tanque_id          = Column(Integer, nullable=False)
+    grados_brix_patron = Column(Float, nullable=False)
+    t_a                = Column(Float, nullable=False)
+    responsable_id     = Column(Integer, nullable=False)
+    observacion        = Column(String, nullable=True)
+
 
 # Modelo para la tabla control_bebida (con FKs a tablas maestras)
 class ControlBebida(Base):
@@ -117,10 +118,40 @@ class ControlBebida(Base):
     control_video_jet = Column(String(50), nullable=True)
     tanque_id       = Column(Integer, nullable=True)
 
+# Modelo para la tabla control_torque (con FKs a marcas y responsables)
+class ControlTorque(Base):
+    __tablename__ = "control_torque"
+
+    id             = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha          = Column(Date, nullable=True)
+    hora           = Column(Time, nullable=True)
+    turno          = Column(String(20), nullable=True)
+    linea          = Column(Integer, nullable=True)
+    numero_cabezal = Column(Integer, nullable=False)
+    marca_id       = Column(Integer, nullable=False)
+    responsable_id = Column(Integer, nullable=False)
+    sabor          = Column(String(50), nullable=True)
+    color          = Column(String(50), nullable=True)
+    valor          = Column(Float, nullable=False)
+
+# Modelo para la tabla control_pausas (con FK a responsables)
+class ControlPausa(Base):
+    __tablename__ = "control_pausas"
+
+    id             = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha          = Column(Date, nullable=True)
+    hora           = Column(Time, nullable=True)
+    turno          = Column(String(20), nullable=True)
+    linea          = Column(Integer, nullable=True)
+    motivo         = Column(String(100), nullable=False)
+    responsable_id = Column(Integer, nullable=False)
+    observacion    = Column(String, nullable=True)
+
 # Función para inicializar las tablas
 def init_db():
-    # Crear las tablas que no existan en el esquema (en este caso creará 'registro_calidad')
     Base.metadata.create_all(bind=engine)
+
+
 
 # Dependencia para obtener la sesión de base de datos
 def get_db():

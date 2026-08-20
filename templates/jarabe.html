@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Control de Jarabe">
+    <title>{{ title if title else "Control de Jarabe | Laboratorio" }}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css?v=1.2">
+</head>
+<body>
+    <div class="background-glow"></div>
+
+    <div class="app-layout">
+        <!-- Main Header -->
+        <header class="main-header">
+            <div class="header-brand">
+                <div class="brand-badge"><i class="fa-solid fa-flask badge-icon"></i></div>
+                <div>
+                    <h1>Control de <span class="highlight-text">Jarabe</span></h1>
+                    <p class="header-subtitle">Laboratorio de Calidad - Análisis de Jarabes</p>
+                </div>
+            </div>
+
+            <!-- Global Controls -->
+            <div class="header-global-controls">
+                
+<a href="/" class="btn-dashboard-header" title="Volver al Portal" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); color: #e2e8f0; font-weight: 600; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s ease;">
+    <i class="fa-solid fa-arrow-left"></i> Volver al Portal
+</a>
+
+            </div>
+
+            <div class="header-status">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Conectado a PostgreSQL</span>
+                </div>
+            </div>
+        </header>
+
+        
+        <div id="tab-jarabe" class="tab-content-standalone" style="padding-top:20px;" >
+            <div class="main-container">
+                <form id="jarabe-form" class="qc-flex-container">
+                    
+                    <!-- Left Column: ParÃ¡metros (Main Form) -->
+                    <div class="main-content-card glass-card">
+                        <div class="card-header">
+                            <span class="card-icon"><i class="fa-solid fa-square-poll-horizontal"></i></span>
+                            <h2>1. ParÃ¡metros de Jarabe</h2>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <!-- Hora -->
+                            <div class="field-container col-span-2">
+                                <label for="jarabe_hora">Hora de InspecciÃ³n <span class="optional-label">(Opcional - por defecto hora de envÃ­o)</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fa-regular fa-clock input-icon"></i>
+                                    <input type="time" id="jarabe_hora" name="jarabe_hora">
+                                </div>
+                            </div>
+                            <!-- Â°Bx Patr. -->
+                            <div class="field-container">
+                                <label for="jarabe_bx_patron">Â°Bx Patr.</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-percent input-icon"></i>
+                                    <input type="number" step="0.01" id="jarabe_bx_patron" name="jarabe_bx_patron" required placeholder="Ej: 55.50">
+                                </div>
+                            </div>
+                            <!-- T.A. -->
+                            <div class="field-container">
+                                <label for="jarabe_ta">T.A.</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-droplet input-icon"></i>
+                                    <input type="number" step="0.001" id="jarabe_ta" name="jarabe_ta" required placeholder="Ej: 0.350">
+                                </div>
+                            </div>
+                            <!-- Responsable -->
+                            <div class="field-container col-span-2">
+                                <label for="jarabe_responsable">Resp.</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-user input-icon"></i>
+                                    <select id="jarabe_responsable" name="jarabe_responsable" required>
+                                        <option value="" disabled selected>Cargando responsables...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- ObservaciÃ³n -->
+                            <div class="field-container">
+                                <label>ObservaciÃ³n</label>
+                                <label class="check-option">
+                                    <input type="checkbox" id="jarabe_chk_obs">
+                                    <span><i class="fa-solid fa-pen-to-square"></i> Cargar observaciÃ³n</span>
+                                </label>
+                            </div>
+                            <!-- ObservaciÃ³n Input -->
+                            <div class="field-container col-span-2 field-hidden" id="jarabe_obs_wrapper">
+                                <label for="jarabe_observacion">Detalle de la observaciÃ³n</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-pen input-icon"></i>
+                                    <input type="text" id="jarabe_observacion" name="jarabe_observacion" maxlength="500" placeholder="EscribÃ­ la observaciÃ³n...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btn-reset-jarabe">
+                                <i class="fa-solid fa-eraser"></i> Limpiar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Jarabe
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Jarabe Data (Sidebar Card) -->
+                    <div class="sidebar-card glass-card">
+                        <div class="card-header">
+                            <span class="card-icon"><i class="fa-solid fa-industry"></i></span>
+                            <h2>2. Datos del Tanque</h2>
+                        </div>
+                        
+                        <div class="sidebar-form-grid">
+                            <!-- Sabor -->
+                            <div class="field-container">
+                                <label for="jarabe_sabor">Sabor</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-lemon input-icon"></i>
+                                    <select id="jarabe_sabor" name="jarabe_sabor" required>
+                                        <option value="" disabled selected>Cargando sabores...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Concentrado -->
+                            <div class="field-container">
+                                <label for="jarabe_concentrado">Concentrado</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-vial input-icon"></i>
+                                    <select id="jarabe_concentrado" name="jarabe_concentrado" required>
+                                        <option value="" disabled selected>Cargando concentrados...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Tanque -->
+                            <div class="field-container">
+                                <label for="jarabe_tanque">Tq. NÂ°</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-warehouse input-icon"></i>
+                                    <select id="jarabe_tanque" name="jarabe_tanque" required>
+                                        <option value="" disabled selected>Cargando tanques...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-hint">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Los datos del tanque se mantienen para agilizar cargas repetitivas.</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div> 
+
+    </div>
+
+    
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- App Logic Script -->
+    <script src="/static/js/app.js?v=3.0"></script>
+</body>
+</html>

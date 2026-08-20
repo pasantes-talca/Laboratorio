@@ -23,8 +23,8 @@
             <div class="header-brand">
                 <div class="brand-badge"><i class="fa-solid fa-flask-vial badge-icon"></i></div>
                 <div>
-                    <h1>Control de <span class="highlight-text">Bebida Terminada</span></h1>
-                    <p class="header-subtitle">Laboratorio de Calidad - Registro de Envasado</p>
+                    <h1>Control de <span class="highlight-text">Calidad</span></h1>
+                    <p class="header-subtitle">Laboratorio de Calidad - Controles de Producción</p>
                 </div>
             </div>
 
@@ -45,7 +45,14 @@
                         <option value="linea2">Línea 2</option>
                     </select>
                 </div>
+                <button type="button" class="btn-pause-header" id="btn-open-pausa" title="Registrar motivo de pausa de línea">
+                    <i class="fa-solid fa-circle-pause"></i> Pausa
+                </button>
+                <a href="/preparacion-jarabe" class="btn-dashboard-header" title="Ir a Preparación Sala de Jarabe" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: #f472b6; font-weight: 600; text-decoration: none; border: 1px solid rgba(236, 72, 153, 0.3); transition: all 0.2s ease;">
+                    <i class="fa-solid fa-industry"></i> Prep. Jarabe
+                </a>
             </div>
+
 
             <div class="header-status">
                 <div class="status-indicator">
@@ -522,10 +529,73 @@
         </div> <!-- End TAB TORQUE -->
     </div>
 
+    <!-- Modal de Pausa -->
+    <div id="modal-pausa" class="modal-overlay field-hidden">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon-pause"><i class="fa-solid fa-circle-pause"></i></span>
+                    <div>
+                        <h2>Registrar Pausa de Línea</h2>
+                        <p class="modal-subtitle">Indica el motivo por el cual se detiene la producción</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" id="btn-close-pausa" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="pausa-form" class="modal-form">
+                <div class="pause-context-badge">
+                    <span id="pausa-ctx-linea"><i class="fa-solid fa-industry"></i> Línea 1</span>
+                    <span id="pausa-ctx-turno"><i class="fa-solid fa-clock"></i> Turno Mañana</span>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Motivo (Texto Libre) -->
+                    <div class="field-container col-span-2">
+                        <label for="pausa_motivo">Motivo de la Pausa <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-pen-nib input-icon"></i>
+                            <input type="text" id="pausa_motivo" name="pausa_motivo" required placeholder="Escribí por qué se registra la pausa (ej: Falla mecánica, cambio de sabor...)">
+                        </div>
+                    </div>
+
+                    <!-- Responsable -->
+                    <div class="field-container col-span-2">
+                        <label for="pausa_responsable">Responsable <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user input-icon"></i>
+                            <select id="pausa_responsable" name="pausa_responsable" required>
+                                <option value="" disabled selected>Cargando responsables...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="field-container col-span-2">
+                        <label for="pausa_observacion">Observaciones / Detalle <span class="optional-label">(Opcional)</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-pen-to-square input-icon textarea-icon"></i>
+                            <textarea id="pausa_observacion" name="pausa_observacion" rows="3" placeholder="Escribí un detalle adicional si es necesario..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-pausa">
+                        <i class="fa-solid fa-xmark"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning-pausa" id="btn-submit-pausa">
+                        <i class="fa-solid fa-check"></i> Registrar Pausa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- App Logic Script -->
-    <script src="/static/js/app.js?v=2.1"></script>
+    <script src="/static/js/app.js?v=3.1"></script>
 </body>
 </html>

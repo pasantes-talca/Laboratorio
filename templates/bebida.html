@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Control de Calidad de Bebida Terminada">
+    <title>{{ title if title else "Control de Bebida | Laboratorio" }}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css?v=1.2">
+</head>
+<body>
+    <div class="background-glow"></div>
+
+    <div class="app-layout">
+        <!-- Main Header -->
+        <header class="main-header">
+            <div class="header-brand">
+                <div class="brand-badge"><i class="fa-solid fa-bottle-water badge-icon"></i></div>
+                <div>
+                    <h1>Control de <span class="highlight-text">Bebida Terminada</span></h1>
+                    <p class="header-subtitle">Laboratorio de Calidad - Registro de Envasado</p>
+                </div>
+            </div>
+
+            <!-- Global Controls -->
+            <div class="header-global-controls">
+                
+<a href="/" class="btn-dashboard-header" title="Volver al Portal" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); color: #e2e8f0; font-weight: 600; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s ease;">
+    <i class="fa-solid fa-arrow-left"></i> Volver al Portal
+</a>
+
+            </div>
+
+            <div class="header-status">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Conectado a PostgreSQL</span>
+                </div>
+            </div>
+        </header>
+
+        
+        <div id="tab-bebida-terminada" class="tab-content-standalone" style="padding-top:20px;">
+            <!-- Form and Sidebar Container -->
+            <div class="main-container">
+                <form id="quality-control-form" class="qc-flex-container">
+                
+                <!-- Left Column: Quality Parameters (Main Form) -->
+                <div class="main-content-card glass-card">
+                    <div class="card-header">
+                        <span class="card-icon"><i class="fa-solid fa-square-poll-horizontal"></i></span>
+                        <h2>1. ParÃ¡metros de Calidad</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Hora (Opcional) -->
+                        <div class="field-container col-span-2">
+                            <label for="hora">Hora de InspecciÃ³n <span class="optional-label">(Opcional - por defecto hora de envÃ­o)</span></label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-clock"></i></span>
+                                <input type="time" id="hora" name="hora" placeholder="HH:MM">
+                            </div>
+                        </div>
+
+                        <!-- Carac. Organolep. (Okey / No Okey) -->
+                        <div class="field-container">
+                            <label>Carac. Organolep.</label>
+                            <div class="toggle-group-premium">
+                                <label class="toggle-option">
+                                    <input type="radio" name="carac_organolep" value="okey" checked>
+                                    <span class="toggle-button button-ok"><i class="fa-solid fa-circle-check"></i> Okey</span>
+                                </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="carac_organolep" value="no okey">
+                                    <span class="toggle-button button-nok"><i class="fa-solid fa-circle-xmark"></i> No Okey</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Nivel Llenado -->
+                        <div class="field-container">
+                            <label>Nivel llenado</label>
+                            <div class="toggle-group-premium">
+                                <label class="toggle-option">
+                                    <input type="radio" name="nivel_llenado" value="okey" checked>
+                                    <span class="toggle-button button-ok">
+                                        <i class="fa-solid fa-check"></i> Okey
+                                    </span>
+                                </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="nivel_llenado" value="no okey">
+                                    <span class="toggle-button button-nok">
+                                        <i class="fa-solid fa-xmark"></i> No Okey
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Contenido (Float) -->
+                        <div class="field-container">
+                            <label for="contenido">Contenido (ml)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-bottle-water"></i></span>
+                                <input type="number" id="contenido" name="contenido" step="any" placeholder="Ej. 1500.0" required>
+                            </div>
+                        </div>
+
+                        <!-- PresiÃ³n (Float) -->
+                        <div class="field-container">
+                            <label for="presion">PresiÃ³n (psi)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-gauge"></i></span>
+                                <input type="number" id="presion" name="presion" step="any" placeholder="Ej. 32.5" required>
+                            </div>
+                        </div>
+
+                        <!-- Temperat. (Float) -->
+                        <div class="field-container">
+                            <label for="temperatura">Temperat. (Â°C)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-temperature-three-quarters"></i></span>
+                                <input type="number" id="temperatura" name="temperatura" step="any" placeholder="Ej. 4.5" required>
+                            </div>
+                        </div>
+
+                        <!-- Vol. Gas (Float) -->
+                        <div class="field-container">
+                            <label for="vol_gas">Vol. Gas (v/v)</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-wind"></i></span>
+                                <input type="number" id="vol_gas" name="vol_gas" step="any" placeholder="Ej. 3.85" required>
+                            </div>
+                        </div>
+
+                        <!-- Â°Brix (Float) -->
+                        <div class="field-container">
+                            <label for="brix">Â°Brix</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-flask"></i></span>
+                                <input type="number" id="brix" name="brix" step="any" placeholder="Ej. 10.4" required>
+                            </div>
+                        </div>
+
+                        <!-- Control Videojet (Okey / No Okey) -->
+                        <div class="field-container">
+                            <label>Control Videojet</label>
+                            <div class="toggle-group-premium">
+                                <label class="toggle-option">
+                                    <input type="radio" name="control_videojet" value="okey" checked>
+                                    <span class="toggle-button button-ok"><i class="fa-solid fa-circle-check"></i> Okey</span>
+                                </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="control_videojet" value="no okey">
+                                    <span class="toggle-button button-nok"><i class="fa-solid fa-circle-xmark"></i> No Okey</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Respons. (Dropdown) -->
+                        <div class="field-container col-span-2">
+                            <label for="responsable">Responsable de InspecciÃ³n</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-user-gear"></i></span>
+                                <select id="responsable" name="responsable" required>
+                                    <option value="" disabled selected>Cargando responsables...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btn-reset" class="btn btn-secondary"><i class="fa-solid fa-broom"></i> Limpiar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Control</button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Product details (Sidebar Card) -->
+                <div class="sidebar-card glass-card">
+                    <div class="card-header">
+                        <span class="card-icon"><i class="fa-solid fa-industry"></i></span>
+                        <h2>2. Producto en ProducciÃ³n</h2>
+                    </div>
+                    
+                    <div class="sidebar-form-grid">
+                        <!-- Marca (Dropdown) -->
+                        <div class="field-container">
+                            <label for="marca">Marca</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-tag"></i></span>
+                                <select id="marca" name="marca" required>
+                                    <option value="" disabled selected>Cargando marcas...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Concent. (Dropdown) -->
+                        <div class="field-container">
+                            <label for="tipo_concentrado">Tipo de Concentrado</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-vial"></i></span>
+                                <select id="tipo_concentrado" name="tipo_concentrado" required>
+                                    <option value="" disabled selected>Cargando concentrados...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- TamaÃ±o (Dropdown) -->
+                        <div class="field-container">
+                            <label for="tamano">TamaÃ±o</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-bottle-droplet"></i></span>
+                                <select id="tamano" name="tamano" required>
+                                    <option value="" disabled selected>Cargando tamaÃ±os...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tanque (Dropdown) -->
+                        <div class="field-container">
+                            <label for="tanque">Tanque</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-warehouse"></i></span>
+                                <select id="tanque" name="tanque" required>
+                                    <option value="" disabled selected>Cargando tanques...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Lote Tapa (Input) -->
+                        <div class="field-container">
+                            <label for="lote_tapa">Lote Tapa</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fa-solid fa-circle-notch"></i></span>
+                                <input type="text" id="lote_tapa" name="lote_tapa" placeholder="Ej. L-TAPA-4321" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-hint">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Los datos del producto corresponden al lote de envasado actual.</span>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </section>
+        </div> 
+
+    </div>
+
+    
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- App Logic Script -->
+    <script src="/static/js/app.js?v=3.0"></script>
+</body>
+</html>
