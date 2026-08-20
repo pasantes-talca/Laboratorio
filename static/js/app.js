@@ -78,7 +78,199 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentValue && opts.includes(currentValue)) select.value = currentValue;
     }
 
-    if (globalLinea) globalLinea.addEventListener("change", () => { if (torqueForm) updateTorqueOptions(); });
+    // ==========================================
+    // ASIGNACIÓN DE PRODUCCIÓN POR LÍNEA
+    // ==========================================
+    const DEFAULT_LINE_CONFIGS = {
+        linea1: {
+            marca: "Cola",
+            concentrado: "IFF",
+            tamano: "2L",
+            tanque: "Tanque 4"
+        },
+        linea2: {
+            marca: "Naranja",
+            concentrado: "KG",
+            tamano: "2.25L",
+            tanque: "Tanque 5"
+        }
+    };
+
+    function getLineConfigs() {
+        try {
+            const saved = localStorage.getItem("produccion_lineas_asignadas");
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.error("Error al leer asignaciones:", e);
+        }
+        return JSON.parse(JSON.stringify(DEFAULT_LINE_CONFIGS));
+    }
+
+    function saveLineConfigs(configs) {
+        localStorage.setItem("produccion_lineas_asignadas", JSON.stringify(configs));
+    }
+
+    function ensureOptionExists(selectElem, val, text = null) {
+        if (!selectElem || !val) return;
+        let opt = Array.from(selectElem.options).find(o => o.value.toLowerCase().trim() === String(val).toLowerCase().trim());
+        if (!opt) {
+            opt = document.createElement("option");
+            opt.value = val;
+            opt.textContent = text || val;
+            selectElem.appendChild(opt);
+        }
+        selectElem.value = opt.value;
+    }
+
+    function applyActiveLineProduction() {
+        const configs = getLineConfigs();
+        const currentLine = (globalLinea && globalLinea.value) ? globalLinea.value : "linea1";
+        const cfg = configs[currentLine] || DEFAULT_LINE_CONFIGS.linea1;
+        const lineLabel = (currentLine === "linea1") ? "Línea 1" : "Línea 2";
+
+        // 1. Actualizar Badges
+        ["badge-bebida-linea", "badge-jarabe-linea", "badge-torque-linea"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = `<i class="fa-solid fa-lock"></i> ${lineLabel}`;
+        });
+
+        // 2. Aplicar en Bebida Terminada
+        if (selectMarca) {
+            ensureOptionExists(selectMarca, cfg.marca);
+            selectMarca.classList.add("input-locked");
+            selectMarca.setAttribute("tabindex", "-1");
+        }
+        if (selectConcentrado) {
+            ensureOptionExists(selectConcentrado, cfg.concentrado);
+            selectConcentrado.classList.add("input-locked");
+            selectConcentrado.setAttribute("tabindex", "-1");
+        }
+        if (selectTamano) {
+            ensureOptionExists(selectTamano, cfg.tamano);
+            selectTamano.classList.add("input-locked");
+            selectTamano.setAttribute("tabindex", "-1");
+        }
+        if (selectBebidaTanque) {
+            const tqVal = cfg.tanque.replace("Tanque ", "").trim();
+            ensureOptionExists(selectBebidaTanque, tqVal, cfg.tanque);
+            selectBebidaTanque.classList.add("input-locked");
+            selectBebidaTanque.setAttribute("tabindex", "-1");
+        }
+
+        // 3. Aplicar en Control de Jarabe
+        const selectSaborJarabe = document.getElementById("jarabe_sabor");
+        const selectConcJarabe = document.getElementById("jarabe_concentrado");
+        const selectTanqueJarabe = document.getElementById("jarabe_tanque");
+
+        if (selectSaborJarabe) {
+            ensureOptionExists(selectSaborJarabe, cfg.marca);
+            selectSaborJarabe.classList.add("input-locked");
+            selectSaborJarabe.setAttribute("tabindex", "-1");
+        }
+        if (selectConcJarabe) {
+            ensureOptionExists(selectConcJarabe, cfg.concentrado);
+            selectConcJarabe.classList.add("input-locked");
+            selectConcJarabe.setAttribute("tabindex", "-1");
+        }
+        if (selectTanqueJarabe) {
+            const tqVal = cfg.tanque.replace("Tanque ", "").trim();
+            ensureOptionExists(selectTanqueJarabe, tqVal, cfg.tanque);
+            selectTanqueJarabe.classList.add("input-locked");
+            selectTanqueJarabe.setAttribute("tabindex", "-1");
+        }
+
+        // 4. Aplicar en Control de Torque
+        if (selectTorqueSabor) {
+            ensureOptionExists(selectTorqueSabor, cfg.marca);
+            selectTorqueSabor.classList.add("input-locked");
+            selectTorqueSabor.setAttribute("tabindex", "-1");
+            selectTorqueSabor.dispatchEvent(new Event("change"));
+        }
+    }
+
+    // Control del Modal de Asignar Producción
+    const btnOpenAsignar = document.getElementById("btn-open-asignar");
+    const btnCloseAsignar = document.getElementById("btn-close-asignar");
+    const btnCancelAsignar = document.getElementById("btn-cancel-asignar");
+    const modalAsignar = document.getElementById("modal-asignar-produccion");
+    const formAsignar = document.getElementById("asignar-produccion-form");
+    const tabModalLinea1 = document.getElementById("modal-tab-linea1");
+    const tabModalLinea2 = document.getElementById("modal-tab-linea2");
+    const ctxModalLinea = document.getElementById("asignar-ctx-linea");
+
+    const inputCfgMarca = document.getElementById("cfg_marca");
+    const inputCfgConc = document.getElementById("cfg_concentrado");
+    const inputCfgTam = document.getElementById("cfg_tamano");
+    const inputCfgTanque = document.getElementById("cfg_tanque");
+
+    let modalEditingLine = "linea1";
+
+    function loadModalLineValues(targetLine) {
+        modalEditingLine = targetLine;
+        const configs = getLineConfigs();
+        const cfg = configs[targetLine] || DEFAULT_LINE_CONFIGS[targetLine];
+        const label = (targetLine === "linea1") ? "Línea 1" : "Línea 2";
+
+        if (tabModalLinea1 && tabModalLinea2) {
+            tabModalLinea1.classList.toggle("active", targetLine === "linea1");
+            tabModalLinea2.classList.toggle("active", targetLine === "linea2");
+        }
+
+        if (ctxModalLinea) {
+            ctxModalLinea.innerHTML = `<i class="fa-solid fa-industry"></i> Editando configuración: <strong>${label}</strong>`;
+        }
+
+        if (inputCfgMarca && cfg.marca) inputCfgMarca.value = cfg.marca;
+        if (inputCfgConc && cfg.concentrado) inputCfgConc.value = cfg.concentrado;
+        if (inputCfgTam && cfg.tamano) inputCfgTam.value = cfg.tamano;
+        if (inputCfgTanque && cfg.tanque) inputCfgTanque.value = cfg.tanque;
+    }
+
+    if (btnOpenAsignar) {
+        btnOpenAsignar.addEventListener("click", () => {
+            const activeLine = (globalLinea && globalLinea.value) ? globalLinea.value : "linea1";
+            loadModalLineValues(activeLine);
+            if (modalAsignar) modalAsignar.classList.remove("field-hidden");
+        });
+    }
+
+    if (tabModalLinea1) tabModalLinea1.addEventListener("click", () => loadModalLineValues("linea1"));
+    if (tabModalLinea2) tabModalLinea2.addEventListener("click", () => loadModalLineValues("linea2"));
+
+    function closeAsignarModal() {
+        if (modalAsignar) modalAsignar.classList.add("field-hidden");
+    }
+
+    if (btnCloseAsignar) btnCloseAsignar.addEventListener("click", closeAsignarModal);
+    if (btnCancelAsignar) btnCancelAsignar.addEventListener("click", closeAsignarModal);
+    if (modalAsignar) {
+        modalAsignar.addEventListener("click", (e) => {
+            if (e.target === modalAsignar) closeAsignarModal();
+        });
+    }
+
+    if (formAsignar) {
+        formAsignar.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const configs = getLineConfigs();
+            configs[modalEditingLine] = {
+                marca: inputCfgMarca ? inputCfgMarca.value : "Cola",
+                concentrado: inputCfgConc ? inputCfgConc.value : "IFF",
+                tamano: inputCfgTam ? inputCfgTam.value : "2L",
+                tanque: inputCfgTanque ? inputCfgTanque.value : "Tanque 4"
+            };
+            saveLineConfigs(configs);
+            applyActiveLineProduction();
+            const label = (modalEditingLine === "linea1") ? "Línea 1" : "Línea 2";
+            showToast(`Asignación guardada para ${label}: ${configs[modalEditingLine].marca} (${configs[modalEditingLine].tamano})`, "success");
+            closeAsignarModal();
+        });
+    }
+
+    if (globalLinea) globalLinea.addEventListener("change", () => {
+        if (torqueForm) updateTorqueOptions();
+        applyActiveLineProduction();
+    });
     if (globalTurno) globalTurno.addEventListener("change", () => {
         if (torqueForm) { updateTorqueOptions(); toggleNocheSection(); }
     });
@@ -164,6 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     selectResponsable.innerHTML = '<option value="" disabled selected>Seleccione responsable</option>';
                     responsables.forEach(r => { const o=document.createElement("option"); o.value=r.nombre_completo; o.textContent=r.nombre_completo; selectResponsable.appendChild(o); });
                 }
+                applyActiveLineProduction();
             } catch(e) { console.error(e); showToast("Error al cargar datos maestros desde PostgreSQL", "error"); }
         }
         initDropdowns();
@@ -233,10 +426,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (btnReset) {
             btnReset.addEventListener("click", () => {
-                if (confirm("\xbfDeseas vaciar todos los campos del formulario?")) {
+                if (confirm("¿Deseas vaciar todos los campos del formulario?")) {
                     form.reset();
-                    [selectMarca, selectConcentrado, selectTamano, selectResponsable, selectBebidaTanque]
-                        .forEach(s => { if(s) s.selectedIndex = 0; });
+                    if (selectResponsable) selectResponsable.selectedIndex = 0;
+                    applyActiveLineProduction();
                 }
             });
         }
@@ -287,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     selectRespJarabe.innerHTML = '<option value="" disabled selected>Seleccione responsable</option>';
                     responsables.forEach(r => { const o=document.createElement("option"); o.value=r.nombre_completo; o.textContent=r.nombre_completo; selectRespJarabe.appendChild(o); });
                 }
+                applyActiveLineProduction();
             } catch(e) { console.error(e); showToast("Error al cargar datos para el Control de Jarabe", "error"); }
         }
         initJarabeDropdowns();
@@ -295,10 +489,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const bx_patron = parseFloat(document.getElementById("jarabe_bx_patron").value);
             const ta = parseFloat(document.getElementById("jarabe_ta").value);
-            if (isNaN(bx_patron) || isNaN(ta)) { showToast("Ingres\xe1 valores num\xe9ricos v\xe1lidos en \xb0Bx Patr. y T.A.", "error"); return; }
+            if (isNaN(bx_patron) || isNaN(ta)) { showToast("Ingresá valores numéricos válidos en °Bx Patr. y T.A.", "error"); return; }
             const payload = {
                 hora: document.getElementById("jarabe_hora").value.trim() || null,
-                turno: globalTurno ? globalTurno.value : "ma\xf1ana",
+                turno: globalTurno ? globalTurno.value : "mañana",
                 linea: globalLinea ? globalLinea.value : "linea1",
                 sabor: selectSabor.value, concentrado: selectConcJarabe.value,
                 tanque: selectTanque.value, bx_patron, ta, responsable: selectRespJarabe.value,
@@ -307,7 +501,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const res = await fetch("/api/controles-jarabe", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
                 if (res.ok) {
-                    showToast("Control de jarabe registrado con \xe9xito", "success");
+                    showToast("Control de jarabe registrado con éxito", "success");
                     ["jarabe_hora","jarabe_bx_patron","jarabe_ta"].forEach(id => { document.getElementById(id).value = ""; });
                     chkObs.checked = false; obsWrapper.classList.add("field-hidden"); inputObservacion.value = "";
                 } else {
@@ -319,10 +513,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (btnResetJarabe) {
             btnResetJarabe.addEventListener("click", () => {
-                if (confirm("\xbfDeseas vaciar los campos del Control de Jarabe?")) {
+                if (confirm("¿Deseas vaciar los campos del Control de Jarabe?")) {
                     jarabeForm.reset();
-                    [selectSabor, selectConcJarabe, selectTanque, selectRespJarabe].forEach(s => { if(s) s.selectedIndex = 0; });
+                    if (selectRespJarabe) selectRespJarabe.selectedIndex = 0;
                     obsWrapper.classList.add("field-hidden");
+                    applyActiveLineProduction();
                 }
             });
         }
@@ -351,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         responsables.forEach(r => { const o=document.createElement("option"); o.value=r.nombre_completo; o.textContent=r.nombre_completo; selectPausaResp.appendChild(o); });
                     }
                 }
+                applyActiveLineProduction();
             } catch(e) { console.error(e); showToast("Error al cargar datos para el Control de Torque", "error"); }
             updateTorqueOptions();
             toggleNocheSection();
@@ -366,7 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 else if (sabor.includes("pomelo")) color = "Amarillo";
                 else if (sabor.includes("lima")) color = "Verde";
                 else if (sabor.includes("soda")) color = "Gris";
-                else if (sabor.includes("sifon") || sabor.includes("sif\xf3n")) color = "Rojo";
+                else if (sabor.includes("sifon") || sabor.includes("sifón")) color = "Rojo";
                 else if (sabor.includes("manzana")) color = "Azul";
                 if (inputTorqueColor) inputTorqueColor.value = color;
             });
@@ -374,10 +570,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (btnResetTorque) {
             btnResetTorque.addEventListener("click", () => {
-                if (confirm("\xbfDeseas vaciar los campos del Control de Torque?")) {
+                if (confirm("¿Deseas vaciar los campos del Control de Torque?")) {
                     torqueForm.reset();
-                    [selectTorqueSabor, selectTorqueMarca, selectTorqueResp, selectTorqueNumero].forEach(s => { if(s) s.selectedIndex = 0; });
-                    if (inputTorqueColor) inputTorqueColor.value = "";
+                    if (selectTorqueMarca) selectTorqueMarca.selectedIndex = 0;
+                    if (selectTorqueResp) selectTorqueResp.selectedIndex = 0;
+                    if (selectTorqueNumero) selectTorqueNumero.selectedIndex = 0;
+                    applyActiveLineProduction();
                 }
             });
         }
@@ -672,6 +870,158 @@ document.addEventListener("DOMContentLoaded", () => {
         formSaneoTanques.addEventListener("submit", (e) => {
             e.preventDefault();
             showToast("Registro de Saneo de Tanques completado correctamente", "success");
+        });
+    }
+
+    // ==========================================
+    // PAGE: PARTE DE JARABE
+    // ==========================================
+    const formParteJarabe = document.getElementById("form-parte-jarabe");
+    if (formParteJarabe) {
+        const inputParteFecha = document.getElementById("parte_fecha");
+        const selectParteTanque = document.getElementById("parte_tanque");
+        const selectParteSabor = document.getElementById("parte_sabor");
+        const btnResetParte = document.getElementById("btn-reset-parte-jarabe");
+
+        // Set default date to today
+        if (inputParteFecha && !inputParteFecha.value) {
+            inputParteFecha.value = new Date().toISOString().split("T")[0];
+        }
+
+        async function initParteJarabeDropdowns() {
+            try {
+                const [tR, sR] = await Promise.all([
+                    fetch("/api/tanques"),
+                    fetch("/api/sabores")
+                ]);
+
+                if (tR.ok && selectParteTanque) {
+                    const tanques = await tR.json();
+                    selectParteTanque.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
+                    tanques.forEach(t => {
+                        const opt = document.createElement("option");
+                        opt.value = t.numero;
+                        opt.textContent = `Tanque ${t.numero}`;
+                        selectParteTanque.appendChild(opt);
+                    });
+                }
+
+                if (sR.ok && selectParteSabor) {
+                    const sabores = await sR.json();
+                    selectParteSabor.innerHTML = '<option value="" disabled selected>Seleccione sabor...</option>';
+                    sabores.forEach(s => {
+                        const opt = document.createElement("option");
+                        opt.value = s.nombre;
+                        opt.textContent = s.nombre;
+                        selectParteSabor.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error("Error al cargar datos para Parte de Jarabe:", e);
+            }
+        }
+        initParteJarabeDropdowns();
+
+        if (btnResetParte) {
+            btnResetParte.addEventListener("click", () => {
+                if (confirm("¿Deseas vaciar los campos del Parte de Jarabe?")) {
+                    formParteJarabe.reset();
+                    if (inputParteFecha) inputParteFecha.value = new Date().toISOString().split("T")[0];
+                    if (selectParteTanque) selectParteTanque.selectedIndex = 0;
+                    if (selectParteSabor) selectParteSabor.selectedIndex = 0;
+                }
+            });
+        }
+
+        // Cargar Reporte Excel y Auto-completar
+        const btnUploadExcel = document.getElementById("btn_upload_excel_parte");
+        const inputExcel = document.getElementById("input_excel_parte");
+
+        if (btnUploadExcel && inputExcel) {
+            btnUploadExcel.addEventListener("click", () => inputExcel.click());
+
+            inputExcel.addEventListener("change", async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                btnUploadExcel.disabled = true;
+                btnUploadExcel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
+
+                try {
+                    const res = await fetch("/api/parse-jarabe-excel", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        const json = await res.json();
+                        const d = json.data;
+
+                        // 1. Fecha
+                        if (d.fecha && inputParteFecha) inputParteFecha.value = d.fecha;
+
+                        // 2. Tanque
+                        if (d.tanque && selectParteTanque) {
+                            const tqNum = d.tanque.replace("Tanque", "").trim();
+                            ensureOptionExists(selectParteTanque, tqNum, `Tanque ${tqNum}`);
+                        }
+
+                        // 3. Sabor
+                        if (d.sabor && selectParteSabor) {
+                            ensureOptionExists(selectParteSabor, d.sabor);
+                        }
+
+                        // 4. Componentes e Ingredientes
+                        const fieldsMap = {
+                            "parte_azucar": d.azucar,
+                            "parte_acido_citrico": d.acido_citrico,
+                            "parte_benzoato": d.benzoato_sodio,
+                            "parte_sorbato": d.sorbato_potasio,
+                            "parte_sucralosa": d.sucralosa,
+                            "parte_acesulfame": d.acesulfame_k,
+                            "parte_citrato": d.citrato_sodio,
+                            "parte_colorante_caramelo": d.colorante_caramelo,
+                            "parte_acido_fosforico": d.acido_fosforico,
+                            "parte_cafeina": d.cafeina,
+                            "parte_acido_ascorbico": d.acido_ascorbico
+                        };
+
+                        Object.entries(fieldsMap).forEach(([elemId, val]) => {
+                            const inp = document.getElementById(elemId);
+                            if (inp) {
+                                inp.value = (val !== null && val !== undefined) ? val : "";
+                                inp.style.transition = "all 0.3s ease";
+                                inp.style.borderColor = "rgba(16, 185, 129, 0.6)";
+                                inp.style.backgroundColor = "rgba(16, 185, 129, 0.08)";
+                                setTimeout(() => {
+                                    inp.style.borderColor = "";
+                                    inp.style.backgroundColor = "";
+                                }, 2500);
+                            }
+                        });
+
+                        showToast(`Reporte importado con éxito: ${file.name}`, "success");
+                    } else {
+                        const err = await res.json();
+                        showToast(`Error al procesar archivo: ${err.detail || "Formato no válido"}`, "error");
+                    }
+                } catch (err) {
+                    console.error("Error al procesar excel:", err);
+                    showToast("No se pudo conectar con el servidor para leer el archivo", "error");
+                } finally {
+                    btnUploadExcel.disabled = false;
+                    btnUploadExcel.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i> Cargar Reporte Excel';
+                    inputExcel.value = "";
+                }
+            });
+        }
+
+        formParteJarabe.addEventListener("submit", (e) => {
+            e.preventDefault();
+            showToast("Parte de Jarabe guardado correctamente", "success");
         });
     }
 });

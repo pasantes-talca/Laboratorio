@@ -54,6 +54,9 @@
             <button class="tab-button" data-tab="saneo-tanques">
                 <i class="fa-solid fa-spray-can-sparkles"></i> Saneo de Tanques
             </button>
+            <button class="tab-button" data-tab="parte-jarabe">
+                <i class="fa-solid fa-file-invoice"></i> Parte de Jarabe
+            </button>
         </div>
 
         <!-- ========================================== -->
@@ -450,12 +453,224 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- TAB 4: PARTE DE JARABE                     -->
+        <!-- ========================================== -->
+        <div id="tab-parte-jarabe" class="tab-content" style="display: none;">
+            <div class="main-container">
+                <!-- Excel Import Banner -->
+                <div class="glass-card" style="margin-bottom: 1.5rem; border: 1px dashed rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.05); padding: 1.25rem 1.75rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(34, 197, 94, 0.15); color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin: 0;">Auto-completar desde Reporte Excel</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 3px;">Subí el archivo .xls exportado y los campos de la fórmula se completarán al instante.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="file" id="input_excel_parte" accept=".xls,.xlsx,.html" style="display: none;">
+                            <button type="button" class="btn" id="btn_upload_excel_parte" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+                                <i class="fa-solid fa-file-arrow-up"></i> Cargar Reporte Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="form-parte-jarabe" class="qc-flex-container">
+                    
+                    <!-- Left Column: Componentes / Ingredientes -->
+                    <div class="main-content-card glass-card">
+                        <div class="card-header">
+                            <span class="card-icon"><i class="fa-solid fa-vial-circle-check"></i></span>
+                            <h2>1. Componentes y Dosificación</h2>
+                        </div>
+
+                        <div class="form-grid">
+                            <!-- Sub-section: Azúcar y Edulcorantes -->
+                            <div class="sub-section-divider">
+                                <i class="fa-solid fa-cubes-stacked"></i> Azúcar y Edulcorantes
+                            </div>
+
+                            <!-- Azúcar -->
+                            <div class="field-container">
+                                <label for="parte_azucar">Azúcar (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-cube input-icon"></i>
+                                    <input type="number" step="any" id="parte_azucar" name="parte_azucar" placeholder="Ej: 3500.00">
+                                </div>
+                            </div>
+
+                            <!-- Sucralosa / Reforzador Cítrico -->
+                            <div class="field-container">
+                                <label for="parte_sucralosa">Sucralosa / Reforzado Cítrico (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-vial input-icon"></i>
+                                    <input type="number" step="any" id="parte_sucralosa" name="parte_sucralosa" placeholder="Ej: 1.25">
+                                </div>
+                            </div>
+
+                            <!-- Acesulfame K -->
+                            <div class="field-container col-span-2">
+                                <label for="parte_acesulfame">Acesulfame K (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-vial input-icon"></i>
+                                    <input type="number" step="any" id="parte_acesulfame" name="parte_acesulfame" placeholder="Ej: 0.85">
+                                </div>
+                            </div>
+
+                            <!-- Sub-section: Conservantes y Reguladores -->
+                            <div class="sub-section-divider">
+                                <i class="fa-solid fa-shield-virus"></i> Conservantes y Reguladores
+                            </div>
+
+                            <!-- Benzoato de Sodio -->
+                            <div class="field-container">
+                                <label for="parte_benzoato">Benzoato de Sodio (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-flask input-icon"></i>
+                                    <input type="number" step="any" id="parte_benzoato" name="parte_benzoato" placeholder="Ej: 2.10">
+                                </div>
+                            </div>
+
+                            <!-- Sorbato de Potasio -->
+                            <div class="field-container">
+                                <label for="parte_sorbato">Sorbato de Potasio (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-flask input-icon"></i>
+                                    <input type="number" step="any" id="parte_sorbato" name="parte_sorbato" placeholder="Ej: 1.50">
+                                </div>
+                            </div>
+
+                            <!-- Citrato de Sodio -->
+                            <div class="field-container col-span-2">
+                                <label for="parte_citrato">Citrato de Sodio (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-droplet input-icon"></i>
+                                    <input type="number" step="any" id="parte_citrato" name="parte_citrato" placeholder="Ej: 3.40">
+                                </div>
+                            </div>
+
+                            <!-- Sub-section: Acidulantes, Colorantes y Aditivos -->
+                            <div class="sub-section-divider">
+                                <i class="fa-solid fa-dna"></i> Acidulantes, Colorantes y Aditivos
+                            </div>
+
+                            <!-- Ácido Cítrico -->
+                            <div class="field-container">
+                                <label for="parte_acido_citrico">Ácido Cítrico (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-lemon input-icon"></i>
+                                    <input type="number" step="any" id="parte_acido_citrico" name="parte_acido_citrico" placeholder="Ej: 15.00">
+                                </div>
+                            </div>
+
+                            <!-- Ácido Fosfórico -->
+                            <div class="field-container">
+                                <label for="parte_acido_fosforico">Ácido Fosfórico (kg / L)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-atom input-icon"></i>
+                                    <input type="number" step="any" id="parte_acido_fosforico" name="parte_acido_fosforico" placeholder="Ej: 4.20">
+                                </div>
+                            </div>
+
+                            <!-- Ácido Ascórbico -->
+                            <div class="field-container">
+                                <label for="parte_acido_ascorbico">Ácido Ascórbico (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-capsules input-icon"></i>
+                                    <input type="number" step="any" id="parte_acido_ascorbico" name="parte_acido_ascorbico" placeholder="Ej: 0.50">
+                                </div>
+                            </div>
+
+                            <!-- Cafeína -->
+                            <div class="field-container">
+                                <label for="parte_cafeina">Cafeína (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-mug-hot input-icon"></i>
+                                    <input type="number" step="any" id="parte_cafeina" name="parte_cafeina" placeholder="Ej: 1.80">
+                                </div>
+                            </div>
+
+                            <!-- Colorante de Caramelo -->
+                            <div class="field-container col-span-2">
+                                <label for="parte_colorante_caramelo">Colorante de Caramelo (kg / L)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-palette input-icon"></i>
+                                    <input type="number" step="any" id="parte_colorante_caramelo" name="parte_colorante_caramelo" placeholder="Ej: 25.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btn-reset-parte-jarabe">
+                                <i class="fa-solid fa-eraser"></i> Limpiar
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit-parte-jarabe">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Parte de Jarabe
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Datos de Cabecera / Identificación -->
+                    <div class="sidebar-card glass-card">
+                        <div class="card-header">
+                            <span class="card-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+                            <h2>2. Identificación del Parte</h2>
+                        </div>
+
+                        <div class="sidebar-form-grid">
+                            <!-- Fecha -->
+                            <div class="field-container">
+                                <label for="parte_fecha">Fecha <span class="required-star">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fa-regular fa-calendar-days input-icon"></i>
+                                    <input type="date" id="parte_fecha" name="parte_fecha" required>
+                                </div>
+                            </div>
+
+                            <!-- Número de Tanque -->
+                            <div class="field-container">
+                                <label for="parte_tanque">Número de Tanque <span class="required-star">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-warehouse input-icon"></i>
+                                    <select id="parte_tanque" name="parte_tanque" required>
+                                        <option value="" disabled selected>Cargando tanques...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Sabor / Producto -->
+                            <div class="field-container">
+                                <label for="parte_sabor">Sabor / Producto</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-lemon input-icon"></i>
+                                    <select id="parte_sabor" name="parte_sabor">
+                                        <option value="" disabled selected>Seleccione sabor...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-hint">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>El Parte de Jarabe registra la masa exacta de componentes químicos y materias primas dosificadas por tanque.</span>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- App Logic Script -->
-    <script src="/static/js/app.js?v=3.5"></script>
+    <script src="/static/js/app.js?v=4.1"></script>
 </body>
 </html>

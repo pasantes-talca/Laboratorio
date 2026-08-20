@@ -48,6 +48,9 @@
                 <button type="button" class="btn-pause-header" id="btn-open-pausa" title="Registrar motivo de pausa de línea">
                     <i class="fa-solid fa-circle-pause"></i> Pausa
                 </button>
+                <button type="button" class="btn-asignar-header" id="btn-open-asignar" title="Asignar producto a las líneas de producción">
+                    <i class="fa-solid fa-sliders"></i> Asignar Producción
+                </button>
                 <a href="/preparacion-jarabe" class="btn-dashboard-header" title="Ir a Preparación Sala de Jarabe" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: #f472b6; font-weight: 600; text-decoration: none; border: 1px solid rgba(236, 72, 153, 0.3); transition: all 0.2s ease;">
                     <i class="fa-solid fa-industry"></i> Prep. Jarabe
                 </a>
@@ -215,6 +218,7 @@
                     <div class="card-header">
                         <span class="card-icon"><i class="fa-solid fa-industry"></i></span>
                         <h2>2. Producto en Producción</h2>
+                        <span id="badge-bebida-linea" class="badge-locked"><i class="fa-solid fa-lock"></i> Línea 1</span>
                     </div>
                     
                     <div class="sidebar-form-grid">
@@ -362,6 +366,7 @@
                         <div class="card-header">
                             <span class="card-icon"><i class="fa-solid fa-industry"></i></span>
                             <h2>2. Datos del Tanque</h2>
+                            <span id="badge-jarabe-linea" class="badge-locked"><i class="fa-solid fa-lock"></i> Línea 1</span>
                         </div>
                         
                         <div class="sidebar-form-grid">
@@ -474,6 +479,7 @@
                         <div class="card-header">
                             <span class="card-icon"><i class="fa-solid fa-industry"></i></span>
                             <h2>2. Datos de Producción</h2>
+                            <span id="badge-torque-linea" class="badge-locked"><i class="fa-solid fa-lock"></i> Línea 1</span>
                         </div>
                         
                         <div class="sidebar-form-grid">
@@ -592,10 +598,121 @@
         </div>
     </div>
 
+    <!-- Modal de Asignar Producción -->
+    <div id="modal-asignar-produccion" class="modal-overlay field-hidden">
+        <div class="modal-card glass-card" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-icon-asignar"><i class="fa-solid fa-sliders"></i></span>
+                    <div>
+                        <h2>Asignar Producción por Línea</h2>
+                        <p class="modal-subtitle">Configura el producto que se envasa en cada línea</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" id="btn-close-asignar" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Selector de Línea a Configurar -->
+            <div class="modal-line-tabs">
+                <button type="button" class="modal-line-tab active" id="modal-tab-linea1" data-target-line="linea1">
+                    <i class="fa-solid fa-industry"></i> Configurar Línea 1
+                </button>
+                <button type="button" class="modal-line-tab" id="modal-tab-linea2" data-target-line="linea2">
+                    <i class="fa-solid fa-industry"></i> Configurar Línea 2
+                </button>
+            </div>
+
+            <form id="asignar-produccion-form" class="modal-form">
+                <div class="pause-context-badge" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.25); color: #38bdf8;">
+                    <span id="asignar-ctx-linea"><i class="fa-solid fa-industry"></i> Editando configuración: Línea 1</span>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Marca / Sabor -->
+                    <div class="field-container col-span-2">
+                        <label for="cfg_marca">Marca / Sabor <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lemon input-icon"></i>
+                            <select id="cfg_marca" name="cfg_marca" required>
+                                <option value="Cola">Cola</option>
+                                <option value="Naranja">Naranja</option>
+                                <option value="Pomelo">Pomelo</option>
+                                <option value="Lima">Lima</option>
+                                <option value="Soda">Soda</option>
+                                <option value="Sifón">Sifón</option>
+                                <option value="Manzana">Manzana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Concentrado -->
+                    <div class="field-container">
+                        <label for="cfg_concentrado">Tipo de Concentrado <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-vial input-icon"></i>
+                            <select id="cfg_concentrado" name="cfg_concentrado" required>
+                                <option value="IFF">IFF</option>
+                                <option value="KG">KG</option>
+                                <option value="XQ">XQ</option>
+                                <option value="BA">BA</option>
+                                <option value="TP">TP</option>
+                                <option value="Talca">Talca</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tamaño -->
+                    <div class="field-container">
+                        <label for="cfg_tamano">Tamaño <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-bottle-droplet input-icon"></i>
+                            <select id="cfg_tamano" name="cfg_tamano" required>
+                                <option value="3L">3L</option>
+                                <option value="2.25L">2,25L</option>
+                                <option value="2L">2L</option>
+                                <option value="500ml">500ml</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tanque -->
+                    <div class="field-container col-span-2">
+                        <label for="cfg_tanque">Tanque de Jarabe <span class="required-star">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-warehouse input-icon"></i>
+                            <select id="cfg_tanque" name="cfg_tanque" required>
+                                <option value="Tanque 4">Tanque 4</option>
+                                <option value="Tanque 5">Tanque 5</option>
+                                <option value="Tanque 6">Tanque 6</option>
+                                <option value="Tanque 7">Tanque 7</option>
+                                <option value="Tanque 8">Tanque 8</option>
+                                <option value="Tanque 9">Tanque 9</option>
+                                <option value="Tanque 10">Tanque 10</option>
+                                <option value="Tanque 11">Tanque 11</option>
+                                <option value="Tanque 12">Tanque 12</option>
+                                <option value="Tanque 13">Tanque 13</option>
+                                <option value="N/A">N/A</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-asignar">
+                        <i class="fa-solid fa-xmark"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-asignar-submit" id="btn-submit-asignar">
+                        <i class="fa-solid fa-check"></i> Guardar Asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- App Logic Script -->
-    <script src="/static/js/app.js?v=3.1"></script>
+    <script src="/static/js/app.js?v=4.0"></script>
 </body>
 </html>

@@ -3,13 +3,14 @@ import time
 from typing import List, Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 from database import init_db, get_db, Marca, TipoConcentrado, Tamano, Tanque, Responsable, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa
+from script import extraer_datos_reporte
 
 
 # Lifespan para inicializar la base de datos
@@ -148,6 +149,16 @@ async def get_portal(request: Request):
 
 
 # --- RUTAS DE LA API (MAESTRAS) ---
+
+@app.post("/api/parse-jarabe-excel")
+async def parse_jarabe_excel(file: UploadFile = File(...)):
+    """Parsea el reporte Excel/HTML de Sala de Jarabe y extrae las cantidades e identificación."""
+    try:
+        content = await file.read()
+        datos = extraer_datos_reporte(content, es_ruta=False)
+        return {"status": "success", "data": datos}
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Error al procesar el archivo Excel: {str(e)}")
 
 @app.get("/api/marcas")
 def get_marcas(db: Session = Depends(get_db)):
