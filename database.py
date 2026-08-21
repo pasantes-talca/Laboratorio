@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Time, MetaData
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Time, MetaData, Text, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Cargar variables de entorno
@@ -92,6 +92,7 @@ class ControlJarabe(Base):
     t_a                = Column(Float, nullable=False)
     responsable_id     = Column(Integer, nullable=False)
     observacion        = Column(String, nullable=True)
+    numero_carga_trilay = Column(String(100), nullable=True)
 
 
 # Modelo para la tabla control_bebida (con FKs a tablas maestras)
@@ -146,6 +147,86 @@ class ControlPausa(Base):
     motivo         = Column(String(100), nullable=False)
     responsable_id = Column(Integer, nullable=False)
     observacion    = Column(String, nullable=True)
+
+
+# ============================================================
+# Nuevas tablas para los formularios de Sala de Jarabe
+# ============================================================
+
+class JarabeSimple(Base):
+    """Registro de preparación de jarabe simple."""
+    __tablename__ = "jarabe_simple"
+
+    id                  = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha               = Column(Date, nullable=False)
+    hora                = Column(Time, nullable=True)
+    tanque_id           = Column(Integer, ForeignKey("laboratorio.tanques.id"), nullable=False)
+    volcado_numero      = Column(Integer, nullable=False)
+    cantidad_bolsas     = Column(Integer, nullable=False)
+    azucar_tipo         = Column(String(50), nullable=False)
+    azucar_marca        = Column(String(100), nullable=False)
+    azucar_ntu          = Column(Float, nullable=True)
+    aux_standard        = Column(Float, nullable=True)
+    aux_hyflo           = Column(Float, nullable=True)
+    pasteurizado_desde  = Column(Time, nullable=True)
+    pasteurizado_hasta  = Column(Time, nullable=True)
+    pasteurizado_temp   = Column(Float, nullable=True)
+    responsables        = Column(Text, nullable=False)          # JSON array of names
+
+
+class JarabeTerminado(Base):
+    """Registro de preparación de jarabe terminado."""
+    __tablename__ = "jarabe_terminado"
+
+    id                     = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha                  = Column(Date, nullable=False)
+    marca_id               = Column(Integer, ForeignKey("laboratorio.marcas.id"), nullable=False)
+    concentrado_id         = Column(Integer, ForeignKey("laboratorio.tipos_concentrado.id"), nullable=False)
+    tanque_id              = Column(Integer, ForeignKey("laboratorio.tanques.id"), nullable=False)
+    unidades               = Column(Integer, nullable=False)
+    volcado_numero         = Column(Integer, nullable=False)
+    tiempo_filtrado        = Column(String(50), nullable=True)
+    be_jarabe_simple       = Column(Float, nullable=True)
+    vol_jarabe_simple      = Column(Float, nullable=True)
+    lts_jarabe_terminado   = Column(Float, nullable=True)
+    responsables           = Column(Text, nullable=False)       # JSON array of names
+
+
+class SaneoTanque(Base):
+    """Registro de saneo (CIP) de tanques."""
+    __tablename__ = "saneo_tanques"
+
+    id             = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha          = Column(Date, nullable=False)
+    hora           = Column(Time, nullable=True)
+    tanque_id      = Column(Integer, ForeignKey("laboratorio.tanques.id"), nullable=False)
+    producto       = Column(String(255), nullable=False)
+    responsables   = Column(Text, nullable=False)               # JSON array of names
+
+
+class ParteJarabe(Base):
+    """Parte de dosificación de ingredientes por tanque."""
+    __tablename__ = "parte_jarabe"
+
+    id                    = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha                 = Column(Date, nullable=False)
+    turno                 = Column(String(20), nullable=False)
+    tanque_id             = Column(Integer, ForeignKey("laboratorio.tanques.id"), nullable=False)
+    numero_carga_trilay   = Column(String(100), nullable=False)
+    marca_id              = Column(Integer, ForeignKey("laboratorio.marcas.id"), nullable=True)
+    responsables          = Column(Text, nullable=False)        # JSON array of names
+    # Componentes
+    azucar                = Column(Float, nullable=True)
+    sucralosa             = Column(Float, nullable=True)
+    acesulfame_k          = Column(Float, nullable=True)
+    benzoato_sodio        = Column(Float, nullable=True)
+    sorbato_potasio       = Column(Float, nullable=True)
+    citrato_sodio         = Column(Float, nullable=True)
+    acido_citrico         = Column(Float, nullable=True)
+    acido_fosforico       = Column(Float, nullable=True)
+    acido_ascorbico       = Column(Float, nullable=True)
+    cafeina               = Column(Float, nullable=True)
+    colorante_caramelo    = Column(Float, nullable=True)
 
 # Función para inicializar las tablas
 def init_db():

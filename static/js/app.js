@@ -668,22 +668,113 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================
+    // MULTI-RESPONSABLE SYSTEM
+    // ==========================================
+    let _cachedResponsables = null;
+
+    async function getResponsables() {
+        if (_cachedResponsables) return _cachedResponsables;
+        try {
+            const r = await fetch("/api/responsables");
+            if (r.ok) {
+                _cachedResponsables = await r.json();
+                return _cachedResponsables;
+            }
+        } catch (e) { console.error(e); }
+        return [];
+    }
+
+    function populateSelectWithResponsables(selectEl, responsables) {
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = '<option value="" disabled selected>Seleccione responsable...</option>';
+        responsables.forEach(r => {
+            const o = document.createElement("option");
+            o.value = r.nombre_completo;
+            o.textContent = r.nombre_completo;
+            selectEl.appendChild(o);
+        });
+        if (currentVal) selectEl.value = currentVal;
+    }
+
+    async function populateAllMultiRespContainers() {
+        const responsables = await getResponsables();
+        document.querySelectorAll(".multi-resp-select").forEach(sel => {
+            populateSelectWithResponsables(sel, responsables);
+        });
+    }
+
+    function addResponsableRow(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const rows = container.querySelectorAll(".multi-resp-row");
+        const firstSelect = rows[0] ? rows[0].querySelector("select") : null;
+        const name = firstSelect ? (firstSelect.getAttribute("name") || "responsable[]") : "responsable[]";
+
+        const row = document.createElement("div");
+        row.className = "multi-resp-row";
+        row.innerHTML = `
+            <div class="input-wrapper" style="flex:1">
+                <i class="fa-solid fa-user-tie input-icon"></i>
+                <select class="multi-resp-select" name="${name}" required>
+                    <option value="" disabled selected>Seleccione responsable...</option>
+                </select>
+            </div>
+            <button type="button" class="btn-resp-remove" title="Quitar"><i class="fa-solid fa-minus"></i></button>
+        `;
+        container.appendChild(row);
+
+        // Populate and wire remove
+        const newSelect = row.querySelector(".multi-resp-select");
+        getResponsables().then(rs => populateSelectWithResponsables(newSelect, rs));
+        const removeBtn = row.querySelector(".btn-resp-remove");
+        if (removeBtn) removeBtn.addEventListener("click", () => {
+            row.remove();
+            updateRemoveButtons(containerId);
+        });
+        updateRemoveButtons(containerId);
+    }
+
+    function updateRemoveButtons(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const rows = container.querySelectorAll(".multi-resp-row");
+        rows.forEach((row, i) => {
+            const btn = row.querySelector(".btn-resp-remove");
+            if (btn) btn.style.display = rows.length > 1 ? "" : "none";
+        });
+    }
+
+    function getResponsablesFromContainer(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        return Array.from(container.querySelectorAll(".multi-resp-select"))
+            .map(s => s.value)
+            .filter(v => v && v.trim());
+    }
+
+    // Wire all add-responsable buttons
+    document.querySelectorAll(".btn-resp-add").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const containerId = btn.getAttribute("data-container");
+            if (containerId) addResponsableRow(containerId);
+        });
+    });
+
+    // Load responsables into all existing multi-resp selects on page load
+    populateAllMultiRespContainers();
+
+    // ==========================================
     // PAGE: PREPARACIÓN DE JARABE SIMPLE
     // ==========================================
     const formJarabeSimple = document.getElementById("form-jarabe-simple");
     if (formJarabeSimple) {
         const selectTanqueSimple = document.getElementById("tanque_numero");
-        const selectRespSimple = document.getElementById("preparacion_responsable");
         const btnResetSimple = document.getElementById("btn-reset-jarabe-simple");
 
-        // Cargar dropdowns de Tanques y Responsables
+        // Cargar dropdowns de Tanques
         async function initJarabeSimpleDropdowns() {
             try {
-                const [tR, rR] = await Promise.all([
-                    fetch("/api/tanques"),
-                    fetch("/api/responsables")
-                ]);
-
+                const tR = await fetch("/api/tanques");
                 if (tR.ok && selectTanqueSimple) {
                     const tanques = await tR.json();
                     selectTanqueSimple.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
@@ -694,19 +785,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectTanqueSimple.appendChild(opt);
                     });
                 }
-
-                if (rR.ok && selectRespSimple) {
-                    const responsables = await rR.json();
-                    selectRespSimple.innerHTML = '<option value="" disabled selected>Seleccione responsable...</option>';
-                    responsables.forEach(r => {
-                        const opt = document.createElement("option");
-                        opt.value = r.nombre_completo;
-                        opt.textContent = r.nombre_completo;
-                        selectRespSimple.appendChild(opt);
-                    });
-                }
             } catch (e) {
-                console.error("Error al cargar datos de tanques o responsables:", e);
+                console.error("Error al cargar datos de tanques:", e);
             }
         }
         initJarabeSimpleDropdowns();
@@ -717,15 +797,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (confirm("¿Deseas vaciar todos los campos del formulario de Jarabe Simple?")) {
                     formJarabeSimple.reset();
                     if (selectTanqueSimple) selectTanqueSimple.selectedIndex = 0;
-                    if (selectRespSimple) selectRespSimple.selectedIndex = 0;
+                    // Reset multi-resp
+                    const container = document.getElementById("simple_responsables_container");
+                    if (container) {
+                        const rows = container.querySelectorAll(".multi-resp-row");
+                        rows.forEach((r, i) => { if (i > 0) r.remove(); });
+                        updateRemoveButtons("simple_responsables_container");
+                    }
                 }
             });
         }
 
         // Envío del formulario
-        formJarabeSimple.addEventListener("submit", (e) => {
+        formJarabeSimple.addEventListener("submit", async (e) => {
             e.preventDefault();
-            showToast("Formulario de Preparación de Jarabe Simple completado correctamente", "success");
+            const responsables = getResponsablesFromContainer("simple_responsables_container");
+            if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
+            const tanqueVal = selectTanqueSimple ? selectTanqueSimple.value : null;
+            if (!tanqueVal) { showToast("Seleccioná el tanque", "error"); return; }
+            const volcadoVal = parseInt(document.getElementById("volcado_numero").value, 10);
+            const bolsasVal = parseInt(document.getElementById("cantidad_bolsas").value, 10);
+            const azucarTipo = document.getElementById("azucar_tipo")?.value || "";
+            const azucarMarca = document.getElementById("azucar_marca")?.value?.trim() || "";
+            if (!azucarTipo) { showToast("Seleccioná el tipo de azúcar", "error"); return; }
+            if (!azucarMarca) { showToast("Ingresá la marca de azúcar", "error"); return; }
+            const payload = {
+                fecha: new Date().toISOString().split("T")[0],
+                hora: document.getElementById("preparacion_hora")?.value?.trim() || null,
+                tanque: tanqueVal,
+                volcado_numero: volcadoVal,
+                cantidad_bolsas: bolsasVal,
+                azucar_tipo: azucarTipo,
+                azucar_marca: azucarMarca,
+                azucar_ntu: parseFloat(document.getElementById("azucar_ntu")?.value) || null,
+                aux_standard: parseFloat(document.getElementById("aux_standard")?.value) || null,
+                aux_hyflo: parseFloat(document.getElementById("aux_hyflo")?.value) || null,
+                pasteurizado_desde: document.getElementById("pasteurizado_desde")?.value || null,
+                pasteurizado_hasta: document.getElementById("pasteurizado_hasta")?.value || null,
+                pasteurizado_temp: parseFloat(document.getElementById("pasteurizado_temp")?.value) || null,
+                responsables
+            };
+            try {
+                const res = await fetch("/api/jarabe-simple", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                if (res.ok) {
+                    showToast("Jarabe Simple registrado con éxito en PostgreSQL", "success");
+                    formJarabeSimple.reset();
+                    selectTanqueSimple && (selectTanqueSimple.selectedIndex = 0);
+                } else {
+                    const err = await res.json();
+                    showToast(`Error: ${err.detail || "Error en el servidor"}`, "error");
+                }
+            } catch (e) { console.error(e); showToast("No se pudo conectar al servidor", "error"); }
         });
     }
 
@@ -737,16 +859,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectSaborTerminado = document.getElementById("terminado_sabor");
         const selectConcTerminado = document.getElementById("terminado_concentrado");
         const selectTanqueTerminado = document.getElementById("terminado_tanque");
-        const selectRespTerminado = document.getElementById("terminado_responsable");
         const btnResetTerminado = document.getElementById("btn-reset-jarabe-terminado");
 
         async function initJarabeTerminadoDropdowns() {
             try {
-                const [sR, cR, tR, rR] = await Promise.all([
+                const [sR, cR, tR] = await Promise.all([
                     fetch("/api/sabores"),
                     fetch("/api/tipos-concentrado"),
-                    fetch("/api/tanques"),
-                    fetch("/api/responsables")
+                    fetch("/api/tanques")
                 ]);
 
                 if (sR.ok && selectSaborTerminado) {
@@ -781,36 +901,63 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectTanqueTerminado.appendChild(opt);
                     });
                 }
-
-                if (rR.ok && selectRespTerminado) {
-                    const responsables = await rR.json();
-                    selectRespTerminado.innerHTML = '<option value="" disabled selected>Seleccione responsable...</option>';
-                    responsables.forEach(r => {
-                        const opt = document.createElement("option");
-                        opt.value = r.nombre_completo;
-                        opt.textContent = r.nombre_completo;
-                        selectRespTerminado.appendChild(opt);
-                    });
-                }
             } catch (e) {
                 console.error("Error al cargar datos para Jarabe Terminado:", e);
             }
         }
         initJarabeTerminadoDropdowns();
 
+
         if (btnResetTerminado) {
             btnResetTerminado.addEventListener("click", () => {
                 if (confirm("¿Deseas vaciar todos los campos del formulario de Jarabe Terminado?")) {
                     formJarabeTerminado.reset();
-                    [selectSaborTerminado, selectConcTerminado, selectTanqueTerminado, selectRespTerminado]
+                    [selectSaborTerminado, selectConcTerminado, selectTanqueTerminado]
                         .forEach(s => { if (s) s.selectedIndex = 0; });
+                    // Reset multi-resp
+                    const container = document.getElementById("terminado_responsables_container");
+                    if (container) {
+                        const rows = container.querySelectorAll(".multi-resp-row");
+                        rows.forEach((r, i) => { if (i > 0) r.remove(); });
+                        updateRemoveButtons("terminado_responsables_container");
+                    }
                 }
             });
         }
 
-        formJarabeTerminado.addEventListener("submit", (e) => {
+        formJarabeTerminado.addEventListener("submit", async (e) => {
             e.preventDefault();
-            showToast("Formulario de Preparación de Jarabe Terminado completado correctamente", "success");
+            const responsables = getResponsablesFromContainer("terminado_responsables_container");
+            if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
+            const sabor = selectSaborTerminado?.value || "";
+            const concentrado = selectConcTerminado?.value || "";
+            const tanque = selectTanqueTerminado?.value || "";
+            const unidades = parseInt(document.getElementById("terminado_unidades")?.value, 10);
+            const volcado = parseInt(document.getElementById("terminado_volcado")?.value, 10);
+            if (!sabor) { showToast("Seleccioná el sabor", "error"); return; }
+            if (!concentrado) { showToast("Seleccioná el concentrado", "error"); return; }
+            if (!tanque) { showToast("Seleccioná el tanque", "error"); return; }
+            if (isNaN(unidades)) { showToast("Ingresá las unidades", "error"); return; }
+            if (isNaN(volcado)) { showToast("Ingresá el número de volcado", "error"); return; }
+            const payload = {
+                fecha: new Date().toISOString().split("T")[0],
+                sabor, concentrado, tanque, unidades, volcado_numero: volcado,
+                tiempo_filtrado: document.getElementById("terminado_tiempo_filtrado")?.value?.trim() || null,
+                be_jarabe_simple: parseFloat(document.getElementById("terminado_be_simple")?.value) || null,
+                vol_jarabe_simple: parseFloat(document.getElementById("terminado_vol_simple")?.value) || null,
+                lts_jarabe_terminado: parseFloat(document.getElementById("terminado_lts_terminado")?.value) || null,
+                responsables
+            };
+            try {
+                const res = await fetch("/api/jarabe-terminado", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                if (res.ok) {
+                    showToast("Jarabe Terminado registrado con éxito en PostgreSQL", "success");
+                    formJarabeTerminado.reset();
+                } else {
+                    const err = await res.json();
+                    showToast(`Error: ${err.detail || "Error en el servidor"}`, "error");
+                }
+            } catch (e) { console.error(e); showToast("No se pudo conectar al servidor", "error"); }
         });
     }
 
@@ -862,14 +1009,41 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (confirm("¿Deseas vaciar los campos del formulario de Saneo de Tanques?")) {
                     formSaneoTanques.reset();
                     if (selectTanqueSaneo) selectTanqueSaneo.selectedIndex = 0;
-                    if (selectRespSaneo) selectRespSaneo.selectedIndex = 0;
+                    // Reset multi-resp
+                    const container = document.getElementById("saneo_responsables_container");
+                    if (container) {
+                        const rows = container.querySelectorAll(".multi-resp-row");
+                        rows.forEach((r, i) => { if (i > 0) r.remove(); });
+                        updateRemoveButtons("saneo_responsables_container");
+                    }
                 }
             });
         }
 
-        formSaneoTanques.addEventListener("submit", (e) => {
+        formSaneoTanques.addEventListener("submit", async (e) => {
             e.preventDefault();
-            showToast("Registro de Saneo de Tanques completado correctamente", "success");
+            const responsables = getResponsablesFromContainer("saneo_responsables_container");
+            if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
+            const tanque = selectTanqueSaneo?.value || "";
+            const producto = document.getElementById("saneo_producto")?.value?.trim() || "";
+            if (!tanque) { showToast("Seleccioná el tanque", "error"); return; }
+            if (!producto) { showToast("Ingresá el producto / solución sanitizante", "error"); return; }
+            const payload = {
+                fecha: new Date().toISOString().split("T")[0],
+                hora: null,
+                tanque, producto, responsables
+            };
+            try {
+                const res = await fetch("/api/saneo-tanques", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                if (res.ok) {
+                    showToast("Saneo de Tanque registrado con éxito en PostgreSQL", "success");
+                    formSaneoTanques.reset();
+                    selectTanqueSaneo && (selectTanqueSaneo.selectedIndex = 0);
+                } else {
+                    const err = await res.json();
+                    showToast(`Error: ${err.detail || "Error en el servidor"}`, "error");
+                }
+            } catch (e) { console.error(e); showToast("No se pudo conectar al servidor", "error"); }
         });
     }
 
@@ -1019,9 +1193,56 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        formParteJarabe.addEventListener("submit", (e) => {
+        formParteJarabe.addEventListener("submit", async (e) => {
             e.preventDefault();
-            showToast("Parte de Jarabe guardado correctamente", "success");
+            const responsables = getResponsablesFromContainer("parte_responsables_container");
+            if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
+            const fecha = document.getElementById("parte_fecha")?.value || "";
+            const turno = document.getElementById("parte_turno")?.value || "";
+            const tanque = document.getElementById("parte_tanque") ? document.getElementById("parte_tanque").value : "";
+            const carga_trilay = document.getElementById("parte_carga_trilay")?.value?.trim() || "";
+            const sabor = document.getElementById("parte_sabor")?.value || null;
+            if (!fecha) { showToast("Seleccioná la fecha", "error"); return; }
+            if (!turno) { showToast("Seleccioná el turno", "error"); return; }
+            if (!tanque) { showToast("Seleccioná el tanque", "error"); return; }
+            if (!carga_trilay) { showToast("Ingresá el N° de Carga Trilay", "error"); return; }
+            const payload = {
+                fecha, turno, tanque,
+                numero_carga_trilay: carga_trilay,
+                sabor,
+                responsables,
+                azucar: parseFloat(document.getElementById("parte_azucar")?.value) || null,
+                sucralosa: parseFloat(document.getElementById("parte_sucralosa")?.value) || null,
+                acesulfame_k: parseFloat(document.getElementById("parte_acesulfame")?.value) || null,
+                benzoato_sodio: parseFloat(document.getElementById("parte_benzoato")?.value) || null,
+                sorbato_potasio: parseFloat(document.getElementById("parte_sorbato")?.value) || null,
+                citrato_sodio: parseFloat(document.getElementById("parte_citrato")?.value) || null,
+                acido_citrico: parseFloat(document.getElementById("parte_acido_citrico")?.value) || null,
+                acido_fosforico: parseFloat(document.getElementById("parte_acido_fosforico")?.value) || null,
+                acido_ascorbico: parseFloat(document.getElementById("parte_acido_ascorbico")?.value) || null,
+                cafeina: parseFloat(document.getElementById("parte_cafeina")?.value) || null,
+                colorante_caramelo: parseFloat(document.getElementById("parte_colorante_caramelo")?.value) || null,
+            };
+            try {
+                const res = await fetch("/api/parte-jarabe", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                if (res.ok) {
+                    showToast("Parte de Jarabe guardado con éxito en PostgreSQL", "success");
+                    formParteJarabe.reset();
+                    if (inputParteFecha) inputParteFecha.value = new Date().toISOString().split("T")[0];
+                    if (selectParteTanque) selectParteTanque.selectedIndex = 0;
+                    if (selectParteSabor) selectParteSabor.selectedIndex = 0;
+                    // Reset multi-resp
+                    const container = document.getElementById("parte_responsables_container");
+                    if (container) {
+                        const rows = container.querySelectorAll(".multi-resp-row");
+                        rows.forEach((r, i) => { if (i > 0) r.remove(); });
+                        updateRemoveButtons("parte_responsables_container");
+                    }
+                } else {
+                    const err = await res.json();
+                    showToast(`Error: ${err.detail || "Error en el servidor"}`, "error");
+                }
+            } catch (e) { console.error(e); showToast("No se pudo conectar al servidor", "error"); }
         });
     }
 });

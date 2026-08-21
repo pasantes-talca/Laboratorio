@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
-from database import init_db, get_db, Marca, TipoConcentrado, Tamano, Tanque, Responsable, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa
+from database import init_db, get_db, Marca, TipoConcentrado, Tamano, Tanque, Responsable, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa, JarabeSimple, JarabeTerminado, SaneoTanque, ParteJarabe
 from script import extraer_datos_reporte
 
 
@@ -97,6 +97,66 @@ class ControlJarabeCreate(BaseModel):
     ta: float
     responsable: str
     observacion: Optional[str] = None
+    numero_carga_trilay: Optional[str] = None
+
+
+class JarabeSimpleCreate(BaseModel):
+    fecha: str
+    hora: Optional[str] = None
+    tanque: str
+    volcado_numero: int
+    cantidad_bolsas: int
+    azucar_tipo: str
+    azucar_marca: str
+    azucar_ntu: Optional[float] = None
+    aux_standard: Optional[float] = None
+    aux_hyflo: Optional[float] = None
+    pasteurizado_desde: Optional[str] = None
+    pasteurizado_hasta: Optional[str] = None
+    pasteurizado_temp: Optional[float] = None
+    responsables: List[str]
+
+
+class JarabeTerminadoCreate(BaseModel):
+    fecha: str
+    sabor: str
+    concentrado: str
+    tanque: str
+    unidades: int
+    volcado_numero: int
+    tiempo_filtrado: Optional[str] = None
+    be_jarabe_simple: Optional[float] = None
+    vol_jarabe_simple: Optional[float] = None
+    lts_jarabe_terminado: Optional[float] = None
+    responsables: List[str]
+
+
+class SaneoTanqueCreate(BaseModel):
+    fecha: str
+    hora: Optional[str] = None
+    tanque: str
+    producto: str
+    responsables: List[str]
+
+
+class ParteJarabeCreate(BaseModel):
+    fecha: str
+    turno: str
+    tanque: str
+    numero_carga_trilay: str
+    sabor: Optional[str] = None
+    responsables: List[str]
+    azucar: Optional[float] = None
+    sucralosa: Optional[float] = None
+    acesulfame_k: Optional[float] = None
+    benzoato_sodio: Optional[float] = None
+    sorbato_potasio: Optional[float] = None
+    citrato_sodio: Optional[float] = None
+    acido_citrico: Optional[float] = None
+    acido_fosforico: Optional[float] = None
+    acido_ascorbico: Optional[float] = None
+    cafeina: Optional[float] = None
+    colorante_caramelo: Optional[float] = None
 
 class ControlTorqueCreate(BaseModel):
     numero_cabezal: int
@@ -374,6 +434,7 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
         t_a=data.ta,
         responsable_id=resp_obj.id,
         observacion=data.observacion.strip() if data.observacion and data.observacion.strip() else None,
+        numero_carga_trilay=data.numero_carga_trilay.strip() if data.numero_carga_trilay and data.numero_carga_trilay.strip() else None,
     )
     db.add(registro)
     db.commit()
@@ -413,6 +474,202 @@ def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
     db.delete(control)
     db.commit()
     return {"message": "Registro eliminado con éxito"}
+
+
+# --- RUTAS: JARABE SIMPLE ---
+
+@app.post("/api/jarabe-simple", status_code=status.HTTP_201_CREATED)
+def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)):
+    """Registra una preparación de jarabe simple."""
+    import json
+    from datetime import date as date_type
+
+    # Resolver FK: tanque
+    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
+    if not tanque_obj:
+        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
+
+    # Parsear fecha
+    try:
+        fecha_obj = date_type.fromisoformat(data.fecha)
+    except ValueError:
+        fecha_obj = datetime.now().date()
+
+    # Parsear hora
+    hora_obj = None
+    if data.hora and data.hora.strip():
+        try:
+            hora_obj = datetime.strptime(data.hora, "%H:%M").time()
+        except ValueError:
+            pass
+
+    # Parsear pasteurizado desde/hasta
+    def parse_time(t):
+        if t and t.strip():
+            try:
+                return datetime.strptime(t, "%H:%M").time()
+            except ValueError:
+                return None
+        return None
+
+    registro = JarabeSimple(
+        fecha=fecha_obj,
+        hora=hora_obj,
+        tanque_id=tanque_obj.id,
+        volcado_numero=data.volcado_numero,
+        cantidad_bolsas=data.cantidad_bolsas,
+        azucar_tipo=data.azucar_tipo,
+        azucar_marca=data.azucar_marca,
+        azucar_ntu=data.azucar_ntu,
+        aux_standard=data.aux_standard,
+        aux_hyflo=data.aux_hyflo,
+        pasteurizado_desde=parse_time(data.pasteurizado_desde),
+        pasteurizado_hasta=parse_time(data.pasteurizado_hasta),
+        pasteurizado_temp=data.pasteurizado_temp,
+        responsables=json.dumps(data.responsables, ensure_ascii=False),
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return {"id": registro.id, "message": "Jarabe Simple registrado con éxito"}
+
+
+# --- RUTAS: JARABE TERMINADO ---
+
+@app.post("/api/jarabe-terminado", status_code=status.HTTP_201_CREATED)
+def create_jarabe_terminado(data: JarabeTerminadoCreate, db: Session = Depends(get_db)):
+    """Registra una preparación de jarabe terminado."""
+    import json
+    from datetime import date as date_type
+
+    # Resolver FK: marca
+    marca_obj = db.query(Marca).filter(Marca.nombre == data.sabor).first()
+    if not marca_obj:
+        raise HTTPException(status_code=422, detail=f"Sabor '{data.sabor}' no encontrado")
+
+    # Resolver FK: concentrado
+    conc_obj = db.query(TipoConcentrado).filter(TipoConcentrado.codigo == data.concentrado).first()
+    if not conc_obj:
+        raise HTTPException(status_code=422, detail=f"Concentrado '{data.concentrado}' no encontrado")
+
+    # Resolver FK: tanque
+    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
+    if not tanque_obj:
+        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
+
+    try:
+        fecha_obj = date_type.fromisoformat(data.fecha)
+    except ValueError:
+        fecha_obj = datetime.now().date()
+
+    registro = JarabeTerminado(
+        fecha=fecha_obj,
+        marca_id=marca_obj.id,
+        concentrado_id=conc_obj.id,
+        tanque_id=tanque_obj.id,
+        unidades=data.unidades,
+        volcado_numero=data.volcado_numero,
+        tiempo_filtrado=data.tiempo_filtrado,
+        be_jarabe_simple=data.be_jarabe_simple,
+        vol_jarabe_simple=data.vol_jarabe_simple,
+        lts_jarabe_terminado=data.lts_jarabe_terminado,
+        responsables=json.dumps(data.responsables, ensure_ascii=False),
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return {"id": registro.id, "message": "Jarabe Terminado registrado con éxito"}
+
+
+# --- RUTAS: SANEO DE TANQUES ---
+
+@app.post("/api/saneo-tanques", status_code=status.HTTP_201_CREATED)
+def create_saneo_tanque(data: SaneoTanqueCreate, db: Session = Depends(get_db)):
+    """Registra un saneo (CIP) de tanque."""
+    import json
+    from datetime import date as date_type
+
+    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
+    if not tanque_obj:
+        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
+
+    try:
+        fecha_obj = date_type.fromisoformat(data.fecha)
+    except ValueError:
+        fecha_obj = datetime.now().date()
+
+    hora_obj = None
+    if data.hora and data.hora.strip():
+        try:
+            hora_obj = datetime.strptime(data.hora, "%H:%M").time()
+        except ValueError:
+            pass
+
+    registro = SaneoTanque(
+        fecha=fecha_obj,
+        hora=hora_obj,
+        tanque_id=tanque_obj.id,
+        producto=data.producto,
+        responsables=json.dumps(data.responsables, ensure_ascii=False),
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return {"id": registro.id, "message": "Saneo de tanque registrado con éxito"}
+
+
+# --- RUTAS: PARTE DE JARABE ---
+
+@app.post("/api/parte-jarabe", status_code=status.HTTP_201_CREATED)
+def create_parte_jarabe(data: ParteJarabeCreate, db: Session = Depends(get_db)):
+    """Registra un parte de dosificación de jarabe."""
+    import json
+    from datetime import date as date_type
+
+    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
+    if not tanque_obj:
+        # Fallback: strip spaces
+        for t in db.query(Tanque).all():
+            if (t.numero or "").strip() == data.tanque.strip():
+                tanque_obj = t
+                break
+    if not tanque_obj:
+        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
+
+    marca_id = None
+    if data.sabor:
+        m = db.query(Marca).filter(Marca.nombre == data.sabor).first()
+        if m:
+            marca_id = m.id
+
+    try:
+        fecha_obj = date_type.fromisoformat(data.fecha)
+    except ValueError:
+        fecha_obj = datetime.now().date()
+
+    registro = ParteJarabe(
+        fecha=fecha_obj,
+        turno=data.turno,
+        tanque_id=tanque_obj.id,
+        numero_carga_trilay=data.numero_carga_trilay,
+        marca_id=marca_id,
+        responsables=json.dumps(data.responsables, ensure_ascii=False),
+        azucar=data.azucar,
+        sucralosa=data.sucralosa,
+        acesulfame_k=data.acesulfame_k,
+        benzoato_sodio=data.benzoato_sodio,
+        sorbato_potasio=data.sorbato_potasio,
+        citrato_sodio=data.citrato_sodio,
+        acido_citrico=data.acido_citrico,
+        acido_fosforico=data.acido_fosforico,
+        acido_ascorbico=data.acido_ascorbico,
+        cafeina=data.cafeina,
+        colorante_caramelo=data.colorante_caramelo,
+    )
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return {"id": registro.id, "message": "Parte de Jarabe registrado con éxito"}
 
 @app.get("/api/sabores")
 def get_sabores(db: Session = Depends(get_db)):

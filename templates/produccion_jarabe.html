@@ -222,13 +222,21 @@
 
                             <!-- Responsables -->
                             <div class="field-container">
-                                <label for="preparacion_responsable">Responsable <span class="required-star">*</span></label>
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-user-tie input-icon"></i>
-                                    <select id="preparacion_responsable" name="preparacion_responsable" required>
-                                        <option value="" disabled selected>Cargando responsables...</option>
-                                    </select>
+                                <label>Responsables <span class="required-star">*</span></label>
+                                <div class="multi-resp-container" id="simple_responsables_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-user-tie input-icon"></i>
+                                            <select class="multi-resp-select" name="preparacion_responsable[]" required>
+                                                <option value="" disabled selected>Cargando responsables...</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn-resp-add" data-container="simple_responsables_container" data-source="preparacion">
+                                    <i class="fa-solid fa-plus"></i> Agregar responsable
+                                </button>
                             </div>
                         </div>
 
@@ -371,13 +379,21 @@
                         <div class="sidebar-form-grid">
                             <!-- Responsables -->
                             <div class="field-container">
-                                <label for="terminado_responsable">Responsables <span class="required-star">*</span></label>
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-user-tie input-icon"></i>
-                                    <select id="terminado_responsable" name="terminado_responsable" required>
-                                        <option value="" disabled selected>Cargando responsables...</option>
-                                    </select>
+                                <label>Responsables <span class="required-star">*</span></label>
+                                <div class="multi-resp-container" id="terminado_responsables_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-user-tie input-icon"></i>
+                                            <select class="multi-resp-select" name="terminado_responsable[]" required>
+                                                <option value="" disabled selected>Cargando responsables...</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn-resp-add" data-container="terminado_responsables_container" data-source="terminado">
+                                    <i class="fa-solid fa-plus"></i> Agregar responsable
+                                </button>
                             </div>
                         </div>
 
@@ -423,15 +439,23 @@
                             </div>
                         </div>
 
-                        <!-- Responsable -->
+                        <!-- Responsables -->
                         <div class="field-container col-span-2">
-                            <label for="saneo_responsable">Responsable <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-user-tie input-icon"></i>
-                                <select id="saneo_responsable" name="saneo_responsable" required>
-                                    <option value="" disabled selected>Cargando responsables...</option>
-                                </select>
+                            <label>Responsables <span class="required-star">*</span></label>
+                            <div class="multi-resp-container" id="saneo_responsables_container">
+                                <div class="multi-resp-row">
+                                    <div class="input-wrapper" style="flex:1">
+                                        <i class="fa-solid fa-user-tie input-icon"></i>
+                                        <select class="multi-resp-select" name="saneo_responsable[]" required>
+                                            <option value="" disabled selected>Cargando responsables...</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                </div>
                             </div>
+                            <button type="button" class="btn-resp-add" data-container="saneo_responsables_container" data-source="saneo">
+                                <i class="fa-solid fa-plus"></i> Agregar responsable
+                            </button>
                         </div>
                     </div>
 
@@ -632,6 +656,20 @@
                                 </div>
                             </div>
 
+                            <!-- Turno -->
+                            <div class="field-container">
+                                <label for="parte_turno">Turno <span class="required-star">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-sun input-icon"></i>
+                                    <select id="parte_turno" name="parte_turno" required>
+                                        <option value="" disabled selected>Seleccione turno...</option>
+                                        <option value="mañana">Mañana</option>
+                                        <option value="tarde">Tarde</option>
+                                        <option value="noche">Noche</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- Número de Tanque -->
                             <div class="field-container">
                                 <label for="parte_tanque">Número de Tanque <span class="required-star">*</span></label>
@@ -643,15 +681,43 @@
                                 </div>
                             </div>
 
+                            <!-- Número de Carga Trilay -->
+                            <div class="field-container">
+                                <label for="parte_carga_trilay">N° Carga Trilay <span class="required-star">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-barcode input-icon"></i>
+                                    <input type="text" id="parte_carga_trilay" name="parte_carga_trilay" required placeholder="Ej: TRL-2024-001">
+                                </div>
+                            </div>
+
                             <!-- Sabor / Producto -->
                             <div class="field-container">
-                                <label for="parte_sabor">Sabor / Producto</label>
+                                <label for="parte_sabor">Sabor / Producto <span class="required-star">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-lemon input-icon"></i>
-                                    <select id="parte_sabor" name="parte_sabor">
+                                    <select id="parte_sabor" name="parte_sabor" required>
                                         <option value="" disabled selected>Seleccione sabor...</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <!-- Responsables -->
+                            <div class="field-container">
+                                <label>Responsables <span class="required-star">*</span></label>
+                                <div class="multi-resp-container" id="parte_responsables_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-user-tie input-icon"></i>
+                                            <select class="multi-resp-select" name="parte_responsable[]" required>
+                                                <option value="" disabled selected>Cargando responsables...</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-resp-add" data-container="parte_responsables_container" data-source="parte">
+                                    <i class="fa-solid fa-plus"></i> Agregar responsable
+                                </button>
                             </div>
                         </div>
 
