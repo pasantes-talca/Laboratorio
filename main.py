@@ -258,6 +258,13 @@ def get_responsables():
     return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables", []), 1)]
 
 
+@app.get("/api/responsables-jarabe")
+def get_responsables_jarabe():
+    """Responsables específicos para los formularios de Sala de Jarabe."""
+    m = load_maestros()
+    return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables_jarabe", []), 1)]
+
+
 # --- RUTAS DE TRANSACCIONES (CONTROLES) ---
 
 @app.post("/api/controles", response_model=RegistroCalidadResponse, status_code=status.HTTP_201_CREATED)

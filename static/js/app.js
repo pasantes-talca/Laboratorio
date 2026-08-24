@@ -661,14 +661,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // MULTI-RESPONSABLE SYSTEM
     // ==========================================
     let _cachedResponsables = null;
+    let _cachedResponsablesJarabe = null;
 
-    async function getResponsables() {
-        if (_cachedResponsables) return _cachedResponsables;
+    async function getResponsables(endpoint) {
+        const url = endpoint || "/api/responsables";
+        const isJarabe = url.includes("jarabe");
+        if (isJarabe && _cachedResponsablesJarabe) return _cachedResponsablesJarabe;
+        if (!isJarabe && _cachedResponsables) return _cachedResponsables;
         try {
-            const r = await fetch("/api/responsables");
+            const r = await fetch(url);
             if (r.ok) {
-                _cachedResponsables = await r.json();
-                return _cachedResponsables;
+                const data = await r.json();
+                if (isJarabe) _cachedResponsablesJarabe = data;
+                else _cachedResponsables = data;
+                return data;
             }
         } catch (e) { console.error(e); }
         return [];
@@ -687,10 +693,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function populateAllMultiRespContainers() {
-        const responsables = await getResponsables();
+        // Group selects by their container's data-api attribute
+        const groups = new Map();
         document.querySelectorAll(".multi-resp-select").forEach(sel => {
-            populateSelectWithResponsables(sel, responsables);
+            const container = sel.closest(".multi-resp-container");
+            const api = (container && container.dataset.api) || "/api/responsables";
+            if (!groups.has(api)) groups.set(api, []);
+            groups.get(api).push(sel);
         });
+        for (const [api, selects] of groups) {
+            const responsables = await getResponsables(api);
+            selects.forEach(sel => populateSelectWithResponsables(sel, responsables));
+        }
     }
 
     function addResponsableRow(containerId) {
@@ -699,6 +713,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const rows = container.querySelectorAll(".multi-resp-row");
         const firstSelect = rows[0] ? rows[0].querySelector("select") : null;
         const name = firstSelect ? (firstSelect.getAttribute("name") || "responsable[]") : "responsable[]";
+        const apiEndpoint = container.dataset.api || "/api/responsables";
 
         const row = document.createElement("div");
         row.className = "multi-resp-row";
@@ -715,7 +730,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Populate and wire remove
         const newSelect = row.querySelector(".multi-resp-select");
-        getResponsables().then(rs => populateSelectWithResponsables(newSelect, rs));
+        getResponsables(apiEndpoint).then(rs => populateSelectWithResponsables(newSelect, rs));
         const removeBtn = row.querySelector(".btn-resp-remove");
         if (removeBtn) removeBtn.addEventListener("click", () => {
             row.remove();
