@@ -1,0 +1,46 @@
+{
+  "responsables": [
+    "Dario Alonso",
+    "Carlos Amaya",
+    "Gonzalo Barrionuevo",
+    "Omar Campillay",
+    "Mauro Diaz",
+    "Luis Moya"
+  ],
+  "marcas": [
+    "Cola",
+    "Lima",
+    "Manzana",
+    "Naranja",
+    "Pomelo",
+    "Sifon",
+    "Soda"
+  ],
+  "tipos_concentrado": [
+    "BA",
+    "IFF",
+    "KG",
+    "N/A",
+    "TP",
+    "XQ"
+  ],
+  "tamanos": [
+    "2.25L",
+    "2L",
+    "3L",
+    "500ml"
+  ],
+  "tanques": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "N/A"
+  ]
+}

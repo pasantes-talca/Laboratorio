@@ -97,9 +97,7 @@
                                 <label for="tanque_numero">Tanque N° <span class="required-star">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-warehouse input-icon"></i>
-                                    <select id="tanque_numero" name="tanque_numero" required>
-                                        <option value="" disabled selected>Cargando tanques...</option>
-                                    </select>
+                                    <input type="text" id="tanque_numero" name="tanque_numero" required placeholder="Ej: 4">
                                 </div>
                             </div>
 
@@ -204,20 +202,36 @@
 
                             <!-- Azúcar Marca -->
                             <div class="field-container">
-                                <label for="azucar_marca">Marca de Azúcar <span class="required-star">*</span></label>
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-industry input-icon"></i>
-                                    <input type="text" id="azucar_marca" name="azucar_marca" required placeholder="Ej: Ledesma, Tabacal...">
+                                <label>Marca de Azúcar <span class="required-star">*</span></label>
+                                <div class="multi-resp-container" id="azucar_marca_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-industry input-icon"></i>
+                                            <input type="text" name="azucar_marca[]" required placeholder="Ej: Ledesma, Tabacal...">
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn-resp-add" data-container="azucar_marca_container" data-source="marca">
+                                    <i class="fa-solid fa-plus"></i> Agregar Marca de azúcar
+                                </button>
                             </div>
 
                             <!-- Azúcar NTU -->
                             <div class="field-container">
-                                <label for="azucar_ntu">Turbidez (NTU)</label>
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-droplet input-icon"></i>
-                                    <input type="number" id="azucar_ntu" name="azucar_ntu" step="0.01" placeholder="Ej: 24.5">
+                                <label>Turbidez (NTU)</label>
+                                <div class="multi-resp-container" id="azucar_ntu_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-droplet input-icon"></i>
+                                            <input type="number" name="azucar_ntu[]" step="0.01" placeholder="Ej: 24.5">
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn-resp-add" data-container="azucar_ntu_container" data-source="ntu">
+                                    <i class="fa-solid fa-plus"></i> Agregar NTU
+                                </button>
                             </div>
 
                             <!-- Responsables -->
@@ -301,19 +315,25 @@
                                 <label for="terminado_tanque">Número de Tanque <span class="required-star">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-warehouse input-icon"></i>
-                                    <select id="terminado_tanque" name="terminado_tanque" required>
-                                        <option value="" disabled selected>Cargando tanques...</option>
-                                    </select>
+                                    <input type="text" id="terminado_tanque" name="terminado_tanque" required placeholder="Ej: 4">
                                 </div>
                             </div>
 
                             <!-- Número de Volcado (Vinculado) -->
                             <div class="field-container">
-                                <label for="terminado_volcado">N° de Volcado (Jarabe Simple) <span class="required-star">*</span></label>
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-link input-icon"></i>
-                                    <input type="number" id="terminado_volcado" name="terminado_volcado" min="1" step="1" required placeholder="N° volcado de origen">
+                                <label>N° de Volcado (Jarabe Simple) <span class="required-star">*</span></label>
+                                <div class="multi-resp-container" id="terminado_volcado_container">
+                                    <div class="multi-resp-row">
+                                        <div class="input-wrapper" style="flex:1">
+                                            <i class="fa-solid fa-link input-icon"></i>
+                                            <input type="number" name="terminado_volcado[]" min="1" step="1" required placeholder="N° volcado de origen">
+                                        </div>
+                                        <button type="button" class="btn-resp-remove" title="Quitar" style="display:none"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
                                 </div>
+                                <button type="button" class="btn-resp-add" data-container="terminado_volcado_container" data-source="volcado">
+                                    <i class="fa-solid fa-plus"></i> Agregar Numero de Volcado
+                                </button>
                             </div>
 
                             <!-- Tiempo de Filtrado -->
@@ -332,7 +352,7 @@
 
                             <!-- °Be jbe spl -->
                             <div class="field-container">
-                                <label for="terminado_be_simple">°Be Jarabe Simple <span class="required-star">*</span></label>
+                                <label for="terminado_be_simple">°Brix Jarabe Simple <span class="required-star">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-percent input-icon"></i>
                                     <input type="number" id="terminado_be_simple" name="terminado_be_simple" step="0.01" required placeholder="Ej: 32.50">
@@ -424,9 +444,7 @@
                             <label for="saneo_tanque">Número de Tanque <span class="required-star">*</span></label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-warehouse input-icon"></i>
-                                <select id="saneo_tanque" name="saneo_tanque" required>
-                                    <option value="" disabled selected>Cargando tanques...</option>
-                                </select>
+                                <input type="text" id="saneo_tanque" name="saneo_tanque" required placeholder="Ej: 4">
                             </div>
                         </div>
 
@@ -436,6 +454,22 @@
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-bottle-droplet input-icon"></i>
                                 <input type="text" id="saneo_producto" name="saneo_producto" required placeholder="Ej: Soda Cáustica 2%, Ácido Peracético, Agua Caliente 85°C...">
+                            </div>
+                        </div>
+
+                        <!-- Hora Inicio y Fin -->
+                        <div class="field-container col-span-2">
+                            <label>Horario de Saneo <span class="required-star">*</span></label>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <div class="input-wrapper" style="flex:1; min-width: 150px;">
+                                    <i class="fa-regular fa-clock input-icon"></i>
+                                    <input type="time" id="saneo_hora_inicio" name="saneo_hora_inicio" required title="Hora de inicio">
+                                </div>
+                                <span style="align-self: center; font-weight: bold;">a</span>
+                                <div class="input-wrapper" style="flex:1; min-width: 150px;">
+                                    <i class="fa-regular fa-clock input-icon"></i>
+                                    <input type="time" id="saneo_hora_fin" name="saneo_hora_fin" required title="Hora de fin">
+                                </div>
                             </div>
                         </div>
 
@@ -527,12 +561,21 @@
                                 </div>
                             </div>
 
-                            <!-- Sucralosa / Reforzador Cítrico -->
+                            <!-- Sucralosa -->
                             <div class="field-container">
-                                <label for="parte_sucralosa">Sucralosa / Reforzado Cítrico (kg)</label>
+                                <label for="parte_sucralosa">Sucralosa (kg)</label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-vial input-icon"></i>
                                     <input type="number" step="any" id="parte_sucralosa" name="parte_sucralosa" placeholder="Ej: 1.25">
+                                </div>
+                            </div>
+
+                            <!-- Reforzado Cítrico -->
+                            <div class="field-container">
+                                <label for="parte_reforzado_citrico">Reforzado Cítrico (kg)</label>
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-vial input-icon"></i>
+                                    <input type="number" step="any" id="parte_reforzado_citrico" name="parte_reforzado_citrico" placeholder="Ej: 0.50">
                                 </div>
                             </div>
 
@@ -675,9 +718,7 @@
                                 <label for="parte_tanque">Número de Tanque <span class="required-star">*</span></label>
                                 <div class="input-wrapper">
                                     <i class="fa-solid fa-warehouse input-icon"></i>
-                                    <select id="parte_tanque" name="parte_tanque" required>
-                                        <option value="" disabled selected>Cargando tanques...</option>
-                                    </select>
+                                    <input type="text" id="parte_tanque" name="parte_tanque" required placeholder="Ej: 4">
                                 </div>
                             </div>
 
@@ -737,6 +778,6 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- App Logic Script -->
-    <script src="/static/js/app.js?v=4.1"></script>
+    <script src="/static/js/app.js?v=4.2"></script>
 </body>
 </html>

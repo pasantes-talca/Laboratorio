@@ -1,5 +1,5 @@
 import os
-import time
+import json
 from typing import List, Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -9,7 +9,19 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
-from database import init_db, get_db, Marca, TipoConcentrado, Tamano, Tanque, Responsable, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa, JarabeSimple, JarabeTerminado, SaneoTanque, ParteJarabe
+from database import init_db, get_db, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa, JarabeSimple, JarabeTerminado, SaneoTanque, ParteJarabe
+
+
+# --- MAESTROS DESDE JSON ---
+_MAESTROS_PATH = os.path.join(os.path.dirname(__file__), "static", "data", "maestros.json")
+
+def load_maestros() -> dict:
+    """Reads master data from static/data/maestros.json. Returns empty lists on error."""
+    try:
+        with open(_MAESTROS_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"responsables": [], "marcas": [], "tipos_concentrado": [], "tamanos": [], "tanques": []}
 from script import extraer_datos_reporte
 
 
@@ -108,7 +120,7 @@ class JarabeSimpleCreate(BaseModel):
     cantidad_bolsas: int
     azucar_tipo: str
     azucar_marca: str
-    azucar_ntu: Optional[float] = None
+    azucar_ntu: Optional[str] = None
     aux_standard: Optional[float] = None
     aux_hyflo: Optional[float] = None
     pasteurizado_desde: Optional[str] = None
@@ -123,7 +135,7 @@ class JarabeTerminadoCreate(BaseModel):
     concentrado: str
     tanque: str
     unidades: int
-    volcado_numero: int
+    volcado_numero: str
     tiempo_filtrado: Optional[str] = None
     be_jarabe_simple: Optional[float] = None
     vol_jarabe_simple: Optional[float] = None
@@ -133,7 +145,8 @@ class JarabeTerminadoCreate(BaseModel):
 
 class SaneoTanqueCreate(BaseModel):
     fecha: str
-    hora: Optional[str] = None
+    hora_inicio: str
+    hora_fin: str
     tanque: str
     producto: str
     responsables: List[str]
@@ -148,6 +161,7 @@ class ParteJarabeCreate(BaseModel):
     responsables: List[str]
     azucar: Optional[float] = None
     sucralosa: Optional[float] = None
+    reforzado_citrico: Optional[float] = None
     acesulfame_k: Optional[float] = None
     benzoato_sodio: Optional[float] = None
     sorbato_potasio: Optional[float] = None
@@ -221,34 +235,27 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail=f"Error al procesar el archivo Excel: {str(e)}")
 
 @app.get("/api/marcas")
-def get_marcas(db: Session = Depends(get_db)):
-    marcas = db.query(Marca).order_by(Marca.nombre).all()
-    return [{"id": m.id, "nombre": m.nombre} for m in marcas]
+def get_marcas():
+    m = load_maestros()
+    return [{"id": i, "nombre": v} for i, v in enumerate(m.get("marcas", []), 1)]
 
 
 @app.get("/api/tipos-concentrado")
-def get_tipos_concentrado(db: Session = Depends(get_db)):
-    tipos = db.query(TipoConcentrado).order_by(TipoConcentrado.codigo).all()
-    return [{"id": t.id, "codigo": t.codigo} for t in tipos]
+def get_tipos_concentrado():
+    m = load_maestros()
+    return [{"id": i, "codigo": v} for i, v in enumerate(m.get("tipos_concentrado", []), 1)]
 
 
 @app.get("/api/tamanos")
-def get_tamanos(db: Session = Depends(get_db)):
-    tamanos = db.query(Tamano).order_by(Tamano.valor).all()
-    # Limpiamos el valor por si acaso tiene espacios
-    return [{"id": t.id, "valor": t.valor.strip()} for t in tamanos]
+def get_tamanos():
+    m = load_maestros()
+    return [{"id": i, "valor": v} for i, v in enumerate(m.get("tamanos", []), 1)]
 
 
 @app.get("/api/responsables")
-def get_responsables(db: Session = Depends(get_db)):
-    responsables = db.query(Responsable).order_by(Responsable.apellido, Responsable.nombre).all()
-    # Devolver nombre y apellido combinados para los dropdowns
-    return [
-        {
-            "id": r.id,
-            "nombre_completo": f"{r.nombre} {r.apellido}".strip()
-        } for r in responsables
-    ]
+def get_responsables():
+    m = load_maestros()
+    return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables", []), 1)]
 
 
 # --- RUTAS DE TRANSACCIONES (CONTROLES) ---
@@ -285,63 +292,22 @@ def create_control(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
 
 @app.post("/api/control-bebida", status_code=status.HTTP_201_CREATED)
 def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
-    """Inserta en la tabla control_bebida resolviendo FKs por nombre."""
+    """Inserta en la tabla control_bebida guardando strings directamente."""
     now = datetime.now()
-
-    # Convertir hora a objeto time (TIME sin timezone)
     hora_str = data.hora if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
     except ValueError:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
-    # Resolver FK: marca
-    marca_obj = db.query(Marca).filter(Marca.nombre == data.marca).first()
-    if not marca_obj:
-        raise HTTPException(status_code=422, detail=f"Marca '{data.marca}' no encontrada")
-
-    # Resolver FK: concentrado
-    conc_obj = db.query(TipoConcentrado).filter(TipoConcentrado.codigo == data.tipo_concentrado).first()
-    if not conc_obj:
-        raise HTTPException(status_code=422, detail=f"Concentrado '{data.tipo_concentrado}' no encontrado")
-
-    # Resolver FK: tamaño (comparación con strip para evitar espacios)
-    tam_obj = db.query(Tamano).filter(Tamano.valor == data.tamano).first()
-    if not tam_obj:
-        # Fallback: buscar ignorando espacios
-        for t in db.query(Tamano).all():
-            if t.valor.strip() == data.tamano.strip():
-                tam_obj = t
-                break
-    if not tam_obj:
-        raise HTTPException(status_code=422, detail=f"Tamaño '{data.tamano}' no encontrado")
-
-    # Resolver FK: responsable — buscar en todos y comparar nombre completo
-    responsable_buscado = data.responsable.strip()
-    resp_obj = None
-    for r in db.query(Responsable).all():
-        nombre_completo = f"{r.nombre} {r.apellido}".strip()
-        if nombre_completo == responsable_buscado:
-            resp_obj = r
-            break
-    if not resp_obj:
-        raise HTTPException(status_code=422, detail=f"Responsable '{data.responsable}' no encontrado")
-
-    # Determinar número de línea
     linea_num = 1 if (data.linea or "") == "linea1" else 2
 
-    # Resolver FK: tanque (opcional)
-    tanque_id = None
-    if data.tanque:
-        tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-        if tanque_obj:
-            tanque_id = tanque_obj.id
-
     registro = ControlBebida(
-        marca_id=marca_obj.id,
-        concentrado_id=conc_obj.id,
-        tamano_id=tam_obj.id,
-        responsable_id=resp_obj.id,
+        marca=data.marca,
+        concentrado=data.tipo_concentrado,
+        tamano=data.tamano,
+        responsable=data.responsable,
+        tanque=data.tanque,
         linea=linea_num,
         turno=data.turno,
         fecha=now.date(),
@@ -355,7 +321,6 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
         grados_brix=data.brix,
         lote_tapa=data.lote_tapa,
         control_video_jet=data.control_videojet,
-        tanque_id=tanque_id,
     )
     db.add(registro)
     db.commit()
@@ -381,58 +346,24 @@ def delete_control(control_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/controles-jarabe", status_code=status.HTTP_201_CREATED)
 def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_db)):
-    """Inserta en la tabla control_jarabe resolviendo FKs por nombre/código/número."""
+    """Inserta en la tabla control_jarabe guardando strings directamente."""
     now = datetime.now()
-
-    # Convertir hora a objeto time (TIME sin timezone)
     hora_str = data.hora if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
     except ValueError:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
-    # Resolver FK: marca (sabor)
-    marca_obj = db.query(Marca).filter(Marca.nombre == data.sabor).first()
-    if not marca_obj:
-        raise HTTPException(status_code=422, detail=f"Sabor '{data.sabor}' no encontrado")
-
-    # Resolver FK: concentrado
-    conc_obj = db.query(TipoConcentrado).filter(TipoConcentrado.codigo == data.concentrado).first()
-    if not conc_obj:
-        raise HTTPException(status_code=422, detail=f"Concentrado '{data.concentrado}' no encontrado")
-
-    # Resolver FK: tanque
-    tanque_buscado = data.tanque.strip()
-    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-    if not tanque_obj:
-        for t in db.query(Tanque).all():
-            if (t.numero or "").strip() == tanque_buscado:
-                tanque_obj = t
-                break
-    if not tanque_obj:
-        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
-
-    # Resolver FK: responsable
-    responsable_buscado = data.responsable.strip()
-    resp_obj = None
-    for r in db.query(Responsable).all():
-        nombre_completo = f"{r.nombre} {r.apellido}".strip()
-        if nombre_completo == responsable_buscado:
-            resp_obj = r
-            break
-    if not resp_obj:
-        raise HTTPException(status_code=422, detail=f"Responsable '{data.responsable}' no encontrado")
-
     registro = ControlJarabe(
         turno=data.turno,
         fecha=now.date(),
         hora=hora_obj,
-        marca_id=marca_obj.id,
-        concentrado_id=conc_obj.id,
-        tanque_id=tanque_obj.id,
+        sabor=data.sabor,
+        concentrado=data.concentrado,
+        tanque=data.tanque.strip(),
         grados_brix_patron=data.bx_patron,
         t_a=data.ta,
-        responsable_id=resp_obj.id,
+        responsable=data.responsable,
         observacion=data.observacion.strip() if data.observacion and data.observacion.strip() else None,
         numero_carga_trilay=data.numero_carga_trilay.strip() if data.numero_carga_trilay and data.numero_carga_trilay.strip() else None,
     )
@@ -444,23 +375,18 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
 @app.get("/api/controles-jarabe")
 def get_controles_jarabe(db: Session = Depends(get_db)):
     controles = db.query(ControlJarabe).order_by(ControlJarabe.id.desc()).all()
-    marcas = {m.id: m.nombre for m in db.query(Marca).all()}
-    concentrados = {c.id: c.codigo for c in db.query(TipoConcentrado).all()}
-    tanques = {t.id: (t.numero or "").strip() for t in db.query(Tanque).all()}
-    responsables = {r.id: f"{r.nombre} {r.apellido}".strip() for r in db.query(Responsable).all()}
-
     return [
         {
             "id": c.id,
             "turno": c.turno,
             "fecha": str(c.fecha) if c.fecha else None,
             "hora": c.hora.strftime("%H:%M") if c.hora else None,
-            "sabor": marcas.get(c.marca_id, str(c.marca_id)),
-            "concentrado": concentrados.get(c.concentrado_id, str(c.concentrado_id)),
-            "tanque": tanques.get(c.tanque_id, str(c.tanque_id)),
+            "sabor": c.sabor,
+            "concentrado": c.concentrado,
+            "tanque": c.tanque,
             "bx_patron": float(c.grados_brix_patron) if c.grados_brix_patron is not None else None,
             "ta": float(c.t_a) if c.t_a is not None else None,
-            "responsable": responsables.get(c.responsable_id, str(c.responsable_id)),
+            "responsable": c.responsable,
             "observacion": c.observacion,
         }
         for c in controles
@@ -481,21 +407,12 @@ def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
 @app.post("/api/jarabe-simple", status_code=status.HTTP_201_CREATED)
 def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)):
     """Registra una preparación de jarabe simple."""
-    import json
     from datetime import date as date_type
-
-    # Resolver FK: tanque
-    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-    if not tanque_obj:
-        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
-
-    # Parsear fecha
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
         fecha_obj = datetime.now().date()
 
-    # Parsear hora
     hora_obj = None
     if data.hora and data.hora.strip():
         try:
@@ -503,7 +420,6 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
         except ValueError:
             pass
 
-    # Parsear pasteurizado desde/hasta
     def parse_time(t):
         if t and t.strip():
             try:
@@ -515,7 +431,7 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
     registro = JarabeSimple(
         fecha=fecha_obj,
         hora=hora_obj,
-        tanque_id=tanque_obj.id,
+        tanque=data.tanque.strip(),
         volcado_numero=data.volcado_numero,
         cantidad_bolsas=data.cantidad_bolsas,
         azucar_tipo=data.azucar_tipo,
@@ -539,24 +455,7 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
 @app.post("/api/jarabe-terminado", status_code=status.HTTP_201_CREATED)
 def create_jarabe_terminado(data: JarabeTerminadoCreate, db: Session = Depends(get_db)):
     """Registra una preparación de jarabe terminado."""
-    import json
     from datetime import date as date_type
-
-    # Resolver FK: marca
-    marca_obj = db.query(Marca).filter(Marca.nombre == data.sabor).first()
-    if not marca_obj:
-        raise HTTPException(status_code=422, detail=f"Sabor '{data.sabor}' no encontrado")
-
-    # Resolver FK: concentrado
-    conc_obj = db.query(TipoConcentrado).filter(TipoConcentrado.codigo == data.concentrado).first()
-    if not conc_obj:
-        raise HTTPException(status_code=422, detail=f"Concentrado '{data.concentrado}' no encontrado")
-
-    # Resolver FK: tanque
-    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-    if not tanque_obj:
-        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
-
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
@@ -564,9 +463,9 @@ def create_jarabe_terminado(data: JarabeTerminadoCreate, db: Session = Depends(g
 
     registro = JarabeTerminado(
         fecha=fecha_obj,
-        marca_id=marca_obj.id,
-        concentrado_id=conc_obj.id,
-        tanque_id=tanque_obj.id,
+        sabor=data.sabor,
+        concentrado=data.concentrado,
+        tanque=data.tanque.strip(),
         unidades=data.unidades,
         volcado_numero=data.volcado_numero,
         tiempo_filtrado=data.tiempo_filtrado,
@@ -586,29 +485,25 @@ def create_jarabe_terminado(data: JarabeTerminadoCreate, db: Session = Depends(g
 @app.post("/api/saneo-tanques", status_code=status.HTTP_201_CREATED)
 def create_saneo_tanque(data: SaneoTanqueCreate, db: Session = Depends(get_db)):
     """Registra un saneo (CIP) de tanque."""
-    import json
     from datetime import date as date_type
-
-    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-    if not tanque_obj:
-        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
-
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
         fecha_obj = datetime.now().date()
 
-    hora_obj = None
-    if data.hora and data.hora.strip():
-        try:
-            hora_obj = datetime.strptime(data.hora, "%H:%M").time()
-        except ValueError:
-            pass
+    def parse_time(t):
+        if t and t.strip():
+            try:
+                return datetime.strptime(t, "%H:%M").time()
+            except ValueError:
+                return None
+        return None
 
     registro = SaneoTanque(
         fecha=fecha_obj,
-        hora=hora_obj,
-        tanque_id=tanque_obj.id,
+        hora_inicio=parse_time(data.hora_inicio),
+        hora_fin=parse_time(data.hora_fin),
+        tanque=data.tanque.strip(),
         producto=data.producto,
         responsables=json.dumps(data.responsables, ensure_ascii=False),
     )
@@ -623,25 +518,7 @@ def create_saneo_tanque(data: SaneoTanqueCreate, db: Session = Depends(get_db)):
 @app.post("/api/parte-jarabe", status_code=status.HTTP_201_CREATED)
 def create_parte_jarabe(data: ParteJarabeCreate, db: Session = Depends(get_db)):
     """Registra un parte de dosificación de jarabe."""
-    import json
     from datetime import date as date_type
-
-    tanque_obj = db.query(Tanque).filter(Tanque.numero == data.tanque).first()
-    if not tanque_obj:
-        # Fallback: strip spaces
-        for t in db.query(Tanque).all():
-            if (t.numero or "").strip() == data.tanque.strip():
-                tanque_obj = t
-                break
-    if not tanque_obj:
-        raise HTTPException(status_code=422, detail=f"Tanque '{data.tanque}' no encontrado")
-
-    marca_id = None
-    if data.sabor:
-        m = db.query(Marca).filter(Marca.nombre == data.sabor).first()
-        if m:
-            marca_id = m.id
-
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
@@ -650,12 +527,13 @@ def create_parte_jarabe(data: ParteJarabeCreate, db: Session = Depends(get_db)):
     registro = ParteJarabe(
         fecha=fecha_obj,
         turno=data.turno,
-        tanque_id=tanque_obj.id,
+        tanque=data.tanque.strip(),
+        sabor=data.sabor,
         numero_carga_trilay=data.numero_carga_trilay,
-        marca_id=marca_id,
         responsables=json.dumps(data.responsables, ensure_ascii=False),
         azucar=data.azucar,
         sucralosa=data.sucralosa,
+        reforzado_citrico=data.reforzado_citrico,
         acesulfame_k=data.acesulfame_k,
         benzoato_sodio=data.benzoato_sodio,
         sorbato_potasio=data.sorbato_potasio,
@@ -672,51 +550,27 @@ def create_parte_jarabe(data: ParteJarabeCreate, db: Session = Depends(get_db)):
     return {"id": registro.id, "message": "Parte de Jarabe registrado con éxito"}
 
 @app.get("/api/sabores")
-def get_sabores(db: Session = Depends(get_db)):
+def get_sabores():
     """Marcas para Control de Jarabe, excluyendo Soda y Sifon."""
     excluidas = {"soda", "sifon"}
-    marcas = db.query(Marca).order_by(Marca.nombre).all()
-    return [{"id": m.id, "nombre": m.nombre} for m in marcas
-            if m.nombre.strip().lower() not in excluidas]
+    m = load_maestros()
+    marcas = [v for v in m.get("marcas", []) if v.strip().lower() not in excluidas]
+    return [{"id": i, "nombre": v} for i, v in enumerate(marcas, 1)]
+
 
 @app.get("/api/tanques")
-def get_tanques(db: Session = Depends(get_db)):
-    tanques = db.query(Tanque).all()
-
-    def clave_orden(t):
-        n = (t.numero or "").strip()
-        return (0, int(n), "") if n.isdigit() else (1, 0, n)
-
-    return [{"id": t.id, "numero": (t.numero or "").strip()}
-            for t in sorted(tanques, key=clave_orden)]
+def get_tanques():
+    m = load_maestros()
+    tanques = m.get("tanques", [])
+    return [{"id": i, "numero": v} for i, v in enumerate(tanques, 1)]
 
 # --- RUTAS DE CONTROL DE TORQUE ---
 
 @app.post("/api/controles-torque", status_code=status.HTTP_201_CREATED)
 def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_db)):
-    """Inserta en la tabla control_torque resolviendo FKs."""
+    """Inserta en la tabla control_torque guardando strings directamente."""
     now = datetime.now()
-
-    # Resolver FK: marca (desde el sabor seleccionado)
-    marca_obj = db.query(Marca).filter(Marca.nombre == data.sabor).first()
-    if not marca_obj:
-        raise HTTPException(status_code=422, detail=f"Sabor/Marca '{data.sabor}' no encontrado")
-
-    # Resolver FK: responsable
-    responsable_buscado = data.responsable.strip()
-    resp_obj = None
-    for r in db.query(Responsable).all():
-        nombre_completo = f"{r.nombre} {r.apellido}".strip()
-        if nombre_completo == responsable_buscado:
-            resp_obj = r
-            break
-    if not resp_obj:
-        raise HTTPException(status_code=422, detail=f"Responsable '{data.responsable}' no encontrado")
-
-    # Determinar número de línea (1 o 2)
     linea_num = 1 if (data.linea or "") == "linea1" else (2 if (data.linea or "") == "linea2" else 1)
-
-    # Determinar turno: si es noche y tiene noche 1 o noche 2
     turno_final = data.noche if ((data.turno or "").lower() == "noche" and data.noche) else data.turno
     if turno_final and turno_final.lower() in ["mañana", "tarde", "noche"]:
         turno_final = turno_final.capitalize()
@@ -727,11 +581,10 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
         turno=turno_final,
         linea=linea_num,
         numero_cabezal=data.numero_cabezal,
-        marca_id=marca_obj.id,
-        responsable_id=resp_obj.id,
         sabor=data.sabor,
         color=data.color,
-        valor=data.valor
+        valor=data.valor,
+        responsable=data.responsable,
     )
     db.add(registro)
     db.commit()
@@ -741,9 +594,6 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
 @app.get("/api/controles-torque")
 def get_controles_torque(db: Session = Depends(get_db)):
     controles = db.query(ControlTorque).order_by(ControlTorque.id.desc()).all()
-    marcas = {m.id: m.nombre for m in db.query(Marca).all()}
-    responsables = {r.id: f"{r.nombre} {r.apellido}".strip() for r in db.query(Responsable).all()}
-
     return [
         {
             "id": c.id,
@@ -752,10 +602,10 @@ def get_controles_torque(db: Session = Depends(get_db)):
             "turno": c.turno,
             "linea": c.linea,
             "numero_cabezal": c.numero_cabezal,
-            "sabor": c.sabor or marcas.get(c.marca_id, str(c.marca_id)),
+            "sabor": c.sabor,
             "color": c.color,
             "valor": float(c.valor) if c.valor is not None else None,
-            "responsable": responsables.get(c.responsable_id, str(c.responsable_id))
+            "responsable": c.responsable,
         }
         for c in controles
     ]
@@ -773,23 +623,9 @@ def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/pausas", status_code=status.HTTP_201_CREATED)
 def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
-    """Registra una pausa de línea resolviendo FK del responsable."""
+    """Registra una pausa de línea guardando strings directamente."""
     now = datetime.now()
-
-    # Resolver FK: responsable
-    responsable_buscado = data.responsable.strip()
-    resp_obj = None
-    for r in db.query(Responsable).all():
-        nombre_completo = f"{r.nombre} {r.apellido}".strip()
-        if nombre_completo == responsable_buscado:
-            resp_obj = r
-            break
-    if not resp_obj:
-        raise HTTPException(status_code=422, detail=f"Responsable '{data.responsable}' no encontrado")
-
-    # Determinar número de línea
     linea_num = 1 if (data.linea or "") == "linea1" else (2 if (data.linea or "") == "linea2" else 1)
-
     turno_val = (data.turno or "").capitalize() if (data.turno or "").lower() in ["mañana", "tarde", "noche"] else data.turno
 
     registro = ControlPausa(
@@ -798,7 +634,7 @@ def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
         turno=turno_val,
         linea=linea_num,
         motivo=data.motivo,
-        responsable_id=resp_obj.id,
+        responsable=data.responsable,
         observacion=data.observacion.strip() if data.observacion and data.observacion.strip() else None
     )
     db.add(registro)
@@ -809,8 +645,6 @@ def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
 @app.get("/api/pausas")
 def get_pausas(db: Session = Depends(get_db)):
     pausas = db.query(ControlPausa).order_by(ControlPausa.id.desc()).all()
-    responsables = {r.id: f"{r.nombre} {r.apellido}".strip() for r in db.query(Responsable).all()}
-
     return [
         {
             "id": p.id,
@@ -819,7 +653,7 @@ def get_pausas(db: Session = Depends(get_db)):
             "turno": p.turno,
             "linea": p.linea,
             "motivo": p.motivo,
-            "responsable": responsables.get(p.responsable_id, str(p.responsable_id)),
+            "responsable": p.responsable,
             "observacion": p.observacion
         }
         for p in pausas

@@ -150,14 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
             selectTamano.classList.add("input-locked");
             selectTamano.setAttribute("tabindex", "-1");
         }
-        if (selectBebidaTanque) {
-            const tqVal = cfg.tanque.replace("Tanque ", "").trim();
-            ensureOptionExists(selectBebidaTanque, tqVal, cfg.tanque);
-            selectBebidaTanque.classList.add("input-locked");
-            selectBebidaTanque.setAttribute("tabindex", "-1");
-        }
-
-        // 3. Aplicar en Control de Jarabe
+        // (Tanque eliminado de Asignar Producción)
         const selectSaborJarabe = document.getElementById("jarabe_sabor");
         const selectConcJarabe = document.getElementById("jarabe_concentrado");
         const selectTanqueJarabe = document.getElementById("jarabe_tanque");
@@ -172,12 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
             selectConcJarabe.classList.add("input-locked");
             selectConcJarabe.setAttribute("tabindex", "-1");
         }
-        if (selectTanqueJarabe) {
-            const tqVal = cfg.tanque.replace("Tanque ", "").trim();
-            ensureOptionExists(selectTanqueJarabe, tqVal, cfg.tanque);
-            selectTanqueJarabe.classList.add("input-locked");
-            selectTanqueJarabe.setAttribute("tabindex", "-1");
-        }
+        // (Tanque eliminado de Asignar Producción)
 
         // 4. Aplicar en Control de Torque
         if (selectTorqueSabor) {
@@ -201,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputCfgMarca = document.getElementById("cfg_marca");
     const inputCfgConc = document.getElementById("cfg_concentrado");
     const inputCfgTam = document.getElementById("cfg_tamano");
-    const inputCfgTanque = document.getElementById("cfg_tanque");
 
     let modalEditingLine = "linea1";
 
@@ -223,7 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (inputCfgMarca && cfg.marca) inputCfgMarca.value = cfg.marca;
         if (inputCfgConc && cfg.concentrado) inputCfgConc.value = cfg.concentrado;
         if (inputCfgTam && cfg.tamano) inputCfgTam.value = cfg.tamano;
-        if (inputCfgTanque && cfg.tanque) inputCfgTanque.value = cfg.tanque;
     }
 
     if (btnOpenAsignar) {
@@ -256,8 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
             configs[modalEditingLine] = {
                 marca: inputCfgMarca ? inputCfgMarca.value : "Cola",
                 concentrado: inputCfgConc ? inputCfgConc.value : "IFF",
-                tamano: inputCfgTam ? inputCfgTam.value : "2L",
-                tanque: inputCfgTanque ? inputCfgTanque.value : "Tanque 4"
+                tamano: inputCfgTam ? inputCfgTam.value : "2L"
             };
             saveLineConfigs(configs);
             applyActiveLineProduction();
@@ -602,7 +587,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const res = await fetch("/api/controles-torque", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(formData) });
                 if (res.ok) {
                     showToast("Control de Torque guardado exitosamente", "success");
-                    if (selectTorqueNumero) selectTorqueNumero.selectedIndex = 0;
+                    if (selectTorqueNumero) {
+                        const maxTorques = (globalLinea && globalLinea.value === "linea1") ? 12 : 14;
+                        let nextVal = parseInt(selectTorqueNumero.value, 10) + 1;
+                        if (nextVal > maxTorques) nextVal = 1;
+                        selectTorqueNumero.value = nextVal.toString();
+                    }
                     if (inputTorqueValor) inputTorqueValor.value = "";
                 } else {
                     const err = await res.json();
@@ -752,13 +742,45 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(v => v && v.trim());
     }
 
-    // Wire all add-responsable buttons
+    // Wire all add-responsable buttons and generic add buttons
     document.querySelectorAll(".btn-resp-add").forEach(btn => {
         btn.addEventListener("click", () => {
             const containerId = btn.getAttribute("data-container");
-            if (containerId) addResponsableRow(containerId);
+            const source = btn.getAttribute("data-source");
+            if (containerId) {
+                if (source === "marca" || source === "ntu" || source === "volcado") {
+                    addGenericRow(containerId);
+                } else {
+                    addResponsableRow(containerId);
+                }
+            }
         });
     });
+
+    function addGenericRow(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const rows = container.querySelectorAll(".multi-resp-row");
+        const firstInput = rows[0] ? rows[0].querySelector("input") : null;
+        if (!firstInput) return;
+        
+        const row = document.createElement("div");
+        row.className = "multi-resp-row";
+        
+        const clonedInputWrapper = rows[0].querySelector(".input-wrapper").cloneNode(true);
+        clonedInputWrapper.querySelector("input").value = "";
+        
+        row.appendChild(clonedInputWrapper);
+        row.insertAdjacentHTML("beforeend", `<button type="button" class="btn-resp-remove" title="Quitar"><i class="fa-solid fa-minus"></i></button>`);
+        container.appendChild(row);
+
+        const removeBtn = row.querySelector(".btn-resp-remove");
+        if (removeBtn) removeBtn.addEventListener("click", () => {
+            row.remove();
+            updateRemoveButtons(containerId);
+        });
+        updateRemoveButtons(containerId);
+    }
 
     // Load responsables into all existing multi-resp selects on page load
     populateAllMultiRespContainers();
@@ -771,23 +793,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectTanqueSimple = document.getElementById("tanque_numero");
         const btnResetSimple = document.getElementById("btn-reset-jarabe-simple");
 
-        // Cargar dropdowns de Tanques
+        // Cargar dropdowns (Tanques removido por input manual)
         async function initJarabeSimpleDropdowns() {
-            try {
-                const tR = await fetch("/api/tanques");
-                if (tR.ok && selectTanqueSimple) {
-                    const tanques = await tR.json();
-                    selectTanqueSimple.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
-                    tanques.forEach(t => {
-                        const opt = document.createElement("option");
-                        opt.value = t.numero;
-                        opt.textContent = `Tanque ${t.numero}`;
-                        selectTanqueSimple.appendChild(opt);
-                    });
-                }
-            } catch (e) {
-                console.error("Error al cargar datos de tanques:", e);
-            }
+            // Ya no se autocompletan tanques aquí
         }
         initJarabeSimpleDropdowns();
 
@@ -818,9 +826,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const volcadoVal = parseInt(document.getElementById("volcado_numero").value, 10);
             const bolsasVal = parseInt(document.getElementById("cantidad_bolsas").value, 10);
             const azucarTipo = document.getElementById("azucar_tipo")?.value || "";
-            const azucarMarca = document.getElementById("azucar_marca")?.value?.trim() || "";
+            
+            // Recolectar múltiples Marcas y NTUs
+            const azucarMarcaInputs = document.querySelectorAll("#azucar_marca_container input[name='azucar_marca[]']");
+            const azucarMarcas = Array.from(azucarMarcaInputs).map(i => i.value.trim()).filter(v => v).join(", ");
+            
+            const azucarNtuInputs = document.querySelectorAll("#azucar_ntu_container input[name='azucar_ntu[]']");
+            const azucarNtus = Array.from(azucarNtuInputs).map(i => i.value.trim()).filter(v => v).join(", ");
+
             if (!azucarTipo) { showToast("Seleccioná el tipo de azúcar", "error"); return; }
-            if (!azucarMarca) { showToast("Ingresá la marca de azúcar", "error"); return; }
+            if (!azucarMarcas) { showToast("Ingresá la marca de azúcar", "error"); return; }
             const payload = {
                 fecha: new Date().toISOString().split("T")[0],
                 hora: document.getElementById("preparacion_hora")?.value?.trim() || null,
@@ -828,8 +843,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 volcado_numero: volcadoVal,
                 cantidad_bolsas: bolsasVal,
                 azucar_tipo: azucarTipo,
-                azucar_marca: azucarMarca,
-                azucar_ntu: parseFloat(document.getElementById("azucar_ntu")?.value) || null,
+                azucar_marca: azucarMarcas,
+                azucar_ntu: azucarNtus,
                 aux_standard: parseFloat(document.getElementById("aux_standard")?.value) || null,
                 aux_hyflo: parseFloat(document.getElementById("aux_hyflo")?.value) || null,
                 pasteurizado_desde: document.getElementById("pasteurizado_desde")?.value || null,
@@ -890,17 +905,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectConcTerminado.appendChild(opt);
                     });
                 }
-
-                if (tR.ok && selectTanqueTerminado) {
-                    const tanques = await tR.json();
-                    selectTanqueTerminado.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
-                    tanques.forEach(t => {
-                        const opt = document.createElement("option");
-                        opt.value = t.numero;
-                        opt.textContent = `Tanque ${t.numero}`;
-                        selectTanqueTerminado.appendChild(opt);
-                    });
-                }
+                
+                // Tanque es manual, no poblamos el select
             } catch (e) {
                 console.error("Error al cargar datos para Jarabe Terminado:", e);
             }
@@ -931,17 +937,20 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
             const sabor = selectSaborTerminado?.value || "";
             const concentrado = selectConcTerminado?.value || "";
-            const tanque = selectTanqueTerminado?.value || "";
+            const tanque = document.getElementById("terminado_tanque")?.value || "";
             const unidades = parseInt(document.getElementById("terminado_unidades")?.value, 10);
-            const volcado = parseInt(document.getElementById("terminado_volcado")?.value, 10);
+            
+            const volcadoInputs = document.querySelectorAll("#terminado_volcado_container input[name='terminado_volcado[]']");
+            const volcadoStr = Array.from(volcadoInputs).map(i => i.value.trim()).filter(v => v).join(", ");
+            
             if (!sabor) { showToast("Seleccioná el sabor", "error"); return; }
             if (!concentrado) { showToast("Seleccioná el concentrado", "error"); return; }
             if (!tanque) { showToast("Seleccioná el tanque", "error"); return; }
             if (isNaN(unidades)) { showToast("Ingresá las unidades", "error"); return; }
-            if (isNaN(volcado)) { showToast("Ingresá el número de volcado", "error"); return; }
+            if (!volcadoStr) { showToast("Ingresá el número de volcado", "error"); return; }
             const payload = {
                 fecha: new Date().toISOString().split("T")[0],
-                sabor, concentrado, tanque, unidades, volcado_numero: volcado,
+                sabor, concentrado, tanque, unidades, volcado_numero: volcadoStr,
                 tiempo_filtrado: document.getElementById("terminado_tiempo_filtrado")?.value?.trim() || null,
                 be_jarabe_simple: parseFloat(document.getElementById("terminado_be_simple")?.value) || null,
                 vol_jarabe_simple: parseFloat(document.getElementById("terminado_vol_simple")?.value) || null,
@@ -972,21 +981,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         async function initSaneoDropdowns() {
             try {
-                const [tR, rR] = await Promise.all([
-                    fetch("/api/tanques"),
+                const [rR] = await Promise.all([
                     fetch("/api/responsables")
                 ]);
-
-                if (tR.ok && selectTanqueSaneo) {
-                    const tanques = await tR.json();
-                    selectTanqueSaneo.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
-                    tanques.forEach(t => {
-                        const opt = document.createElement("option");
-                        opt.value = t.numero;
-                        opt.textContent = `Tanque ${t.numero}`;
-                        selectTanqueSaneo.appendChild(opt);
-                    });
-                }
 
                 if (rR.ok && selectRespSaneo) {
                     const responsables = await rR.json();
@@ -1024,13 +1021,18 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const responsables = getResponsablesFromContainer("saneo_responsables_container");
             if (!responsables.length) { showToast("Seleccioná al menos un responsable", "error"); return; }
-            const tanque = selectTanqueSaneo?.value || "";
+            const tanque = document.getElementById("saneo_tanque")?.value || "";
             const producto = document.getElementById("saneo_producto")?.value?.trim() || "";
+            const horaInicio = document.getElementById("saneo_hora_inicio")?.value?.trim() || "";
+            const horaFin = document.getElementById("saneo_hora_fin")?.value?.trim() || "";
+            
             if (!tanque) { showToast("Seleccioná el tanque", "error"); return; }
             if (!producto) { showToast("Ingresá el producto / solución sanitizante", "error"); return; }
+            if (!horaInicio || !horaFin) { showToast("Ingresá los horarios", "error"); return; }
             const payload = {
                 fecha: new Date().toISOString().split("T")[0],
-                hora: null,
+                hora_inicio: horaInicio,
+                hora_fin: horaFin,
                 tanque, producto, responsables
             };
             try {
@@ -1064,21 +1066,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         async function initParteJarabeDropdowns() {
             try {
-                const [tR, sR] = await Promise.all([
-                    fetch("/api/tanques"),
+                const [sR] = await Promise.all([
                     fetch("/api/sabores")
                 ]);
-
-                if (tR.ok && selectParteTanque) {
-                    const tanques = await tR.json();
-                    selectParteTanque.innerHTML = '<option value="" disabled selected>Seleccione tanque...</option>';
-                    tanques.forEach(t => {
-                        const opt = document.createElement("option");
-                        opt.value = t.numero;
-                        opt.textContent = `Tanque ${t.numero}`;
-                        selectParteTanque.appendChild(opt);
-                    });
-                }
 
                 if (sR.ok && selectParteSabor) {
                     const sabores = await sR.json();
@@ -1138,9 +1128,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (d.fecha && inputParteFecha) inputParteFecha.value = d.fecha;
 
                         // 2. Tanque
-                        if (d.tanque && selectParteTanque) {
+                        if (d.tanque && document.getElementById("parte_tanque")) {
                             const tqNum = d.tanque.replace("Tanque", "").trim();
-                            ensureOptionExists(selectParteTanque, tqNum, `Tanque ${tqNum}`);
+                            document.getElementById("parte_tanque").value = tqNum;
                         }
 
                         // 3. Sabor
@@ -1160,7 +1150,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             "parte_colorante_caramelo": d.colorante_caramelo,
                             "parte_acido_fosforico": d.acido_fosforico,
                             "parte_cafeina": d.cafeina,
-                            "parte_acido_ascorbico": d.acido_ascorbico
+                            "parte_acido_ascorbico": d.acido_ascorbico,
+                            "parte_reforzado_citrico": d.reforzado_citrico || null
                         };
 
                         Object.entries(fieldsMap).forEach(([elemId, val]) => {
@@ -1213,6 +1204,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 responsables,
                 azucar: parseFloat(document.getElementById("parte_azucar")?.value) || null,
                 sucralosa: parseFloat(document.getElementById("parte_sucralosa")?.value) || null,
+                reforzado_citrico: parseFloat(document.getElementById("parte_reforzado_citrico")?.value) || null,
                 acesulfame_k: parseFloat(document.getElementById("parte_acesulfame")?.value) || null,
                 benzoato_sodio: parseFloat(document.getElementById("parte_benzoato")?.value) || null,
                 sorbato_potasio: parseFloat(document.getElementById("parte_sorbato")?.value) || null,
