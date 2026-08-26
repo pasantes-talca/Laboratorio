@@ -1,4 +1,4 @@
-﻿import os
+import os
 from datetime import datetime
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Time, MetaData, Text
@@ -142,6 +142,7 @@ class SaneoTanque(Base):
     tanque       = Column(String(20),  nullable=False)
     producto     = Column(String(255), nullable=False)
     responsables = Column(Text,    nullable=False)
+    numero_saneo = Column(Integer, nullable=True)
 
 class ParteJarabe(Base):
     __tablename__ = "parte_jarabe"

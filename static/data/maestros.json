@@ -1,41 +1,25 @@
 {
-  "responsables": [
-    "Dario Alonso",
-    "Carlos Amaya",
-    "Gonzalo Barrionuevo",
-    "Omar Campillay",
-    "Mauro Diaz",
-    "Luis Moya"
-  ],
-  "responsables_jarabe": [
-    "Gustavo Tunes",
-    "Carlos Videla",
-    "Emanuel Juarez",
-    "Sebastian Astor",
-    "Carlos Abrego",
-    "Pedro Guerra"
-  ],
   "marcas": [
     "Cola",
-    "Lima",
-    "Manzana",
     "Naranja",
+    "Lima",
     "Pomelo",
+    "Manzana",
     "Sifon",
     "Soda"
   ],
   "tipos_concentrado": [
-    "BA",
-    "IFF",
     "KG",
-    "N/A",
+    "XQ",
+    "IFF",
     "TP",
-    "XQ"
+    "BA",
+    "TALCA"
   ],
   "tamanos": [
-    "2.25L",
-    "2L",
     "3L",
+    "2,25L",
+    "2L",
     "500ml"
   ],
   "tanques": [
@@ -50,5 +34,21 @@
     "12",
     "13",
     "N/A"
+  ],
+  "responsables": [
+    "Moya Luis",
+    "Diaz Mauro",
+    "Alonso Dario",
+    "Amaya Carlos",
+    "Campillay Omar",
+    "Barrionuevo Gonzalo"
+  ],
+  "responsables_jarabe": [
+    "Gustavo Funes",
+    "Carlos Videla",
+    "Emanuel Juarez",
+    "Sebastian Astor",
+    "Carlos Abrego",
+    "Pedro Guerra"
   ]
 }

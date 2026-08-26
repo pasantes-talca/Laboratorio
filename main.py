@@ -4,12 +4,17 @@ from typing import List, Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Depends, HTTPException, status, UploadFile, File
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 from database import init_db, get_db, RegistroCalidad, ControlJarabe, ControlBebida, ControlTorque, ControlPausa, JarabeSimple, JarabeTerminado, SaneoTanque, ParteJarabe
+
+# Brand to color mapping for bottle visual
+BRAND_BOTTLE_COLOR = {
+    "talca": "#00FF00",
+}
+
 
 
 # --- MAESTROS DESDE JSON ---
@@ -31,6 +36,8 @@ async def lifespan(app: FastAPI):
     init_db()
     yield
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # Inicializar FastAPI
 app = FastAPI(
     title="Laboratorio de Calidad - Control de Bebida Terminada",
@@ -38,17 +45,25 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Montar archivos estáticos (CSS, JS)
+# Configurar CORS para frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Rutas estáticas de React (frontend/dist)
+frontend_dist = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+frontend_assets = os.path.join(frontend_dist, "assets")
+
+if os.path.exists(frontend_assets):
+    app.mount("/assets", StaticFiles(directory=frontend_assets), name="react-assets")
+
 static_dir = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
-    os.makedirs(os.path.join(static_dir, "css"), exist_ok=True)
-    os.makedirs(os.path.join(static_dir, "js"), exist_ok=True)
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Configurar motor de plantillas
-templates = Jinja2Templates(directory="templates")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # Esquemas Pydantic para validación de datos
@@ -150,6 +165,7 @@ class SaneoTanqueCreate(BaseModel):
     tanque: str
     producto: str
     responsables: List[str]
+    numero_saneo: Optional[int] = None
 
 
 class ParteJarabeCreate(BaseModel):
@@ -193,32 +209,20 @@ class ControlPausaCreate(BaseModel):
 
 
 
-# --- RUTAS DE NAVEGACIÓN ---
+# --- RUTAS DE NAVEGACIÓN (REACT SPA) ---
 
-@app.get("/", response_class=HTMLResponse)
-async def get_index(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"title": "Control de Calidad | Laboratorio"}
-    )
-
-@app.get("/preparacion-jarabe", response_class=HTMLResponse)
-@app.get("/produccion-jarabe", response_class=HTMLResponse)
-async def get_produccion_jarabe(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="produccion_jarabe.html",
-        context={"title": "Preparación Sala de Jarabe | Laboratorio"}
-    )
-
-@app.get("/portal", response_class=HTMLResponse)
-async def get_portal(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="portal.html",
-        context={"title": "Portal de Calidad | Laboratorio"}
-    )
+@app.get("/")
+@app.get("/calidad")
+@app.get("/jarabe")
+@app.get("/preparacion-jarabe")
+@app.get("/produccion-jarabe")
+@app.get("/portal")
+@app.get("/dashboard")
+async def get_react_app():
+    index_path = os.path.join(os.path.dirname(__file__), "frontend", "dist", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return HTMLResponse("<h3>Frontend React no compilado. Ejecute 'cd frontend && npm run build' o inicie 'npm run dev'.</h3>")
 
 
 
@@ -332,13 +336,60 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
     db.add(registro)
     db.commit()
     db.refresh(registro)
-    return {"id": registro.id, "message": "Control de bebida registrado con éxito"}
+    return {
+        "id": registro.id,
+        "message": "Control de bebida registrado con éxito",
+        "bottle_visual": {
+            "brand": data.marca,
+            "color": BRAND_BOTTLE_COLOR.get(data.marca.lower(), "#CCCCCC"),
+            "label": data.marca.lower()
+        }
+    }
 
 
 @app.get("/api/controles", response_model=List[RegistroCalidadResponse])
 def get_controles(db: Session = Depends(get_db)):
     # Devolver todos los registros ordenados del más reciente al más antiguo
     return db.query(RegistroCalidad).order_by(RegistroCalidad.id.desc()).all()
+
+
+@app.get("/api/control-bebida")
+def get_controles_bebida(db: Session = Depends(get_db)):
+    registros = db.query(ControlBebida).order_by(ControlBebida.id.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "marca": r.marca,
+            "concentrado": r.concentrado,
+            "tamano": r.tamano,
+            "responsable": r.responsable,
+            "tanque": r.tanque,
+            "linea": r.linea,
+            "turno": r.turno,
+            "fecha": str(r.fecha) if r.fecha else None,
+            "hora": r.hora.strftime("%H:%M") if r.hora else None,
+            "carac_organolep": r.carac_organolep,
+            "nivel_llenado": r.nivel_llenado,
+            "contenido": float(r.contenido) if r.contenido is not None else None,
+            "presion": float(r.presion) if r.presion is not None else None,
+            "temperatura": float(r.temperatura) if r.temperatura is not None else None,
+            "vol_gas": float(r.vol_gas) if r.vol_gas is not None else None,
+            "grados_brix": float(r.grados_brix) if r.grados_brix is not None else None,
+            "lote_tapa": r.lote_tapa,
+            "control_video_jet": r.control_video_jet,
+        }
+        for r in registros
+    ]
+
+
+@app.delete("/api/control-bebida/{control_id}")
+def delete_control_bebida(control_id: int, db: Session = Depends(get_db)):
+    control = db.query(ControlBebida).filter(ControlBebida.id == control_id).first()
+    if not control:
+        raise HTTPException(status_code=404, detail="Registro de control de bebida no encontrado")
+    db.delete(control)
+    db.commit()
+    return {"message": "Registro eliminado con éxito"}
 
 
 @app.delete("/api/controles/{control_id}")
@@ -457,6 +508,36 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
     return {"id": registro.id, "message": "Jarabe Simple registrado con éxito"}
 
 
+@app.get("/api/jarabe-simple")
+def get_jarabe_simples(tanque: str = None, fecha: str = None, db: Session = Depends(get_db)):
+    """Devuelve registros de jarabe simple. Permite filtrar por tanque y/o fecha."""
+    query = db.query(JarabeSimple).order_by(JarabeSimple.id.desc())
+    if tanque:
+        query = query.filter(JarabeSimple.tanque == tanque.strip())
+    if fecha:
+        from datetime import date as date_type
+        try:
+            fecha_obj = date_type.fromisoformat(fecha)
+            query = query.filter(JarabeSimple.fecha == fecha_obj)
+        except ValueError:
+            pass
+    registros = query.all()
+    return [
+        {
+            "id": r.id,
+            "fecha": str(r.fecha) if r.fecha else None,
+            "hora": r.hora.strftime("%H:%M") if r.hora else None,
+            "tanque": r.tanque,
+            "volcado_numero": r.volcado_numero,
+            "cantidad_bolsas": r.cantidad_bolsas,
+            "azucar_tipo": r.azucar_tipo,
+            "azucar_marca": r.azucar_marca,
+            "responsables": r.responsables,
+        }
+        for r in registros
+    ]
+
+
 # --- RUTAS: JARABE TERMINADO ---
 
 @app.post("/api/jarabe-terminado", status_code=status.HTTP_201_CREATED)
@@ -513,6 +594,7 @@ def create_saneo_tanque(data: SaneoTanqueCreate, db: Session = Depends(get_db)):
         tanque=data.tanque.strip(),
         producto=data.producto,
         responsables=json.dumps(data.responsables, ensure_ascii=False),
+        numero_saneo=data.numero_saneo,
     )
     db.add(registro)
     db.commit()

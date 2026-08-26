@@ -1,0 +1,10 @@
+[run]
+omit =
+    tests/*
+    frontend/*
+    env/*
+    venv/*
+    .venv/*
+
+[report]
+show_missing = True
