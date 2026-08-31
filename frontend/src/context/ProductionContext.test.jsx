@@ -8,7 +8,6 @@ const STORAGE_KEY = 'calidad_active_production';
 const DEFAULT_STATE = {
   linea: 'linea1',
   turno: 'Mañana',
-  nocheSubturno: '',
   sabor: '',
   tipoConcentrado: '',
   tamano: '',

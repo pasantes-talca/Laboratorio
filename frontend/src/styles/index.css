@@ -359,6 +359,11 @@ select {
   padding-right: 2.5rem;
 }
 
+select option {
+  background-color: #0a0813;
+  color: var(--text-primary);
+}
+
 /* Radio Cards (Okey / No Okey) */
 .radio-group-cards {
   display: flex;

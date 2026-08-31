@@ -1,50 +1,144 @@
-import React from 'react';
-import { PackageCheck, Edit3, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PackageCheck, AlertCircle } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
+import { getMarcas } from '../services/api';
+import { getConcentradosForSabor, getTamanosForSabor } from '../utils/productRules';
+
+const DEFAULT_MARCAS = [
+  { id: 1, nombre: 'Cola' },
+  { id: 2, nombre: 'Naranja' },
+  { id: 3, nombre: 'Lima' },
+  { id: 4, nombre: 'Pomelo' },
+  { id: 5, nombre: 'Manzana' },
+  { id: 6, nombre: 'Sifon' },
+  { id: 7, nombre: 'Soda' },
+];
 
 export default function SidebarInfo({ customHint, showLoteTapa = false }) {
-  const { production, updateProduction, openModal } = useProduction();
+  const { production, updateProduction } = useProduction();
+  const [marcasCatalog, setMarcasCatalog] = useState(DEFAULT_MARCAS);
 
-  const lineaText = production.linea === 'linea2' ? 'Línea 2' : 'Línea 1';
-  const subturno = production.turno === 'Noche' && production.nocheSubturno ? ` (${production.nocheSubturno})` : '';
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const m = await getMarcas();
+        if (m && m.length) setMarcasCatalog(m);
+      } catch (_) {
+        // use default marcas
+      }
+    }
+    loadCatalog();
+  }, []);
+
+  const availableConcentrados = getConcentradosForSabor(production.sabor);
+  const availableTamanos = getTamanosForSabor(production.sabor);
+
+  const handleSaborChange = (newSabor) => {
+    const validConc = getConcentradosForSabor(newSabor);
+    const validTam = getTamanosForSabor(newSabor);
+
+    const nextConc = validConc.includes(production.tipoConcentrado)
+      ? production.tipoConcentrado
+      : (validConc[0] || '');
+
+    const nextTam = validTam.includes(production.tamano)
+      ? production.tamano
+      : (validTam[0] || '');
+
+    updateProduction({
+      sabor: newSabor,
+      tipoConcentrado: nextConc,
+      tamano: nextTam,
+    });
+  };
+
+  const selectStyle = {
+    background: 'rgba(255, 255, 255, 0.06)',
+    border: '1px solid var(--border-glass)',
+    color: '#fff',
+    borderRadius: 'var(--radius-sm)',
+    padding: '0.3rem 0.5rem',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
+    maxWidth: '170px',
+    outline: 'none',
+  };
 
   return (
     <aside className="sidebar-card">
-      <div className="sidebar-header" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <PackageCheck size={20} color="#00f2fe" />
-          <span>Producción Activa</span>
-        </div>
-        <button
-          type="button"
-          onClick={openModal}
-          style={{ background: 'none', border: 'none', color: '#a855f7', cursor: 'pointer', display: 'flex' }}
-          title="Editar producción"
-        >
-          <Edit3 size={16} />
-        </button>
+      <div className="sidebar-header">
+        <PackageCheck size={20} color="#00f2fe" />
+        <span>Producción Activa</span>
       </div>
 
       <div className="sidebar-data-list">
         <div className="sidebar-data-item">
           <span className="sidebar-data-label">Línea:</span>
-          <span className="sidebar-data-val">{lineaText}</span>
+          <select
+            value={production.linea}
+            onChange={(e) => updateProduction({ linea: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="linea1">Línea 1</option>
+            <option value="linea2">Línea 2</option>
+          </select>
         </div>
+
         <div className="sidebar-data-item">
           <span className="sidebar-data-label">Turno:</span>
-          <span className="sidebar-data-val">{production.turno}{subturno}</span>
+          <select
+            value={production.turno}
+            onChange={(e) => updateProduction({ turno: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="Mañana">Mañana</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noche">Noche</option>
+          </select>
         </div>
+
         <div className="sidebar-data-item">
           <span className="sidebar-data-label">Sabor:</span>
-          <span className="sidebar-data-val">{production.sabor || <span style={{ color: 'var(--text-muted)' }}>Sin asignar</span>}</span>
+          <select
+            value={production.sabor}
+            onChange={(e) => handleSaborChange(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="" disabled>Seleccione sabor...</option>
+            {marcasCatalog.map((m) => (
+              <option key={m.id} value={m.nombre}>{m.nombre}</option>
+            ))}
+          </select>
         </div>
+
         <div className="sidebar-data-item">
           <span className="sidebar-data-label">Concentrado:</span>
-          <span className="sidebar-data-val">{production.tipoConcentrado || <span style={{ color: 'var(--text-muted)' }}>Sin asignar</span>}</span>
+          <select
+            value={production.tipoConcentrado}
+            onChange={(e) => updateProduction({ tipoConcentrado: e.target.value })}
+            style={selectStyle}
+            disabled={!production.sabor}
+          >
+            <option value="" disabled>Seleccione...</option>
+            {availableConcentrados.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
+
         <div className="sidebar-data-item">
           <span className="sidebar-data-label">Tamaño:</span>
-          <span className="sidebar-data-val">{production.tamano || <span style={{ color: 'var(--text-muted)' }}>Sin asignar</span>}</span>
+          <select
+            value={production.tamano}
+            onChange={(e) => updateProduction({ tamano: e.target.value })}
+            style={selectStyle}
+            disabled={!production.sabor}
+          >
+            <option value="" disabled>Seleccione...</option>
+            {availableTamanos.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
 
         {showLoteTapa && (

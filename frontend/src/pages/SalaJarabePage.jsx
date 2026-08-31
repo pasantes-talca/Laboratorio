@@ -166,17 +166,19 @@ export default function SalaJarabePage() {
     responsables: [''],
   });
 
-  // Fetch registered volcado numbers for the selected tank
+  // Fetch registered volcado numbers for the selected tank, sabor and fecha
   useEffect(() => {
     async function fetchVolcados() {
-      if (!terminadoForm.tanque) {
+      if (!terminadoForm.tanque && !terminadoForm.sabor) {
         setAvailableVolcados([]);
         return;
       }
       try {
-        const records = await getJarabeSimples({
-          tanque: terminadoForm.tanque,
-        });
+        const params = {};
+        if (terminadoForm.tanque) params.tanque = terminadoForm.tanque;
+        if (terminadoForm.sabor) params.sabor = terminadoForm.sabor;
+        if (terminadoForm.fecha) params.fecha = terminadoForm.fecha;
+        const records = await getJarabeSimples(params);
         const uniqueVols = Array.from(new Set(records.map(r => r.volcado_numero).filter(Boolean)));
         uniqueVols.sort((a, b) => a - b);
         setAvailableVolcados(uniqueVols);
@@ -186,7 +188,7 @@ export default function SalaJarabePage() {
       }
     }
     fetchVolcados();
-  }, [terminadoForm.tanque]);
+  }, [terminadoForm.tanque, terminadoForm.sabor, terminadoForm.fecha]);
 
   const handleTerminadoSubmit = async (e) => {
     e.preventDefault();
@@ -388,8 +390,6 @@ export default function SalaJarabePage() {
     }
   };
 
-  const lineaText = production.linea === 'linea2' ? 'Línea 2' : 'Línea 1';
-  const subturno = production.turno === 'Noche' && production.nocheSubturno ? ` (${production.nocheSubturno})` : '';
 
   return (
     <div className="content-grid">

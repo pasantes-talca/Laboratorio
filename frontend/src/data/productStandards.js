@@ -48,11 +48,39 @@ export const PRODUCT_STANDARDS = [
   },
   // GIVAUDAN
   {
-    id: 'cola-givaudan',
+    id: 'cola-xq',
     marca: 'TALCA',
-    sabor: 'COLA Red. XQ - KG',
+    sabor: 'COLA Red. XQ',
     grupo: 'GIVAUDAN',
-    concentrado: 'GIVAUDAN',
+    concentrado: 'XQ',
+    brix: {
+      objetivo: 7.60,
+      min: 7.40,
+      max: 8.10,
+      tolerancia: '+0.5 / -0.2',
+    },
+    ta: {
+      objetivo: 14.0,
+      min: 13.0,
+      max: 15.0,
+      tolerancia: '±1',
+    },
+    carbonatacion: {
+      objetivo: 4.2,
+      min: 4.0,
+      max: 4.7,
+      tolerancia: '+0.5 / -0.2',
+    },
+    torqueLong: { min: 15, max: 20, objetivo: 17.5, rango: '15 - 20' },
+    torqueShort: { min: 13, max: 17, objetivo: 15.0, rango: '15 ± 2' },
+    vencimiento: '6 Meses',
+  },
+  {
+    id: 'cola-kg',
+    marca: 'TALCA',
+    sabor: 'COLA Red. KG',
+    grupo: 'GIVAUDAN',
+    concentrado: 'KG',
     brix: {
       objetivo: 7.60,
       min: 7.40,
@@ -317,7 +345,7 @@ function normalize(str) {
  * Encuentra el estándar correspondiente dado un sabor y concentrado.
  */
 export function findProductStandard(sabor, concentrado = '') {
-  if (!sabor) return PRODUCT_STANDARDS[2]; // Default COLA Givaudan
+  if (!sabor) return PRODUCT_STANDARDS.find(p => p.id === 'cola-xq'); // Default COLA XQ
   
   const normSabor = normalize(sabor);
   const normConc = normalize(concentrado);
@@ -327,12 +355,16 @@ export function findProductStandard(sabor, concentrado = '') {
   if (normSabor.includes('soda')) return PRODUCT_STANDARDS.find(p => p.id === 'soda');
   if (normSabor.includes('manzana')) return PRODUCT_STANDARDS.find(p => p.id === 'manzana');
 
-  // Givaudan vs IFF match
+  // Route Cola by concentrado: XQ or KG → separate entries; IFF
   if (normSabor.includes('cola')) {
     if (normSabor.includes('iff') || normConc.includes('iff')) {
       return PRODUCT_STANDARDS.find(p => p.id === 'cola-iff');
     }
-    return PRODUCT_STANDARDS.find(p => p.id === 'cola-givaudan');
+    if (normConc.includes('kg') || normSabor.includes('kg')) {
+      return PRODUCT_STANDARDS.find(p => p.id === 'cola-kg');
+    }
+    // Default Cola (XQ or unspecified)
+    return PRODUCT_STANDARDS.find(p => p.id === 'cola-xq');
   }
 
   if (normSabor.includes('naranja')) {

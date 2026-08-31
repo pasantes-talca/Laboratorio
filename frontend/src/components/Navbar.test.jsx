@@ -52,43 +52,13 @@ describe('Navbar', () => {
     expect(calidadBtn.className).not.toContain('active');
   });
 
-  it('shows the production config button on non-jarabe pages', () => {
+  it('shows the line badge on non-jarabe pages', () => {
     renderNavbar('calidad');
-    expect(
-      screen.getByRole('button', { name: /Asignar Producción/ })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Línea 1')).toBeInTheDocument();
   });
 
-  it('hides the production config button and line badge on jarabe page', () => {
+  it('hides the line badge on jarabe page', () => {
     renderNavbar('jarabe');
-    expect(
-      screen.queryByRole('button', { name: /Asignar Producción/ })
-    ).not.toBeInTheDocument();
     expect(screen.queryByText('Línea 1')).not.toBeInTheDocument();
   });
-
-  it('shows the turno selector with default Mañana', () => {
-    renderNavbar();
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveValue('Mañana');
-  });
-
-  it('changing turno to Tarde updates production without throwing', () => {
-    renderNavbar();
-    const select = screen.getByRole('combobox');
-
-    expect(() => fireEvent.change(select, { target: { value: 'Tarde' } })).not.toThrow();
-    expect(select).toHaveValue('Tarde');
-  });
-
-  it.each(['Noche 1', 'Noche 2'])(
-    'changing turno to %s sets Noche with subturno persisted',
-    (subturno) => {
-      renderNavbar();
-      const select = screen.getByRole('combobox');
-
-      expect(() => fireEvent.change(select, { target: { value: subturno } })).not.toThrow();
-      expect(select).toHaveValue(subturno);
-    }
-  );
 });

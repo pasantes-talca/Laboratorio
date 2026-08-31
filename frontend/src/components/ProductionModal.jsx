@@ -3,6 +3,7 @@ import { X, Settings2, Sparkles } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 import { useToast } from '../context/ToastContext';
 import { getMarcas, getTiposConcentrado, getTamanos } from '../services/api';
+import { getConcentradosForSabor, getTamanosForSabor } from '../utils/productRules';
 
 export default function ProductionModal() {
   const { production, updateProduction, isModalOpen, closeModal } = useProduction();
@@ -10,8 +11,6 @@ export default function ProductionModal() {
 
   const [formData, setFormData] = useState({ ...production });
   const [marcas, setMarcas] = useState([]);
-  const [concentrados, setConcentrados] = useState([]);
-  const [tamanos, setTamanos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,19 +23,36 @@ export default function ProductionModal() {
   const loadCatalogs = async () => {
     try {
       setLoading(true);
-      const [m, c, t] = await Promise.all([
-        getMarcas(),
-        getTiposConcentrado(),
-        getTamanos(),
-      ]);
+      const m = await getMarcas();
       setMarcas(m);
-      setConcentrados(c);
-      setTamanos(t);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const availableConcentrados = getConcentradosForSabor(formData.sabor);
+  const availableTamanos = getTamanosForSabor(formData.sabor);
+
+  const handleSaborChange = (newSabor) => {
+    const validConc = getConcentradosForSabor(newSabor);
+    const validTam = getTamanosForSabor(newSabor);
+
+    const nextConc = validConc.includes(formData.tipoConcentrado)
+      ? formData.tipoConcentrado
+      : (validConc[0] || '');
+
+    const nextTam = validTam.includes(formData.tamano)
+      ? formData.tamano
+      : (validTam[0] || '');
+
+    setFormData((prev) => ({
+      ...prev,
+      sabor: newSabor,
+      tipoConcentrado: nextConc,
+      tamano: nextTam,
+    }));
   };
 
   if (!isModalOpen) return null;
@@ -74,11 +90,24 @@ export default function ProductionModal() {
           </div>
 
           <div className="field-container">
+            <label>Turno <span className="required-star">*</span></label>
+            <select
+              value={formData.turno}
+              required
+              onChange={(e) => setFormData({ ...formData, turno: e.target.value })}
+            >
+              <option value="Mañana">Mañana</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noche">Noche</option>
+            </select>
+          </div>
+
+          <div className="field-container">
             <label>Sabor / Marca <span className="required-star">*</span></label>
             <select
               value={formData.sabor}
               required
-              onChange={(e) => setFormData({ ...formData, sabor: e.target.value })}
+              onChange={(e) => handleSaborChange(e.target.value)}
             >
               <option value="" disabled>Seleccione sabor...</option>
               {marcas.map((m) => (
@@ -93,11 +122,12 @@ export default function ProductionModal() {
               <select
                 value={formData.tipoConcentrado}
                 required
+                disabled={!formData.sabor}
                 onChange={(e) => setFormData({ ...formData, tipoConcentrado: e.target.value })}
               >
                 <option value="" disabled>Seleccione...</option>
-                {concentrados.map((c) => (
-                  <option key={c.id} value={c.codigo}>{c.codigo}</option>
+                {availableConcentrados.map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
@@ -107,11 +137,12 @@ export default function ProductionModal() {
               <select
                 value={formData.tamano}
                 required
+                disabled={!formData.sabor}
                 onChange={(e) => setFormData({ ...formData, tamano: e.target.value })}
               >
                 <option value="" disabled>Seleccione...</option>
-                {tamanos.map((t) => (
-                  <option key={t.id} value={t.valor}>{t.valor}</option>
+                {availableTamanos.map((t) => (
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </select>
             </div>

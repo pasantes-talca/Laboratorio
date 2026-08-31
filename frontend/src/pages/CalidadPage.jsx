@@ -12,6 +12,8 @@ import {
   X,
   User,
   FlaskRound as Flask,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 import { useToast } from '../context/ToastContext';
@@ -69,23 +71,24 @@ export default function CalidadPage() {
   // ----------------------------------------------------
   const [bebidaForm, setBebidaForm] = useState({
     hora: '',
-    carac_organolep: 'okey',
-    nivel_llenado: 'Normal',
+    carac_organolep: 'OK',
+    nivel_llenado: 'OK',
     contenido: '',
     presion: '',
     temperatura: '',
     vol_gas: '',
     brix: '',
-    control_videojet: 'okey',
+    control_videojet: 'OK',
     responsable: '',
-    tanque: '',
   });
 
   const handleBebidaSubmit = async (e) => {
     e.preventDefault();
     try {
+      const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
         ...bebidaForm,
+        hora: bebidaForm.hora && bebidaForm.hora.trim() ? bebidaForm.hora.trim() : nowTime,
         contenido: parseFloat(bebidaForm.contenido) || 0,
         presion: parseFloat(bebidaForm.presion) || 0,
         temperatura: parseFloat(bebidaForm.temperatura) || 0,
@@ -119,23 +122,23 @@ export default function CalidadPage() {
   // ----------------------------------------------------
   const [jarabeForm, setJarabeForm] = useState({
     hora: '',
-    sabor: '',
-    concentrado: '',
     tanque: '',
     bx_patron: '',
     ta: '',
     responsable: '',
-    observacion: '',
-    numero_carga_trilay: '',
   });
 
   const handleJarabeSubmit = async (e) => {
     e.preventDefault();
     try {
+      const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
         ...jarabeForm,
+        hora: jarabeForm.hora && jarabeForm.hora.trim() ? jarabeForm.hora.trim() : nowTime,
         bx_patron: parseFloat(jarabeForm.bx_patron) || 0,
         ta: parseFloat(jarabeForm.ta) || 0,
+        sabor: production.sabor || 'N/A',
+        concentrado: production.tipoConcentrado || 'N/A',
         linea: production.linea,
         turno: production.turno,
       };
@@ -146,51 +149,108 @@ export default function CalidadPage() {
         hora: '',
         bx_patron: '',
         ta: '',
-        observacion: '',
       }));
     } catch (err) {
       showToast(err.message, 'error');
     }
   };
 
+const SABOR_COLOR_MAP = {
+  cola: 'Azul',
+  pomelo: 'Amarillo',
+  lima: 'Verde',
+  naranja: 'Naranja',
+  manzana: 'Azul',
+  soda: 'Gris',
+  sifon: 'Rojo',
+};
+
+function getColorBySabor(sabor) {
+  if (!sabor) return '';
+  const norm = sabor
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+  for (const [key, color] of Object.entries(SABOR_COLOR_MAP)) {
+    if (norm.includes(key)) {
+      return color;
+    }
+  }
+  return '';
+}
+
   // ----------------------------------------------------
-  // FORM 3: CONTROL DE TORQUE (CON AVANCE AUTOMÁTICO!)
+  // FORM 3: CONTROL DE TORQUE (LISTA DINÁMICA DE CABEZALES)
   // ----------------------------------------------------
   const maxCabezales = production.linea === 'linea1' ? 12 : 14;
   const [torqueForm, setTorqueForm] = useState({
-    numero_cabezal: 1,
-    sabor: '',
-    color: '',
-    valor: '',
+    hora: '',
+    marca_tapa: '',
     responsable: '',
+    color: getColorBySabor(production.sabor),
+    cabezales: [{ numero: 1, valor: '' }],
   });
 
-  // Sync flavor from production when assigned
   useEffect(() => {
-    if (production.sabor) {
-      setTorqueForm((prev) => ({ ...prev, sabor: production.sabor }));
-    }
+    const autoColor = getColorBySabor(production.sabor);
+    setTorqueForm((prev) => ({ ...prev, color: autoColor }));
   }, [production.sabor]);
+
+  const addCabezal = () => {
+    setTorqueForm((prev) => {
+      const lastNum = prev.cabezales[prev.cabezales.length - 1]?.numero || 0;
+      const nextNum = lastNum >= maxCabezales ? 1 : lastNum + 1;
+      return { ...prev, cabezales: [...prev.cabezales, { numero: nextNum, valor: '' }] };
+    });
+  };
+
+  const removeCabezal = (idx) => {
+    setTorqueForm((prev) => ({
+      ...prev,
+      cabezales: prev.cabezales.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const updateCabezal = (idx, field, val) => {
+    setTorqueForm((prev) => {
+      const updated = [...prev.cabezales];
+      updated[idx] = { ...updated[idx], [field]: val };
+      return { ...prev, cabezales: updated };
+    });
+  };
 
   const handleTorqueSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...torqueForm,
-        numero_cabezal: parseInt(torqueForm.numero_cabezal, 10),
-        valor: parseFloat(torqueForm.valor) || 0,
-        linea: production.linea,
-        turno: production.turno,
-        noche: production.nocheSubturno,
-      };
-      await submitControlTorque(payload);
-      showToast(`Torque Cabezal ${torqueForm.numero_cabezal} registrado`, 'success');
-
-      // Auto-advance to next head (1 -> 2 -> ... -> max -> 1)
+      const nowTime = new Date().toTimeString().slice(0, 5);
+      const hora = torqueForm.hora && torqueForm.hora.trim() ? torqueForm.hora.trim() : nowTime;
+      // Submit one record per cabezal
+      for (const cab of torqueForm.cabezales) {
+        const payload = {
+          hora,
+          numero_cabezal: parseInt(cab.numero, 10),
+          valor: parseFloat(cab.valor) || 0,
+          color: torqueForm.color,
+          marca_tapa: torqueForm.marca_tapa || null,
+          responsable: torqueForm.responsable,
+          sabor: production.sabor || 'N/A',
+          linea: production.linea,
+          turno: production.turno,
+        };
+        await submitControlTorque(payload);
+      }
+      showToast(
+        torqueForm.cabezales.length === 1
+          ? `Torque Cabezal ${torqueForm.cabezales[0].numero} registrado`
+          : `${torqueForm.cabezales.length} cabezales registrados`,
+        'success',
+      );
       setTorqueForm((prev) => ({
         ...prev,
-        valor: '',
-        numero_cabezal: prev.numero_cabezal >= maxCabezales ? 1 : prev.numero_cabezal + 1,
+        hora: '',
+        cabezales: [{ numero: 1, valor: '' }],
       }));
     } catch (err) {
       showToast(err.message, 'error');
@@ -289,7 +349,7 @@ export default function CalidadPage() {
           <form onSubmit={handleBebidaSubmit} style={{ marginTop: '1.25rem' }}>
             <div className="form-grid">
               <div className="field-container">
-                <label>Hora de Control</label>
+                <label>Hora</label>
                 <div className="input-wrapper">
                   <Clock className="input-icon" size={18} />
                   <input
@@ -301,7 +361,31 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>Contenido Neto (ml / L) <span className="required-star">*</span></label>
+                <label>Características Organolépticas <span className="required-star">*</span></label>
+                <select
+                  required
+                  value={bebidaForm.carac_organolep}
+                  onChange={(e) => setBebidaForm({ ...bebidaForm, carac_organolep: e.target.value })}
+                >
+                  <option value="OK">OK</option>
+                  <option value="NOK">NOK</option>
+                </select>
+              </div>
+
+              <div className="field-container">
+                <label>Nivel de Llenado <span className="required-star">*</span></label>
+                <select
+                  required
+                  value={bebidaForm.nivel_llenado}
+                  onChange={(e) => setBebidaForm({ ...bebidaForm, nivel_llenado: e.target.value })}
+                >
+                  <option value="OK">OK</option>
+                  <option value="NOK">NOK</option>
+                </select>
+              </div>
+
+              <div className="field-container">
+                <label>Contenido (ml / L) <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <Flask className="input-icon" size={18} />
                   <input
@@ -311,21 +395,6 @@ export default function CalidadPage() {
                     placeholder="Ej: 2250"
                     value={bebidaForm.contenido}
                     onChange={(e) => setBebidaForm({ ...bebidaForm, contenido: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>°Brix <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Droplet className="input-icon" size={18} />
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="Ej: 10.45"
-                    value={bebidaForm.brix}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, brix: e.target.value })}
                   />
                 </div>
               </div>
@@ -346,7 +415,7 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>Temperatura (°C) <span className="required-star">*</span></label>
+                <label>Temperat. (°C) <span className="required-star">*</span></label>
                 <input
                   type="number"
                   step="0.1"
@@ -358,7 +427,7 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>Volumen de Gas (GV) <span className="required-star">*</span></label>
+                <label>Vol. Gas (GV) <span className="required-star">*</span></label>
                 <input
                   type="number"
                   step="0.01"
@@ -370,68 +439,34 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>Nivel de Llenado</label>
-                <select
-                  value={bebidaForm.nivel_llenado}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, nivel_llenado: e.target.value })}
-                >
-                  <option value="Normal">Normal</option>
-                  <option value="Alto">Alto</option>
-                  <option value="Bajo">Bajo</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Tanque de Jarabe (Opcional)</label>
-                <select
-                  value={bebidaForm.tanque}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, tanque: e.target.value })}
-                >
-                  <option value="">Seleccione tanque (Opcional)...</option>
-                  {tanquesCatalog.map((t) => (
-                    <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Características Organolépticas</label>
-                <div className="radio-group-cards">
-                  <div
-                    className={`radio-card ${bebidaForm.carac_organolep === 'okey' ? 'selected-ok' : ''}`}
-                    onClick={() => setBebidaForm({ ...bebidaForm, carac_organolep: 'okey' })}
-                  >
-                    <CheckCircle2 size={18} /> Okey
-                  </div>
-                  <div
-                    className={`radio-card ${bebidaForm.carac_organolep === 'no okey' ? 'selected-nok' : ''}`}
-                    onClick={() => setBebidaForm({ ...bebidaForm, carac_organolep: 'no okey' })}
-                  >
-                    <XCircle size={18} /> No Okey
-                  </div>
+                <label>°Brix <span className="required-star">*</span></label>
+                <div className="input-wrapper">
+                  <Droplet className="input-icon" size={18} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="Ej: 10.45"
+                    value={bebidaForm.brix}
+                    onChange={(e) => setBebidaForm({ ...bebidaForm, brix: e.target.value })}
+                  />
                 </div>
               </div>
 
               <div className="field-container">
-                <label>Control VideoJet</label>
-                <div className="radio-group-cards">
-                  <div
-                    className={`radio-card ${bebidaForm.control_videojet === 'okey' ? 'selected-ok' : ''}`}
-                    onClick={() => setBebidaForm({ ...bebidaForm, control_videojet: 'okey' })}
-                  >
-                    <CheckCircle2 size={18} /> Okey
-                  </div>
-                  <div
-                    className={`radio-card ${bebidaForm.control_videojet === 'no okey' ? 'selected-nok' : ''}`}
-                    onClick={() => setBebidaForm({ ...bebidaForm, control_videojet: 'no okey' })}
-                  >
-                    <XCircle size={18} /> No Okey
-                  </div>
-                </div>
+                <label>Control Video Jet <span className="required-star">*</span></label>
+                <select
+                  required
+                  value={bebidaForm.control_videojet}
+                  onChange={(e) => setBebidaForm({ ...bebidaForm, control_videojet: e.target.value })}
+                >
+                  <option value="OK">OK</option>
+                  <option value="NOK">NOK</option>
+                </select>
               </div>
 
               <div className="field-container col-span-2">
-                <label>Responsable de Calidad <span className="required-star">*</span></label>
+                <label>Respons. <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <User className="input-icon" size={18} />
                   <select
@@ -439,7 +474,7 @@ export default function CalidadPage() {
                     value={bebidaForm.responsable}
                     onChange={(e) => setBebidaForm({ ...bebidaForm, responsable: e.target.value })}
                   >
-                    <option value="" disabled>Seleccione analista...</option>
+                    <option value="" disabled>Seleccione responsable...</option>
                     {responsables.map((r) => (
                       <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
                     ))}
@@ -454,16 +489,15 @@ export default function CalidadPage() {
                 className="btn btn-secondary"
                 onClick={() => setBebidaForm({
                   hora: '',
-                  carac_organolep: 'okey',
-                  nivel_llenado: 'Normal',
+                  carac_organolep: 'OK',
+                  nivel_llenado: 'OK',
                   contenido: '',
                   presion: '',
                   temperatura: '',
                   vol_gas: '',
                   brix: '',
-                  control_videojet: 'okey',
+                  control_videojet: 'OK',
                   responsable: '',
-                  tanque: '',
                 })}
               >
                 <RotateCcw size={16} /> Limpiar
@@ -480,7 +514,7 @@ export default function CalidadPage() {
           <form onSubmit={handleJarabeSubmit} style={{ marginTop: '1.25rem' }}>
             <div className="form-grid">
               <div className="field-container">
-                <label>Hora de Control</label>
+                <label>Hora</label>
                 <div className="input-wrapper">
                   <Clock className="input-icon" size={18} />
                   <input
@@ -492,35 +526,7 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>Sabor / Marca <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={jarabeForm.sabor}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, sabor: e.target.value })}
-                >
-                  <option value="" disabled>Seleccione sabor...</option>
-                  {sabores.map((s) => (
-                    <option key={s.id} value={s.nombre}>{s.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Tipo de Concentrado <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={jarabeForm.concentrado}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, concentrado: e.target.value })}
-                >
-                  <option value="" disabled>Seleccione...</option>
-                  {concentrados.map((c) => (
-                    <option key={c.id} value={c.codigo}>{c.codigo}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Tanque de Jarabe <span className="required-star">*</span></label>
+                <label>Número de Tanque <span className="required-star">*</span></label>
                 <select
                   required
                   value={jarabeForm.tanque}
@@ -534,7 +540,7 @@ export default function CalidadPage() {
               </div>
 
               <div className="field-container">
-                <label>°Brix Patrón <span className="required-star">*</span></label>
+                <label>°Bx Patr. <span className="required-star">*</span></label>
                 <input
                   type="number"
                   step="0.01"
@@ -557,38 +563,18 @@ export default function CalidadPage() {
                 />
               </div>
 
-              <div className="field-container">
-                <label>N° Carga Trilay (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Ej: TR-8942"
-                  value={jarabeForm.numero_carga_trilay}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, numero_carga_trilay: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label>Responsable <span className="required-star">*</span></label>
+              <div className="field-container col-span-2">
+                <label>Respons. <span className="required-star">*</span></label>
                 <select
                   required
                   value={jarabeForm.responsable}
                   onChange={(e) => setJarabeForm({ ...jarabeForm, responsable: e.target.value })}
                 >
-                  <option value="" disabled>Seleccione analista...</option>
+                  <option value="" disabled>Seleccione responsable...</option>
                   {responsables.map((r) => (
                     <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
                   ))}
                 </select>
-              </div>
-
-              <div className="field-container col-span-2">
-                <label>Observaciones</label>
-                <textarea
-                  rows="2"
-                  placeholder="Comentarios adicionales sobre el jarabe..."
-                  value={jarabeForm.observacion}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, observacion: e.target.value })}
-                />
               </div>
             </div>
 
@@ -598,14 +584,10 @@ export default function CalidadPage() {
                 className="btn btn-secondary"
                 onClick={() => setJarabeForm({
                   hora: '',
-                  sabor: '',
-                  concentrado: '',
                   tanque: '',
                   bx_patron: '',
                   ta: '',
                   responsable: '',
-                  observacion: '',
-                  numero_carga_trilay: '',
                 })}
               >
                 <RotateCcw size={16} /> Limpiar
@@ -617,48 +599,31 @@ export default function CalidadPage() {
           </form>
         )}
 
-        {/* TAB 3: CONTROL DE TORQUE CON AUTO-AVANCE DE CABEZAL */}
+        {/* TAB 3: CONTROL DE TORQUE — LISTA DINÁMICA DE CABEZALES */}
         {activeTab === 'torque' && (
           <form onSubmit={handleTorqueSubmit} style={{ marginTop: '1.25rem' }}>
             <div className="form-grid">
               <div className="field-container">
-                <label>N° Cabezal ({production.linea === 'linea2' ? '1 a 14' : '1 a 12'}) <span className="required-star">*</span></label>
-                <select
-                  value={torqueForm.numero_cabezal}
-                  onChange={(e) => setTorqueForm({ ...torqueForm, numero_cabezal: parseInt(e.target.value, 10) })}
-                >
-                  {Array.from({ length: maxCabezales }, (_, i) => i + 1).map((num) => (
-                    <option key={num} value={num}>Cabezal {num}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Valor de Torque (lbf·in) <span className="required-star">*</span></label>
+                <label>Hora</label>
                 <div className="input-wrapper">
-                  <Gauge className="input-icon" size={18} />
+                  <Clock className="input-icon" size={18} />
                   <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="Ej: 14.5"
-                    value={torqueForm.valor}
-                    onChange={(e) => setTorqueForm({ ...torqueForm, valor: e.target.value })}
+                    type="time"
+                    value={torqueForm.hora}
+                    onChange={(e) => setTorqueForm({ ...torqueForm, hora: e.target.value })}
                   />
                 </div>
               </div>
 
               <div className="field-container">
-                <label>Sabor / Marca <span className="required-star">*</span></label>
+                <label>Marca de Tapa</label>
                 <select
-                  required
-                  value={torqueForm.sabor}
-                  onChange={(e) => setTorqueForm({ ...torqueForm, sabor: e.target.value })}
+                  value={torqueForm.marca_tapa}
+                  onChange={(e) => setTorqueForm({ ...torqueForm, marca_tapa: e.target.value })}
                 >
-                  <option value="" disabled>Seleccione sabor...</option>
-                  {marcas.map((m) => (
-                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
-                  ))}
+                  <option value="">Sin especificar</option>
+                  <option value="PRIVA">PRIVA</option>
+                  <option value="SIDE">SIDE</option>
                 </select>
               </div>
 
@@ -666,20 +631,21 @@ export default function CalidadPage() {
                 <label>Color de Tapa</label>
                 <input
                   type="text"
-                  placeholder="Ej: Azul, Rojo, Blanco"
-                  value={torqueForm.color}
-                  onChange={(e) => setTorqueForm({ ...torqueForm, color: e.target.value })}
+                  placeholder="Automático según sabor"
+                  value={torqueForm.color || '—'}
+                  readOnly
+                  style={{ opacity: 0.85, cursor: 'default' }}
                 />
               </div>
 
               <div className="field-container col-span-2">
-                <label>Responsable <span className="required-star">*</span></label>
+                <label>Respons. <span className="required-star">*</span></label>
                 <select
                   required
                   value={torqueForm.responsable}
                   onChange={(e) => setTorqueForm({ ...torqueForm, responsable: e.target.value })}
                 >
-                  <option value="" disabled>Seleccione analista...</option>
+                  <option value="" disabled>Seleccione responsable...</option>
                   {responsables.map((r) => (
                     <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
                   ))}
@@ -687,16 +653,88 @@ export default function CalidadPage() {
               </div>
             </div>
 
+            {/* Dynamic cabezal list */}
+            <div style={{ marginTop: '1rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+                Cabezales ({production.linea === 'linea2' ? '1 a 14' : '1 a 12'}) <span className="required-star">*</span>
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {torqueForm.cabezales.map((cab, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <select
+                      value={cab.numero}
+                      onChange={(e) => updateCabezal(idx, 'numero', parseInt(e.target.value, 10))}
+                      style={{ width: '140px', flexShrink: 0 }}
+                    >
+                      {Array.from({ length: maxCabezales }, (_, i) => i + 1).map((num) => (
+                        <option key={num} value={num}>Cabezal {num}</option>
+                      ))}
+                    </select>
+                    <div className="input-wrapper" style={{ flex: 1 }}>
+                      <Gauge className="input-icon" size={18} />
+                      <input
+                        type="number"
+                        step="0.1"
+                        required
+                        placeholder="Valor (Ej: 14.5)"
+                        value={cab.valor}
+                        onChange={(e) => updateCabezal(idx, 'valor', e.target.value)}
+                      />
+                    </div>
+                    {torqueForm.cabezales.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCabezal(idx)}
+                        style={{
+                          background: 'rgba(244,63,94,0.12)',
+                          border: '1px solid rgba(244,63,94,0.4)',
+                          color: '#fb7185',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '0.4rem 0.6rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addCabezal}
+                style={{
+                  marginTop: '0.5rem',
+                  background: 'rgba(138,43,226,0.1)',
+                  border: '1px dashed rgba(168,85,247,0.4)',
+                  color: '#c084fc',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  width: '100%',
+                  justifyContent: 'center',
+                }}
+              >
+                <Plus size={15} /> Agregar Cabezal
+              </button>
+            </div>
+
             <div className="form-actions">
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setTorqueForm((prev) => ({ ...prev, valor: '', numero_cabezal: 1 }))}
+                onClick={() => setTorqueForm((prev) => ({ ...prev, hora: '', cabezales: [{ numero: 1, valor: '' }] }))}
               >
                 <RotateCcw size={16} /> Reiniciar al Cabezal 1
               </button>
               <button type="submit" className="btn btn-primary">
-                <Save size={16} /> Registrar Torque (Avanza Cabezal)
+                <Save size={16} /> Registrar Torque
               </button>
             </div>
           </form>

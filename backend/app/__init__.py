@@ -1,0 +1,1 @@
+"""Laboratorio backend package."""

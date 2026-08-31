@@ -21,48 +21,54 @@ beforeEach(() => {
 });
 
 describe('SidebarInfo', () => {
-  it('renders provided production props as visible text', () => {
+  it('renders interactive selects initialized with active production state', () => {
     seedProduction({
       linea: 'linea2',
       turno: 'Tarde',
-      sabor: 'COLA Red. XQ',
-      tipoConcentrado: 'GIVAUDAN',
-      tamano: '500 ml',
+      sabor: 'Cola',
+      tipoConcentrado: 'XQ',
+      tamano: '3L',
     });
     renderSidebar();
 
-    expect(screen.getByText('Línea 2')).toBeInTheDocument();
-    expect(screen.getByText('Tarde')).toBeInTheDocument();
-    expect(screen.getByText('COLA Red. XQ')).toBeInTheDocument();
-    expect(screen.getByText('GIVAUDAN')).toBeInTheDocument();
-    expect(screen.getByText('500 ml')).toBeInTheDocument();
+    const selects = screen.getAllByRole('combobox');
+    expect(selects.length).toBeGreaterThanOrEqual(5);
+
+    // Linea select
+    expect(selects[0]).toHaveValue('linea2');
+    // Turno select
+    expect(selects[1]).toHaveValue('Tarde');
   });
 
-  it('shows Sin asignar placeholders for empty fields', () => {
-    seedProduction({});
-    renderSidebar({ showLoteTapa: true });
-
-    // sabor + concentrado + tamano
-    expect(screen.getAllByText('Sin asignar')).toHaveLength(3);
-  });
-
-  it('defaults to Línea 1 label for the default linea value', () => {
-    seedProduction({});
-    renderSidebar();
-    expect(screen.getByText('Línea 1')).toBeInTheDocument();
-  });
-
-  it('appends night subturno in parentheses when turno is Noche with subturno', () => {
-    seedProduction({ turno: 'Noche', nocheSubturno: 'Noche 2' });
+  it('updates linea and turno directly through selects', () => {
+    seedProduction({ linea: 'linea1', turno: 'Mañana' });
     renderSidebar();
 
-    expect(screen.getByText('Noche (Noche 2)')).toBeInTheDocument();
+    const selects = screen.getAllByRole('combobox');
+    fireEvent.change(selects[0], { target: { value: 'linea2' } });
+    expect(selects[0]).toHaveValue('linea2');
+
+    fireEvent.change(selects[1], { target: { value: 'Noche' } });
+    expect(selects[1]).toHaveValue('Noche');
   });
 
-  it('shows plain Noche when no subturno is set', () => {
-    seedProduction({ turno: 'Noche' });
+  it('filters concentrados and tamanos dynamically when flavor changes', () => {
+    seedProduction({ sabor: 'Cola' });
     renderSidebar();
-    expect(screen.getByText('Noche')).toBeInTheDocument();
+
+    const selects = screen.getAllByRole('combobox');
+    const saborSelect = selects[2];
+    const concentradoSelect = selects[3];
+    const tamanoSelect = selects[4];
+
+    // Select Cola -> should have XQ, KG, IFF
+    fireEvent.change(saborSelect, { target: { value: 'Cola' } });
+    expect(concentradoSelect).not.toBeDisabled();
+    expect(tamanoSelect).not.toBeDisabled();
+
+    // Select Soda -> should have TALCA concentrado
+    fireEvent.change(saborSelect, { target: { value: 'Soda' } });
+    expect(concentradoSelect).toHaveValue('TALCA');
   });
 
   it('shows default association hint when no customHint given', () => {

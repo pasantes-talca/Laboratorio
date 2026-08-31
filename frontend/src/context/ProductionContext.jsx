@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ProductionContext = createContext(null);
 
@@ -7,7 +7,6 @@ const STORAGE_KEY = 'calidad_active_production';
 const DEFAULT_STATE = {
   linea: 'linea1',
   turno: 'Mañana',
-  nocheSubturno: '',
   sabor: '',
   tipoConcentrado: '',
   tamano: '',
