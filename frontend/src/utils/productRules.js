@@ -21,26 +21,17 @@ export const SABOR_TAMANOS_MAP = {
 };
 
 export function getNormalizedSaborKey(sabor) {
-  if (!sabor) return '';
-  const norm = sabor
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
-  if (norm.includes('cola')) return 'cola';
-  if (norm.includes('pomelo')) return 'pomelo';
-  if (norm.includes('lima') || norm.includes('limon')) return 'lima';
-  if (norm.includes('naranja')) return 'naranja';
-  if (norm.includes('manzana')) return 'manzana';
-  if (norm.includes('soda')) return 'soda';
-  if (norm.includes('sifon')) return 'sifon';
+  if (!sabor || typeof sabor !== 'string') return '';
+  const norm = sabor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  for (const key of Object.keys(SABOR_CONCENTRADOS_MAP)) {
+    if (norm.includes(key)) return key;
+  }
   return norm;
 }
 
 export function getConcentradosForSabor(sabor) {
   const key = getNormalizedSaborKey(sabor);
-  return SABOR_CONCENTRADOS_MAP[key] || ['KG', 'XQ', 'IFF', 'TP', 'BA', 'TALCA'];
+  return SABOR_CONCENTRADOS_MAP[key] || [];
 }
 
 export function getTamanosForSabor(sabor) {

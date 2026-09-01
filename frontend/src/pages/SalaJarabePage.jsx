@@ -30,6 +30,7 @@ import {
   submitParteJarabe,
   parseJarabeExcel,
 } from '../services/api';
+import { getConcentradosForSabor } from '../utils/productRules';
 
 export default function SalaJarabePage() {
   const { showToast } = useToast();
@@ -56,7 +57,13 @@ export default function SalaJarabePage() {
         setResponsables(r);
         setSabores(s);
         setConcentrados(c);
-        setTanquesCatalog(t);
+        const processedTanques = t.map(tanque => 
+          tanque.numero === 'TALCA' ? { ...tanque, numero: 'N/A' } : tanque
+        ).reduce((acc, curr) => {
+          if (!acc.some(x => x.numero === curr.numero)) acc.push(curr);
+          return acc;
+        }, []);
+        setTanquesCatalog(processedTanques);
       } catch (err) {
         console.error(err);
       }
@@ -1195,7 +1202,14 @@ export default function SalaJarabePage() {
                     required
                     form="terminado-form"
                     value={terminadoForm.sabor}
-                    onChange={(e) => setTerminadoForm({ ...terminadoForm, sabor: e.target.value })}
+                    onChange={(e) => {
+                      const newSabor = e.target.value;
+                      const validConc = getConcentradosForSabor(newSabor);
+                      const nextConc = validConc && validConc.length > 0
+                        ? (validConc.includes(terminadoForm.concentrado) ? terminadoForm.concentrado : validConc[0])
+                        : '';
+                      setTerminadoForm({ ...terminadoForm, sabor: newSabor, concentrado: nextConc });
+                    }}
                     style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem', width: '100%' }}
                   >
                     <option value="" disabled>Seleccione sabor...</option>
@@ -1211,12 +1225,13 @@ export default function SalaJarabePage() {
                     required
                     form="terminado-form"
                     value={terminadoForm.concentrado}
+                    disabled={!terminadoForm.sabor}
                     onChange={(e) => setTerminadoForm({ ...terminadoForm, concentrado: e.target.value })}
                     style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem', width: '100%' }}
                   >
                     <option value="" disabled>Seleccione...</option>
-                    {concentrados.map((c) => (
-                      <option key={c.id} value={c.codigo}>{c.codigo}</option>
+                    {terminadoForm.sabor && getConcentradosForSabor(terminadoForm.sabor).map((c) => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
