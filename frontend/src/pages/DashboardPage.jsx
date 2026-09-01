@@ -255,36 +255,81 @@ export default function DashboardPage() {
     return `${dateStr} ${time}`.trim();
   };
 
-  // 1. Datos para gráfico de °BRIX (desde Jarabe)
+  // 1. Datos para gráfico de °BRIX (desde Bebida y Jarabe)
   const brixChartData = useMemo(() => {
     if (isSodaOrSifon || !currentStandard?.brix) return [];
 
-    let filtered = jarabeData.filter((item) => {
+    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+
+    const filteredBebida = bebidaData.filter((item) => {
+      if (item.grados_brix === null || item.grados_brix === undefined) return false;
+      if (item.linea && item.linea !== lineaNum) return false;
+      if (!matchesDateFilter(item.fecha)) return false;
+      if (!matchesSabor(item.marca)) return false;
+      return true;
+    });
+
+    const filteredJarabe = jarabeData.filter((item) => {
       if (item.bx_patron === null || item.bx_patron === undefined) return false;
       if (!matchesDateFilter(item.fecha)) return false;
       if (!matchesSabor(item.sabor)) return false;
       return true;
     });
 
-    // Orden cronológico
-    filtered = [...filtered].reverse();
+    // Helper to parse date for sorting
+    const parseDateTime = (d, t) => {
+      if (!d) return 0;
+      const [year, month, day] = d.split('-');
+      let [hh, mm] = ['00', '00'];
+      if (t) {
+        [hh, mm] = t.split(':');
+      }
+      return new Date(year, month - 1, day, hh, mm).getTime();
+    };
 
-    if (filtered.length === 0) {
+    const combined = [];
+
+    filteredBebida.forEach(item => {
+      combined.push({
+        type: 'bebida',
+        time: parseDateTime(item.fecha, item.hora),
+        label: formatDateTimeLabel(item.fecha, item.hora),
+        fullTime: `${item.fecha || ''} ${item.hora || ''}`.trim(),
+        valor: item.grados_brix,
+        meta: { responsable: item.responsable }
+      });
+    });
+
+    filteredJarabe.forEach(item => {
+      combined.push({
+        type: 'jarabe',
+        time: parseDateTime(item.fecha, item.hora),
+        label: formatDateTimeLabel(item.fecha, item.hora),
+        fullTime: `${item.fecha || ''} ${item.hora || ''}`.trim(),
+        valorSecundario: item.bx_patron,
+        meta: { responsable: item.responsable, tanque: item.tanque }
+      });
+    });
+
+    combined.sort((a, b) => a.time - b.time);
+
+    if (combined.length === 0) {
       return [
         { label: 'Ref', valor: currentStandard.brix.objetivo, limiteMin: currentStandard.brix.min, limiteMax: currentStandard.brix.max, objetivo: currentStandard.brix.objetivo },
       ];
     }
 
-    return filtered.map((item) => ({
-      label: formatDateTimeLabel(item.fecha, item.hora),
-      fullTime: `${item.fecha || ''} ${item.hora || ''}`.trim(),
-      valor: item.bx_patron,
+    return combined.map((item) => ({
+      label: item.label,
+      fullTime: item.fullTime,
+      valor: item.valor ?? null,
+      valorSecundario: item.valorSecundario ?? null,
       limiteMin: currentStandard.brix.min,
       limiteMax: currentStandard.brix.max,
       objetivo: currentStandard.brix.objetivo,
-      meta: { responsable: item.responsable, tanque: item.tanque },
+      meta: item.meta,
     }));
-  }, [jarabeData, currentStandard, isSodaOrSifon, matchesDateFilter, matchesSabor, selectedFecha]);
+  }, [bebidaData, jarabeData, currentStandard, isSodaOrSifon, matchesDateFilter, matchesSabor, selectedFecha, selectedLinea]);
 
   // 2. Datos para gráfico de TA (desde Jarabe)
   const taChartData = useMemo(() => {
@@ -655,7 +700,7 @@ export default function DashboardPage() {
         <div className="chart-card card">
           <ControlChart
             type="time"
-            title="°Brix 20° Bebida (Control de Jarabe)"
+            title="°Brix 20° Bebida"
             data={brixChartData}
             staticLimits={currentStandard?.brix}
             yAxisLabel="VALOR | LIMITE_MIN | LIMITE_MAX | OBJETIVO"
@@ -663,6 +708,7 @@ export default function DashboardPage() {
             unit="°Bx"
             notApplicable={isSodaOrSifon}
             notApplicableMessage={`El producto ${selectedSabor} no utiliza Jarabe ni tiene especificación de Brix.`}
+            valorSecundarioLabel="Patrón Jarabe"
           />
         </div>
 

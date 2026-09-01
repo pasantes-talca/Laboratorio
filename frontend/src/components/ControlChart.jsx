@@ -15,6 +15,7 @@ import React, { useState, useId } from 'react';
  * - yMaxManual?: number
  * - notApplicable?: boolean
  * - notApplicableMessage?: string
+ * - valorSecundarioLabel?: string
  */
 export default function ControlChart({
   type = 'time',
@@ -28,6 +29,7 @@ export default function ControlChart({
   yMaxManual = null,
   notApplicable = false,
   notApplicableMessage = 'No aplica para este producto',
+  valorSecundarioLabel = 'PATRON',
 }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const chartId = useId();
@@ -67,6 +69,7 @@ export default function ControlChart({
       label: d.label || (type === 'cab' ? `${index + 1}` : ''),
       fullTime: d.fullTime || d.label,
       valor: d.valor !== null && d.valor !== undefined && !isNaN(d.valor) ? Number(d.valor) : null,
+      valorSecundario: d.valorSecundario !== null && d.valorSecundario !== undefined && !isNaN(d.valorSecundario) ? Number(d.valorSecundario) : null,
       limiteMin: minLim !== null ? Number(minLim) : null,
       limiteMax: maxLim !== null ? Number(maxLim) : null,
       objetivo: obj !== null ? Number(obj) : null,
@@ -78,6 +81,7 @@ export default function ControlChart({
   let allYValues = [];
   points.forEach((p) => {
     if (p.valor !== null) allYValues.push(p.valor);
+    if (p.valorSecundario !== null) allYValues.push(p.valorSecundario);
     if (p.limiteMin !== null) allYValues.push(p.limiteMin);
     if (p.limiteMax !== null) allYValues.push(p.limiteMax);
     if (p.objetivo !== null) allYValues.push(p.objetivo);
@@ -129,6 +133,7 @@ export default function ControlChart({
     ...p,
     x: scaleX(idx),
     yVal: scaleY(p.valor),
+    ySec: scaleY(p.valorSecundario),
     yMin: scaleY(p.limiteMin),
     yMax: scaleY(p.limiteMax),
     yObj: scaleY(p.objetivo),
@@ -146,11 +151,16 @@ export default function ControlChart({
     .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.yVal}`)
     .join(' ');
 
+  const pathValorSecundario = computedPoints
+    .filter((p) => p.ySec !== null)
+    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.ySec}`)
+    .join(' ');
+
   const pathLimiteMin = generatePath('yMin');
   const pathLimiteMax = generatePath('yMax');
   const pathObjetivo = generatePath('yObj');
 
-  const hasData = points.some((p) => p.valor !== null);
+  const hasData = points.some((p) => p.valor !== null || p.valorSecundario !== null);
 
   return (
     <div className="control-chart-container">
@@ -174,6 +184,16 @@ export default function ControlChart({
           </span>
           <span className="legend-text">VALOR</span>
         </div>
+
+        {points.some(p => p.valorSecundario !== null) && (
+          <div className="legend-item">
+            <span className="legend-symbol" style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0ea5e9' }} />
+              <span style={{ width: '16px', height: '2px', backgroundColor: '#0ea5e9', marginLeft: '-12px' }} />
+            </span>
+            <span className="legend-text">{valorSecundarioLabel}</span>
+          </div>
+        )}
 
         <div className="legend-item">
           <span className="legend-symbol symbol-min" />
@@ -316,6 +336,18 @@ export default function ControlChart({
             />
           )}
 
+          {/* Línea de VALOR SECUNDARIO (Azul sólido) */}
+          {pathValorSecundario && (
+            <path
+              d={pathValorSecundario}
+              fill="none"
+              stroke="#0ea5e9"
+              strokeWidth="2.2"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          )}
+
           {/* Nodos de VALOR (Círculos púrpuras) */}
           {computedPoints.map((p, i) => {
             if (p.yVal === null) return null;
@@ -354,6 +386,35 @@ export default function ControlChart({
                   cy={p.yVal}
                   r={isHovered ? 6 : 4}
                   fill="#8e24aa"
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                  style={{ transition: 'r 0.15s ease' }}
+                />
+              </g>
+            );
+          })}
+
+          {/* Nodos de VALOR SECUNDARIO (Círculos azules) */}
+          {computedPoints.map((p, i) => {
+            if (p.ySec === null) return null;
+            const isHovered = hoveredPoint?.index === p.index;
+
+            return (
+              <g
+                key={`node-sec-${i}`}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHoveredPoint(p)}
+                onMouseLeave={() => setHoveredPoint(null)}
+              >
+                {/* Zona de hover invisible más grande */}
+                <circle cx={p.x} cy={p.ySec} r={14} fill="transparent" />
+
+                {/* Nodo principal */}
+                <circle
+                  cx={p.x}
+                  cy={p.ySec}
+                  r={isHovered ? 6 : 4}
+                  fill="#0ea5e9"
                   stroke="#ffffff"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
@@ -418,12 +479,22 @@ export default function ControlChart({
             <div className="tooltip-title">
               {type === 'cab' ? `Cabezal #${hoveredPoint.label}` : hoveredPoint.fullTime}
             </div>
-            <div className="tooltip-row highlight">
-              <span>Valor Medido:</span>
-              <strong>
-                {hoveredPoint.valor} {unit}
-              </strong>
-            </div>
+            {hoveredPoint.valor !== null && (
+              <div className="tooltip-row highlight">
+                <span>Valor Medido:</span>
+                <strong>
+                  {hoveredPoint.valor} {unit}
+                </strong>
+              </div>
+            )}
+            {hoveredPoint.valorSecundario !== null && (
+              <div className="tooltip-row highlight" style={{ color: '#0ea5e9' }}>
+                <span>{valorSecundarioLabel}:</span>
+                <strong>
+                  {hoveredPoint.valorSecundario} {unit}
+                </strong>
+              </div>
+            )}
             {hoveredPoint.objetivo !== null && (
               <div className="tooltip-row">
                 <span>Objetivo:</span>
