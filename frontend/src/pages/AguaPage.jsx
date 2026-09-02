@@ -82,14 +82,16 @@ export default function AguaPage() {
     cip_enjuague_sanitizante_fin: '',
     cip_enjuague_desinfectante_inicio: '',
     cip_enjuague_desinfectante_fin: '',
+    cip_opciones: [],
   };
   const [salaSaneadoForm, setSalaSaneadoForm] = useState(initialSalaSaneadoState);
 
   const handleSalaSaneadoSubmit = async (e) => {
     e.preventDefault();
     try {
+      const { cip_opciones, ...rest } = salaSaneadoForm;
       const payload = {
-        ...salaSaneadoForm,
+        ...rest,
         cop_hora_inicio: salaSaneadoForm.cop_hora_inicio || null,
         cop_hora_fin: salaSaneadoForm.cop_hora_fin || null,
         cip_sanitizante_temp: salaSaneadoForm.cip_sanitizante_temp ? parseFloat(salaSaneadoForm.cip_sanitizante_temp) : null,
@@ -296,69 +298,100 @@ export default function AguaPage() {
               {salaSaneadoForm.tipo_limpieza === 'CIP' && (
                 <div className="col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
                   
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                    <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Sanitizante</h4>
-                    <div className="form-grid">
-                      <div className="field-container">
-                        <label>Temperatura</label>
-                        <input type="number" step="0.1" value={salaSaneadoForm.cip_sanitizante_temp} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_temp: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Inicio</label>
-                        <input type="time" value={salaSaneadoForm.cip_sanitizante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_inicio: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Fin</label>
-                        <input type="time" value={salaSaneadoForm.cip_sanitizante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_fin: e.target.value })} />
-                      </div>
+                  <div className="field-container">
+                    <label>Etapas CIP a registrar</label>
+                    <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-glass)', padding: '1rem' }}>
+                      {['Sanitizante', 'Desinfectante', 'Enjuague Sanitizante', 'Enjuague Desinfectante'].map(opt => (
+                        <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                          <input 
+                            type="checkbox"
+                            checked={salaSaneadoForm.cip_opciones?.includes(opt) || false}
+                            onChange={(e) => {
+                              const currentOpts = salaSaneadoForm.cip_opciones || [];
+                              const newOpts = e.target.checked 
+                                ? [...currentOpts, opt]
+                                : currentOpts.filter(o => o !== opt);
+                              setSalaSaneadoForm({ ...salaSaneadoForm, cip_opciones: newOpts });
+                            }}
+                            style={{ cursor: 'pointer', accentColor: 'var(--accent-primary)' }}
+                          />
+                          {opt}
+                        </label>
+                      ))}
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                    <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Desinfectante</h4>
-                    <div className="form-grid">
-                      <div className="field-container">
-                        <label>Temperatura</label>
-                        <input type="number" step="0.1" value={salaSaneadoForm.cip_desinfectante_temp} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_temp: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Inicio</label>
-                        <input type="time" value={salaSaneadoForm.cip_desinfectante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_inicio: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Fin</label>
-                        <input type="time" value={salaSaneadoForm.cip_desinfectante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_fin: e.target.value })} />
+                  {(salaSaneadoForm.cip_opciones || []).includes('Sanitizante') && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Sanitizante</h4>
+                      <div className="form-grid">
+                        <div className="field-container">
+                          <label>Temperatura</label>
+                          <input type="number" step="0.1" value={salaSaneadoForm.cip_sanitizante_temp} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_temp: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Inicio</label>
+                          <input type="time" value={salaSaneadoForm.cip_sanitizante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_inicio: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Fin</label>
+                          <input type="time" value={salaSaneadoForm.cip_sanitizante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_sanitizante_fin: e.target.value })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                    <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Enjuague Sanitizante</h4>
-                    <div className="form-grid">
-                      <div className="field-container">
-                        <label>Hora Inicio</label>
-                        <input type="time" value={salaSaneadoForm.cip_enjuague_sanitizante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_sanitizante_inicio: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Fin</label>
-                        <input type="time" value={salaSaneadoForm.cip_enjuague_sanitizante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_sanitizante_fin: e.target.value })} />
+                  {(salaSaneadoForm.cip_opciones || []).includes('Desinfectante') && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Desinfectante</h4>
+                      <div className="form-grid">
+                        <div className="field-container">
+                          <label>Temperatura</label>
+                          <input type="number" step="0.1" value={salaSaneadoForm.cip_desinfectante_temp} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_temp: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Inicio</label>
+                          <input type="time" value={salaSaneadoForm.cip_desinfectante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_inicio: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Fin</label>
+                          <input type="time" value={salaSaneadoForm.cip_desinfectante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_desinfectante_fin: e.target.value })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                    <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Enjuague Desinfectante</h4>
-                    <div className="form-grid">
-                      <div className="field-container">
-                        <label>Hora Inicio</label>
-                        <input type="time" value={salaSaneadoForm.cip_enjuague_desinfectante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_desinfectante_inicio: e.target.value })} />
-                      </div>
-                      <div className="field-container">
-                        <label>Hora Fin</label>
-                        <input type="time" value={salaSaneadoForm.cip_enjuague_desinfectante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_desinfectante_fin: e.target.value })} />
+                  {(salaSaneadoForm.cip_opciones || []).includes('Enjuague Sanitizante') && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Enjuague Sanitizante</h4>
+                      <div className="form-grid">
+                        <div className="field-container">
+                          <label>Hora Inicio</label>
+                          <input type="time" value={salaSaneadoForm.cip_enjuague_sanitizante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_sanitizante_inicio: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Fin</label>
+                          <input type="time" value={salaSaneadoForm.cip_enjuague_sanitizante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_sanitizante_fin: e.target.value })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {(salaSaneadoForm.cip_opciones || []).includes('Enjuague Desinfectante') && (
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Enjuague Desinfectante</h4>
+                      <div className="form-grid">
+                        <div className="field-container">
+                          <label>Hora Inicio</label>
+                          <input type="time" value={salaSaneadoForm.cip_enjuague_desinfectante_inicio} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_desinfectante_inicio: e.target.value })} />
+                        </div>
+                        <div className="field-container">
+                          <label>Hora Fin</label>
+                          <input type="time" value={salaSaneadoForm.cip_enjuague_desinfectante_fin} onChange={(e) => setSalaSaneadoForm({ ...salaSaneadoForm, cip_enjuague_desinfectante_fin: e.target.value })} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
