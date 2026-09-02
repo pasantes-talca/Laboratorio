@@ -8,6 +8,7 @@ from backend.app.models.jarabe import (
     ParteJarabe,
 )
 from backend.app.models.ops import ControlTorque, ControlPausa
+from backend.app.models.agua import ControlFisicoQuimico, SalaSaneado
 
 __all__ = [
     "Base",
@@ -21,4 +22,6 @@ __all__ = [
     "ParteJarabe",
     "ControlTorque",
     "ControlPausa",
+    "ControlFisicoQuimico",
+    "SalaSaneado",
 ]

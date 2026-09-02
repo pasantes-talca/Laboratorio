@@ -10,14 +10,13 @@ from backend.app.api.routers import (
     jarabe_router,
     ops_router,
     spa_router,
+    agua_router,
 )
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
-
 
 app = FastAPI(
     title="Laboratorio de Calidad - Control de Bebida Terminada",
@@ -47,6 +46,7 @@ app.include_router(calidad_router)
 app.include_router(jarabe_router)
 app.include_router(ops_router)
 app.include_router(spa_router)
+app.include_router(agua_router)
 
 if __name__ == "__main__":
     import uvicorn

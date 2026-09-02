@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlaskConical, CheckSquare, Layers, LineChart } from 'lucide-react';
+import { FlaskConical, CheckSquare, Layers, LineChart, Droplet } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 
 export default function Navbar({ activePage, setActivePage }) {
@@ -37,6 +37,15 @@ export default function Navbar({ activePage, setActivePage }) {
         >
           <Layers size={18} />
           Sala de Jarabe
+        </button>
+
+        <button
+          type="button"
+          className={`nav-link ${activePage === 'agua' ? 'active' : ''}`}
+          onClick={() => setActivePage('agua')}
+        >
+          <Droplet size={18} />
+          Agua
         </button>
 
         <button

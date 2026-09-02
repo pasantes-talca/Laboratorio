@@ -150,3 +150,18 @@ export async function parseJarabeExcel(file) {
 
   return res.json();
 }
+
+// Agua endpoints
+export async function submitControlFisicoQuimico(payload) {
+  return fetchJson('/agua/fisico-quimico', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitSalaSaneado(payload) {
+  return fetchJson('/agua/sala-saneado', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
