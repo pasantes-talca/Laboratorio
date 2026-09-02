@@ -198,6 +198,13 @@ function getColorBySabor(sabor) {
     setTorqueForm((prev) => ({ ...prev, color: autoColor }));
   }, [production.sabor]);
 
+  useEffect(() => {
+    setTorqueForm((prev) => ({
+      ...prev,
+      cabezales: [{ numero: 1, valor: '' }],
+    }));
+  }, [production.turno]);
+
   const addCabezal = () => {
     setTorqueForm((prev) => {
       const lastNum = prev.cabezales[prev.cabezales.length - 1]?.numero || 0;
@@ -247,11 +254,15 @@ function getColorBySabor(sabor) {
           : `${torqueForm.cabezales.length} cabezales registrados`,
         'success',
       );
-      setTorqueForm((prev) => ({
-        ...prev,
-        hora: '',
-        cabezales: [{ numero: 1, valor: '' }],
-      }));
+      setTorqueForm((prev) => {
+        const lastNum = prev.cabezales[prev.cabezales.length - 1]?.numero || 0;
+        const nextNum = lastNum >= maxCabezales ? 1 : lastNum + 1;
+        return {
+          ...prev,
+          hora: '',
+          cabezales: [{ numero: nextNum, valor: '' }],
+        };
+      });
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -623,7 +634,7 @@ function getColorBySabor(sabor) {
                 >
                   <option value="">Sin especificar</option>
                   <option value="PRIVA">PRIVA</option>
-                  <option value="SIDE">SIDE</option>
+                  <option value="SIDEL">SIDEL</option>
                 </select>
               </div>
 
@@ -664,7 +675,7 @@ function getColorBySabor(sabor) {
                     <select
                       value={cab.numero}
                       onChange={(e) => updateCabezal(idx, 'numero', parseInt(e.target.value, 10))}
-                      style={{ width: '140px', flexShrink: 0 }}
+                      style={{ minWidth: '160px', width: 'auto', flexShrink: 0, paddingLeft: '1rem' }}
                     >
                       {Array.from({ length: maxCabezales }, (_, i) => i + 1).map((num) => (
                         <option key={num} value={num}>Cabezal {num}</option>
