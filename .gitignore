@@ -1,0 +1,8 @@
+*.json
+.gitatributes
+.env
+__pycache__
+node_modules
+*.txt
+/env
+*.pyc
