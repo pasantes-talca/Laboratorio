@@ -69,7 +69,7 @@ export default function ProductionModal() {
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>
-            <Settings2 size={20} color="#a855f7" />
+            <Settings2 size={20} color="#0077B6" />
             Asignar Producción en Línea
           </h3>
           <button type="button" className="btn-close-modal" onClick={closeModal}>

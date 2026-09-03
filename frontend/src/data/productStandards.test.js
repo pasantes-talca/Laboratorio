@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { PRODUCT_STANDARDS, findProductStandard } from './productStandards';
 
 describe('PRODUCT_STANDARDS', () => {
-  it('contains 11 products with unique ids', () => {
-    expect(PRODUCT_STANDARDS).toHaveLength(11);
+  it('contains 12 products with unique ids', () => {
+    expect(PRODUCT_STANDARDS).toHaveLength(12);
     const ids = PRODUCT_STANDARDS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
@@ -72,7 +72,7 @@ describe('PRODUCT_STANDARDS', () => {
 describe('findProductStandard', () => {
   it('returns COLA Givaudan (index 2) when sabor is falsy', () => {
     expect(findProductStandard('')).toBe(
-      PRODUCT_STANDARDS.find((p) => p.id === 'cola-givaudan')
+      PRODUCT_STANDARDS.find((p) => p.id === 'cola-xq')
     );
     expect(findProductStandard(null)).toBe(findProductStandard(''));
     expect(findProductStandard(undefined)).toBe(findProductStandard(''));
@@ -96,7 +96,7 @@ describe('findProductStandard', () => {
 
   describe('concentrado disambiguation (GIVAUDAN vs IFF)', () => {
     it('cola defaults to givaudan when no iff marker', () => {
-      expect(findProductStandard('COLA').id).toBe('cola-givaudan');
+      expect(findProductStandard('COLA').id).toBe('cola-xq');
     });
 
     it('cola resolves to IFF via sabor marker', () => {
@@ -133,7 +133,7 @@ describe('findProductStandard', () => {
 
   it('falls back to COLA Givaudan for completely unknown sabor', () => {
     expect(findProductStandard('frutilla')).toBe(
-      PRODUCT_STANDARDS.find((p) => p.id === 'cola-givaudan')
+      PRODUCT_STANDARDS.find((p) => p.id === 'cola-xq')
     );
     expect(findProductStandard('xyz123')).toBe(findProductStandard(''));
   });

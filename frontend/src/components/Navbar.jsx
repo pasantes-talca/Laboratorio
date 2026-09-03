@@ -1,5 +1,6 @@
 import React from 'react';
-import { FlaskConical, CheckSquare, Layers, LineChart, Droplet } from 'lucide-react';
+import { CheckSquare, Layers, LineChart, Droplet } from 'lucide-react';
+import logoImg from '../assets/logo-color-fondo.png';
 import { useProduction } from '../context/ProductionContext';
 
 export default function Navbar({ activePage, setActivePage }) {
@@ -11,9 +12,11 @@ export default function Navbar({ activePage, setActivePage }) {
   return (
     <header className="main-header">
       <div className="header-brand">
-        <div className="brand-badge">
-          <FlaskConical size={26} />
-        </div>
+        <img
+          src={logoImg}
+          alt="Laboratorio Talca"
+          style={{ height: '3rem', width: '3rem', objectFit: 'contain', borderRadius: '0.5rem' }}
+        />
         <div>
           <h1>Laboratorio de Calidad</h1>
           <div className="header-subtitle">Control de Procesos y Producto Terminado</div>

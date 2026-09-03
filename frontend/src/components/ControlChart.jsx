@@ -161,6 +161,7 @@ export default function ControlChart({
   const pathObjetivo = generatePath('yObj');
 
   const hasData = points.some((p) => p.valor !== null || p.valorSecundario !== null);
+  const hasSecondaryData = points.some((p) => p.valorSecundario !== null);
 
   return (
     <div className="control-chart-container">
@@ -185,11 +186,11 @@ export default function ControlChart({
           <span className="legend-text">VALOR</span>
         </div>
 
-        {points.some(p => p.valorSecundario !== null) && (
+        {hasSecondaryData && (
           <div className="legend-item">
             <span className="legend-symbol" style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0ea5e9' }} />
-              <span style={{ width: '16px', height: '2px', backgroundColor: '#0ea5e9', marginLeft: '-12px' }} />
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0077B6' }} />
+              <span style={{ width: '16px', height: '2px', backgroundColor: '#0077B6', marginLeft: '-12px' }} />
             </span>
             <span className="legend-text">{valorSecundarioLabel}</span>
           </div>
@@ -248,9 +249,9 @@ export default function ControlChart({
                   y={yPos + 4}
                   textAnchor="end"
                   fontSize="11"
-                  fill="#334155"
+                  fill="#1A202C"
                   fontWeight="600"
-                  fontFamily="'Plus Jakarta Sans', sans-serif"
+                  fontFamily="'Inter', sans-serif"
                 >
                   {tickVal.toFixed(Number.isInteger(tickVal) ? 0 : 2)}
                 </text>
@@ -266,7 +267,7 @@ export default function ControlChart({
                 y1={padding.top}
                 x2={p.x}
                 y2={padding.top + chartHeight}
-                stroke="#f1f5f9"
+                stroke="#e2e8f0"
                 strokeWidth="1"
                 strokeDasharray="3 3"
               />
@@ -276,7 +277,7 @@ export default function ControlChart({
                 y1={padding.top + chartHeight}
                 x2={p.x}
                 y2={padding.top + chartHeight + 5}
-                stroke="#334155"
+                stroke="#0F2C45"
                 strokeWidth="1.2"
               />
               {/* Etiqueta X */}
@@ -286,9 +287,9 @@ export default function ControlChart({
                 textAnchor={type === 'cab' ? 'middle' : 'end'}
                 transform={type === 'cab' ? undefined : `rotate(-38, ${p.x}, ${padding.top + chartHeight + 16})`}
                 fontSize={type === 'cab' ? '11' : '10'}
-                fill="#1e293b"
+                fill="#1A202C"
                 fontWeight="600"
-                fontFamily="'Plus Jakarta Sans', sans-serif"
+                fontFamily="'Inter', sans-serif"
               >
                 {p.label}
               </text>
@@ -300,7 +301,7 @@ export default function ControlChart({
             <path
               d={pathLimiteMin}
               fill="none"
-              stroke="#e57373"
+              stroke="#E53E3E"
               strokeWidth="1.6"
               strokeDasharray="6 4"
             />
@@ -309,7 +310,7 @@ export default function ControlChart({
             <path
               d={pathLimiteMax}
               fill="none"
-              stroke="#e57373"
+              stroke="#E53E3E"
               strokeWidth="1.6"
               strokeDasharray="6 4"
             />
@@ -318,37 +319,37 @@ export default function ControlChart({
             <path
               d={pathObjetivo}
               fill="none"
-              stroke="#66bb6a"
-              strokeWidth="1.6"
+              stroke="#2F855A"
+              strokeWidth="1.8"
               strokeDasharray="6 4"
             />
           )}
 
-          {/* Línea de VALOR (Púrpura sólido) */}
+          {/* Línea de VALOR (Verde Bosque Estructural #40675D) */}
           {pathValor && (
             <path
               d={pathValor}
               fill="none"
-              stroke="#8e24aa"
-              strokeWidth="2.2"
+              stroke="#0077B6"
+              strokeWidth="2.4"
               strokeLinejoin="round"
               strokeLinecap="round"
             />
           )}
 
-          {/* Línea de VALOR SECUNDARIO (Azul sólido) */}
+          {/* Línea de VALOR SECUNDARIO (Celeste Dinámico #78C0E0) */}
           {pathValorSecundario && (
             <path
               d={pathValorSecundario}
               fill="none"
-              stroke="#0ea5e9"
+              stroke="#E31B23"
               strokeWidth="2.2"
               strokeLinejoin="round"
               strokeLinecap="round"
             />
           )}
 
-          {/* Nodos de VALOR (Círculos púrpuras) */}
+          {/* Nodos de VALOR (Círculos #40675D) */}
           {computedPoints.map((p, i) => {
             if (p.yVal === null) return null;
             const isHovered = hoveredPoint?.index === p.index;
@@ -373,10 +374,10 @@ export default function ControlChart({
                     cy={p.yVal}
                     r={8}
                     fill="none"
-                    stroke="#ef4444"
+                    stroke="#E53E3E"
                     strokeWidth="2"
                     strokeDasharray="2 2"
-                    opacity="0.8"
+                    opacity="0.85"
                   />
                 )}
 
@@ -385,7 +386,7 @@ export default function ControlChart({
                   cx={p.x}
                   cy={p.yVal}
                   r={isHovered ? 6 : 4}
-                  fill="#8e24aa"
+                  fill="#0077B6"
                   stroke="#ffffff"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
@@ -394,7 +395,7 @@ export default function ControlChart({
             );
           })}
 
-          {/* Nodos de VALOR SECUNDARIO (Círculos azules) */}
+          {/* Nodos de VALOR SECUNDARIO (Círculos #78C0E0) */}
           {computedPoints.map((p, i) => {
             if (p.ySec === null) return null;
             const isHovered = hoveredPoint?.index === p.index;
@@ -414,7 +415,7 @@ export default function ControlChart({
                   cx={p.x}
                   cy={p.ySec}
                   r={isHovered ? 6 : 4}
-                  fill="#0ea5e9"
+                  fill="#E31B23"
                   stroke="#ffffff"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
@@ -430,10 +431,10 @@ export default function ControlChart({
             transform="rotate(-90)"
             textAnchor="middle"
             fontSize="10.5"
-            fill="#475569"
+            fill="#1A202C"
             fontWeight="700"
             letterSpacing="0.5px"
-            fontFamily="'Plus Jakarta Sans', sans-serif"
+            fontFamily="'Inter', sans-serif"
           >
             {yAxisLabel}
           </text>
@@ -444,10 +445,10 @@ export default function ControlChart({
             y={height - (type === 'cab' ? 10 : 8)}
             textAnchor="middle"
             fontSize="11"
-            fill="#334155"
+            fill="#1A202C"
             fontWeight="700"
             letterSpacing="0.5px"
-            fontFamily="'Plus Jakarta Sans', sans-serif"
+            fontFamily="'Inter', sans-serif"
           >
             {xAxisLabel}
           </text>
@@ -488,7 +489,7 @@ export default function ControlChart({
               </div>
             )}
             {hoveredPoint.valorSecundario !== null && (
-              <div className="tooltip-row highlight" style={{ color: '#0ea5e9' }}>
+              <div className="tooltip-row highlight" style={{ color: '#0077B6' }}>
                 <span>{valorSecundarioLabel}:</span>
                 <strong>
                   {hoveredPoint.valorSecundario} {unit}

@@ -165,3 +165,24 @@ export async function submitSalaSaneado(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function submitAnalisisCloro(payload) {
+  return fetchJson('/agua/analisis-cloro', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitOsmosisInversa(payload) {
+  return fetchJson('/agua/osmosis-inversa', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitFiltroArena(payload) {
+  return fetchJson('/agua/filtro-arena', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

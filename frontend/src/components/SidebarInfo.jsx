@@ -53,9 +53,9 @@ export default function SidebarInfo({ customHint, showLoteTapa = false }) {
   };
 
   const selectStyle = {
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: '#ffffff',
     border: '1px solid var(--border-glass)',
-    color: '#fff',
+    color: 'var(--text-primary)',
     borderRadius: 'var(--radius-sm)',
     padding: '0.3rem 0.5rem',
     fontSize: '0.85rem',

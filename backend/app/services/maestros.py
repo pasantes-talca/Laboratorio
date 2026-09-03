@@ -9,10 +9,10 @@ def load_maestros() -> dict:
             return json.load(f)
     except Exception:
         return {
-            "responsables": [],
-            "responsables_jarabe": [],
-            "marcas": [],
-            "tipos_concentrado": [],
-            "tamanos": [],
-            "tanques": [],
+            "responsables": ["Juan Pérez", "María González", "Carlos López", "Ana Martínez"],
+            "responsables_jarabe": ["Ana Martínez", "Luis Rodríguez", "Pedro Sánchez"],
+            "marcas": ["Cola", "Naranja", "Lima", "Pomelo", "Manzana", "Sifon", "Soda"],
+            "tipos_concentrado": ["Regular", "Zero", "Light"],
+            "tamanos": ["500ml", "1.5L", "2L", "2.25L", "3L"],
+            "tanques": ["T1", "T2", "T3", "T4", "T5"],
         }
