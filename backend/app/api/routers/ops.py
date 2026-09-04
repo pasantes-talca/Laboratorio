@@ -8,6 +8,9 @@ from backend.app.schemas.ops import ControlTorqueCreate, ControlPausaCreate
 router = APIRouter(prefix="/api", tags=["Operaciones"])
 
 
+@router.post("/calidad/torque", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/control-torque", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/controles-torque", status_code=status.HTTP_201_CREATED)
 @router.post("/controles-torque", status_code=status.HTTP_201_CREATED)
 def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_torque guardando strings directamente."""
@@ -43,6 +46,9 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
     return {"id": registro.id, "message": "Control de torque registrado con éxito"}
 
 
+@router.get("/calidad/torque")
+@router.get("/calidad/control-torque")
+@router.get("/calidad/controles-torque")
 @router.get("/controles-torque")
 def get_controles_torque(db: Session = Depends(get_db)):
     controles = db.query(ControlTorque).order_by(ControlTorque.id.desc()).all()
@@ -64,6 +70,9 @@ def get_controles_torque(db: Session = Depends(get_db)):
     ]
 
 
+@router.delete("/calidad/torque/{control_id}")
+@router.delete("/calidad/control-torque/{control_id}")
+@router.delete("/calidad/controles-torque/{control_id}")
 @router.delete("/controles-torque/{control_id}")
 def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlTorque).filter(ControlTorque.id == control_id).first()
@@ -74,6 +83,8 @@ def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
     return {"message": "Registro eliminado con éxito"}
 
 
+@router.post("/calidad/pausa", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/pausas", status_code=status.HTTP_201_CREATED)
 @router.post("/pausas", status_code=status.HTTP_201_CREATED)
 def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
     """Registra una pausa de línea guardando strings directamente."""
@@ -96,6 +107,8 @@ def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
     return {"id": registro.id, "message": "Pausa registrada con éxito"}
 
 
+@router.get("/calidad/pausa")
+@router.get("/calidad/pausas")
 @router.get("/pausas")
 def get_pausas(db: Session = Depends(get_db)):
     pausas = db.query(ControlPausa).order_by(ControlPausa.id.desc()).all()

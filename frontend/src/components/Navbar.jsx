@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Layers, LineChart, Droplet } from 'lucide-react';
+import { CheckSquare, Layers, LineChart, Droplet, Waves } from 'lucide-react';
 import logoImg from '../assets/logo-color-fondo.png';
 import { useProduction } from '../context/ProductionContext';
 
@@ -53,6 +53,15 @@ export default function Navbar({ activePage, setActivePage }) {
 
         <button
           type="button"
+          className={`nav-link ${activePage === 'saneado' ? 'active' : ''}`}
+          onClick={() => setActivePage('saneado')}
+        >
+          <Waves size={18} />
+          Área de Saneado
+        </button>
+
+        <button
+          type="button"
           className={`nav-link ${activePage === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActivePage('dashboard')}
         >
@@ -60,8 +69,7 @@ export default function Navbar({ activePage, setActivePage }) {
           Dashboard
         </button>
 
-
-        {activePage !== 'jarabe' && (
+        {activePage === 'calidad' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className={`badge-pill ${lineaBadgeClass}`}>{lineaText}</span>
           </div>
@@ -70,3 +78,4 @@ export default function Navbar({ activePage, setActivePage }) {
     </header>
   );
 }
+

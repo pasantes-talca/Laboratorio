@@ -634,7 +634,7 @@ function getColorBySabor(sabor) {
                 >
                   <option value="">Sin especificar</option>
                   <option value="PRIVA">PRIVA</option>
-                  <option value="SIDEL">SIDEL</option>
+                  <option value="SIDES">SIDES</option>
                 </select>
               </div>
 

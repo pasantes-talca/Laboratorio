@@ -4,6 +4,7 @@ from backend.app.api.routers.jarabe import router as jarabe_router
 from backend.app.api.routers.ops import router as ops_router
 from backend.app.api.routers.spa import router as spa_router
 from backend.app.api.routers.agua import router as agua_router
+from backend.app.api.routers.saneado import router as saneado_router
 
 __all__ = [
     "maestros_router",
@@ -12,4 +13,6 @@ __all__ = [
     "ops_router",
     "spa_router",
     "agua_router",
+    "saneado_router",
 ]
+

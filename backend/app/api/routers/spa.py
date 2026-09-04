@@ -8,6 +8,9 @@ SPA_ROUTES = [
     "/",
     "/calidad",
     "/jarabe",
+    "/agua",
+    "/saneado",
+    "/area-saneado",
     "/preparacion-jarabe",
     "/produccion-jarabe",
     "/portal",
@@ -18,6 +21,9 @@ SPA_ROUTES = [
 @router.get("/")
 @router.get("/calidad")
 @router.get("/jarabe")
+@router.get("/agua")
+@router.get("/saneado")
+@router.get("/area-saneado")
 @router.get("/preparacion-jarabe")
 @router.get("/produccion-jarabe")
 @router.get("/portal")
@@ -29,3 +35,4 @@ async def get_react_app():
     return HTMLResponse(
         "<h3>Frontend React no compilado. Ejecute 'cd frontend && npm run build' o inicie 'npm run dev'.</h3>"
     )
+

@@ -36,6 +36,9 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
         )
 
 
+@router.post("/calidad/jarabe", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/control-jarabe", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/controles-jarabe", status_code=status.HTTP_201_CREATED)
 @router.post("/controles-jarabe", status_code=status.HTTP_201_CREATED)
 def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_jarabe guardando strings directamente."""
@@ -65,6 +68,9 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
     return {"id": registro.id, "message": "Control de jarabe registrado con éxito"}
 
 
+@router.get("/calidad/jarabe")
+@router.get("/calidad/control-jarabe")
+@router.get("/calidad/controles-jarabe")
 @router.get("/controles-jarabe")
 def get_controles_jarabe(db: Session = Depends(get_db)):
     controles = db.query(ControlJarabe).order_by(ControlJarabe.id.desc()).all()
@@ -86,6 +92,9 @@ def get_controles_jarabe(db: Session = Depends(get_db)):
     ]
 
 
+@router.delete("/calidad/jarabe/{control_id}")
+@router.delete("/calidad/control-jarabe/{control_id}")
+@router.delete("/calidad/controles-jarabe/{control_id}")
 @router.delete("/controles-jarabe/{control_id}")
 def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlJarabe).filter(ControlJarabe.id == control_id).first()

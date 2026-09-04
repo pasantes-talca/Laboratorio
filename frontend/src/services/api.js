@@ -160,10 +160,14 @@ export async function submitControlFisicoQuimico(payload) {
 }
 
 export async function submitSalaSaneado(payload) {
-  return fetchJson('/agua/sala-saneado', {
+  return fetchJson('/saneado/sala-saneado', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function submitAreaSaneado(payload) {
+  return submitSalaSaneado(payload);
 }
 
 export async function submitAnalisisCloro(payload) {

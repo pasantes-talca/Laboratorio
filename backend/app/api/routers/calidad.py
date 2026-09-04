@@ -58,6 +58,8 @@ def delete_control(control_id: int, db: Session = Depends(get_db)):
     return {"message": "Registro eliminado con éxito"}
 
 
+@router.post("/calidad/bebida_terminada", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/bebida-terminada", status_code=status.HTTP_201_CREATED)
 @router.post("/control-bebida", status_code=status.HTTP_201_CREATED)
 def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
     now = datetime.now()
@@ -106,6 +108,8 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
     }
 
 
+@router.get("/calidad/bebida_terminada")
+@router.get("/calidad/bebida-terminada")
 @router.get("/control-bebida")
 def get_controles_bebida(db: Session = Depends(get_db)):
     registros = db.query(ControlBebida).order_by(ControlBebida.id.desc()).all()
@@ -135,6 +139,8 @@ def get_controles_bebida(db: Session = Depends(get_db)):
     ]
 
 
+@router.delete("/calidad/bebida_terminada/{control_id}")
+@router.delete("/calidad/bebida-terminada/{control_id}")
 @router.delete("/control-bebida/{control_id}")
 def delete_control_bebida(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlBebida).filter(ControlBebida.id == control_id).first()
@@ -143,3 +149,4 @@ def delete_control_bebida(control_id: int, db: Session = Depends(get_db)):
     db.delete(control)
     db.commit()
     return {"message": "Registro eliminado con éxito"}
+

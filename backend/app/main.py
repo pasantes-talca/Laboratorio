@@ -11,6 +11,7 @@ from backend.app.api.routers import (
     ops_router,
     spa_router,
     agua_router,
+    saneado_router,
 )
 
 @asynccontextmanager
@@ -45,8 +46,11 @@ app.include_router(maestros_router)
 app.include_router(calidad_router)
 app.include_router(jarabe_router)
 app.include_router(ops_router)
-app.include_router(spa_router)
 app.include_router(agua_router)
+app.include_router(saneado_router)
+app.include_router(spa_router)
+
+
 
 if __name__ == "__main__":
     import uvicorn
