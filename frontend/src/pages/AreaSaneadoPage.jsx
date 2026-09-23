@@ -45,7 +45,8 @@ export default function AreaSaneadoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { cip_opciones, ...rest } = form;
+      const rest = { ...form };
+      delete rest.cip_opciones;
       const payload = {
         ...rest,
         cop_hora_inicio: form.cop_hora_inicio || null,
@@ -87,16 +88,17 @@ export default function AreaSaneadoPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
-                background: 'rgba(56, 189, 248, 0.1)',
+                background: 'var(--color-azul-hielo, #E8F4F8)',
                 padding: '0.6rem',
-                borderRadius: '10px',
-                color: 'var(--accent-primary, #38bdf8)',
+                borderRadius: 'var(--radius-md, 8px)',
+                color: 'var(--color-azul-clinico, #0077B6)',
+                border: '1px solid rgba(0, 119, 182, 0.2)',
               }}
             >
               <Waves size={24} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 600, color: 'var(--color-azul-marino, #0F2C45)' }}>
                 Área de Saneado
               </h2>
               <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -197,7 +199,7 @@ export default function AreaSaneadoPage() {
                       display: 'flex',
                       gap: '1.5rem',
                       flexWrap: 'wrap',
-                      background: 'rgba(255,255,255,0.03)',
+                      background: 'var(--color-gris-100, #F7FAFC)',
                       borderRadius: '8px',
                       border: '1px solid var(--border-glass)',
                       padding: '1rem',
@@ -229,7 +231,7 @@ export default function AreaSaneadoPage() {
                               : currentOpts.filter((o) => o !== opt);
                             setForm({ ...form, cip_opciones: newOpts });
                           }}
-                          style={{ cursor: 'pointer', accentColor: 'var(--accent-primary)' }}
+                          style={{ cursor: 'pointer', accentColor: 'var(--color-azul-clinico, #0077B6)' }}
                         />
                         {opt}
                       </label>

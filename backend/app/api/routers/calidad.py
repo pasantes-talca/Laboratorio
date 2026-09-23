@@ -1,9 +1,10 @@
 from typing import List
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from backend.app.core.config import BRAND_BOTTLE_COLOR
 from backend.app.core.database import get_db
+from backend.app.core.time import local_now
 from backend.app.models.calidad import RegistroCalidad, ControlBebida
 from backend.app.schemas.calidad import (
     RegistroCalidadCreate,
@@ -58,17 +59,18 @@ def delete_control(control_id: int, db: Session = Depends(get_db)):
     return {"message": "Registro eliminado con éxito"}
 
 
-@router.post("/calidad/bebida_terminada", status_code=status.HTTP_201_CREATED)
-@router.post("/calidad/bebida-terminada", status_code=status.HTTP_201_CREATED)
-@router.post("/control-bebida", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/bebidas", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/bebida_terminada", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/calidad/bebida-terminada", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/control-bebida", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
-    now = datetime.now()
+    now = local_now()
 
     if data.hora and data.hora.strip():
         try:
             hora_obj = datetime.strptime(data.hora.strip(), "%H:%M").time()
-        except ValueError:
-            hora_obj = now.time().replace(second=0, microsecond=0)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM") from exc
     else:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
@@ -108,11 +110,20 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
     }
 
 
-@router.get("/calidad/bebida_terminada")
-@router.get("/calidad/bebida-terminada")
-@router.get("/control-bebida")
-def get_controles_bebida(db: Session = Depends(get_db)):
-    registros = db.query(ControlBebida).order_by(ControlBebida.id.desc()).all()
+@router.get("/calidad/bebidas")
+@router.get("/calidad/bebida_terminada", include_in_schema=False)
+@router.get("/calidad/bebida-terminada", include_in_schema=False)
+@router.get("/control-bebida", include_in_schema=False)
+def get_controles_bebida(
+    linea: int | None = Query(None, ge=1, le=2),
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(ControlBebida)
+    if linea is not None:
+        query = query.filter(ControlBebida.linea == linea)
+    registros = query.order_by(ControlBebida.id.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": r.id,
@@ -139,9 +150,10 @@ def get_controles_bebida(db: Session = Depends(get_db)):
     ]
 
 
-@router.delete("/calidad/bebida_terminada/{control_id}")
-@router.delete("/calidad/bebida-terminada/{control_id}")
-@router.delete("/control-bebida/{control_id}")
+@router.delete("/calidad/bebidas/{control_id}")
+@router.delete("/calidad/bebida_terminada/{control_id}", include_in_schema=False)
+@router.delete("/calidad/bebida-terminada/{control_id}", include_in_schema=False)
+@router.delete("/control-bebida/{control_id}", include_in_schema=False)
 def delete_control_bebida(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlBebida).filter(ControlBebida.id == control_id).first()
     if not control:

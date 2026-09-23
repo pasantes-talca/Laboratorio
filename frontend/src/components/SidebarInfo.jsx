@@ -23,7 +23,7 @@ export default function SidebarInfo({ customHint, showLoteTapa = false }) {
       try {
         const m = await getMarcas();
         if (m && m.length) setMarcasCatalog(m);
-      } catch (_) {
+      } catch {
         // use default marcas
       }
     }
@@ -67,7 +67,7 @@ export default function SidebarInfo({ customHint, showLoteTapa = false }) {
   return (
     <aside className="sidebar-card">
       <div className="sidebar-header">
-        <PackageCheck size={20} color="#00f2fe" />
+        <PackageCheck size={20} color="var(--color-azul-clinico)" />
         <span>Producción Activa</span>
       </div>
 

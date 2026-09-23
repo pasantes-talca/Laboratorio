@@ -13,15 +13,12 @@ import {
   Droplets,
   User,
   PackageCheck,
-  Edit3,
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { useProduction } from '../context/ProductionContext';
 import MultiInputList from '../components/MultiInputList';
 import {
   getResponsablesJarabe,
   getSabores,
-  getTiposConcentrado,
   getTanques,
   getJarabeSimples,
   submitJarabeSimple,
@@ -34,12 +31,9 @@ import { getConcentradosForSabor } from '../utils/productRules';
 
 export default function SalaJarabePage() {
   const { showToast } = useToast();
-  const { production, openModal } = useProduction();
-
   const [activeTab, setActiveTab] = useState('simple');
   const [responsables, setResponsables] = useState([]);
   const [sabores, setSabores] = useState([]);
-  const [concentrados, setConcentrados] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
   // volcado_numero auto-computed
   const [volcadoAuto, setVolcadoAuto] = useState(null);
@@ -48,15 +42,13 @@ export default function SalaJarabePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [r, s, c, t] = await Promise.all([
+        const [r, s, t] = await Promise.all([
           getResponsablesJarabe(),
           getSabores(),
-          getTiposConcentrado(),
           getTanques(),
         ]);
         setResponsables(r);
         setSabores(s);
-        setConcentrados(c);
         const processedTanques = t.map(tanque => 
           tanque.numero === 'TALCA' ? { ...tanque, numero: 'N/A' } : tanque
         ).reduce((acc, curr) => {
@@ -102,7 +94,7 @@ export default function SalaJarabePage() {
         ? Math.max(...records.map(r => r.volcado_numero || 0)) + 1
         : 1;
       setVolcadoAuto(nextNum);
-    } catch (_) { setVolcadoAuto(null); }
+    } catch { setVolcadoAuto(null); }
   }, []);
 
   useEffect(() => {
@@ -446,7 +438,7 @@ export default function SalaJarabePage() {
                 <label>
                   N° Volcado <span className="required-star">*</span>
                   {volcadoAuto !== null && (
-                    <span style={{ marginLeft: '0.5rem', color: '#00f2fe', fontSize: '0.78rem' }}>
+                    <span style={{ marginLeft: '0.5rem', color: 'var(--color-azul-clinico)', fontSize: '0.78rem' }}>
                       (sugerido: {volcadoAuto})
                     </span>
                   )}
@@ -845,15 +837,15 @@ export default function SalaJarabePage() {
                 alignItems: 'center',
                 padding: '1rem',
                 borderRadius: 'var(--radius-lg)',
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
+                background: 'rgba(47, 133, 90, 0.08)',
+                border: '1px solid rgba(47, 133, 90, 0.25)',
                 marginBottom: '1.5rem',
                 flexWrap: 'wrap',
                 gap: '1rem',
               }}
             >
               <div>
-                <div style={{ fontWeight: 700, color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ fontWeight: 700, color: 'var(--color-exito)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <FileSpreadsheet size={18} />
                   Importar Parte desde Excel / HTML
                 </div>
@@ -951,7 +943,7 @@ export default function SalaJarabePage() {
             </div>
 
             <div style={{ marginTop: '1.75rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem' }}>
-              <h4 style={{ fontSize: '1rem', color: '#00f2fe', marginBottom: '1rem', fontWeight: 600 }}>
+              <h4 style={{ fontSize: '1rem', color: 'var(--color-azul-marino)', marginBottom: '1rem', fontWeight: 600 }}>
                 Dosificación de Materias Primas e Insumos (kg)
               </h4>
               <div className="form-grid">
@@ -1129,7 +1121,7 @@ export default function SalaJarabePage() {
         <aside className="sidebar-card">
           <div className="sidebar-header" style={{ justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <PackageCheck size={20} color="#00f2fe" />
+              <PackageCheck size={20} color="var(--color-azul-clinico)" />
               <span>{activeTab === 'simple' ? 'Jarabe Simple Activo' : 'Jarabe Terminado Activo'}</span>
             </div>
           </div>

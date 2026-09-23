@@ -7,6 +7,7 @@ export default function AguaPage() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('fisicoQuimico');
   const [responsables, setResponsables] = useState([]);
+  const [saving, setSaving] = useState(null);
 
   useEffect(() => {
     async function loadData() {
@@ -40,6 +41,8 @@ export default function AguaPage() {
 
   const handleFisicoQuimicoSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving('fisicoQuimico');
     try {
       const payload = {
         ...fisicoQuimicoForm,
@@ -58,6 +61,8 @@ export default function AguaPage() {
       setFisicoQuimicoForm(initialFisicoQuimicoState);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -80,6 +85,8 @@ export default function AguaPage() {
 
   const handleAnalisisCloroSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving('analisisCloro');
     try {
       const payload = {
         ...analisisCloroForm,
@@ -91,6 +98,8 @@ export default function AguaPage() {
       setAnalisisCloroForm(initialAnalisisCloroState);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -111,6 +120,8 @@ export default function AguaPage() {
 
   const handleOsmosisInversaSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving('osmosisInversa');
     try {
       const payload = {
         ...osmosisInversaForm,
@@ -126,6 +137,8 @@ export default function AguaPage() {
       setOsmosisInversaForm(initialOsmosisInversaState);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -142,6 +155,8 @@ export default function AguaPage() {
 
   const handleFiltroArenaSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving('filtroArena');
     try {
       const payload = {
         ...filtroArenaForm,
@@ -153,6 +168,8 @@ export default function AguaPage() {
       setFiltroArenaForm(initialFiltroArenaState);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -277,8 +294,8 @@ export default function AguaPage() {
               <button type="button" className="btn btn-secondary" onClick={() => setFisicoQuimicoForm(initialFisicoQuimicoState)}>
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
-                <Save size={16} /> Registrar Control
+              <button type="submit" className="btn btn-primary" disabled={saving === 'fisicoQuimico'}>
+                <Save size={16} /> {saving === 'fisicoQuimico' ? 'Guardando…' : 'Registrar Control'}
               </button>
             </div>
           </form>
@@ -421,8 +438,8 @@ export default function AguaPage() {
               <button type="button" className="btn btn-secondary" onClick={() => setAnalisisCloroForm(initialAnalisisCloroState)}>
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
-                <Save size={16} /> Registrar Análisis
+              <button type="submit" className="btn btn-primary" disabled={saving === 'analisisCloro'}>
+                <Save size={16} /> {saving === 'analisisCloro' ? 'Guardando…' : 'Registrar Análisis'}
               </button>
             </div>
           </form>
@@ -539,8 +556,8 @@ export default function AguaPage() {
               <button type="button" className="btn btn-secondary" onClick={() => setOsmosisInversaForm(initialOsmosisInversaState)}>
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
-                <Save size={16} /> Registrar Osmosis
+              <button type="submit" className="btn btn-primary" disabled={saving === 'osmosisInversa'}>
+                <Save size={16} /> {saving === 'osmosisInversa' ? 'Guardando…' : 'Registrar Osmosis'}
               </button>
             </div>
           </form>
@@ -605,8 +622,8 @@ export default function AguaPage() {
               <button type="button" className="btn btn-secondary" onClick={() => setFiltroArenaForm(initialFiltroArenaState)}>
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
-                <Save size={16} /> Registrar Filtro
+              <button type="submit" className="btn btn-primary" disabled={saving === 'filtroArena'}>
+                <Save size={16} /> {saving === 'filtroArena' ? 'Guardando…' : 'Registrar Filtro'}
               </button>
             </div>
           </form>

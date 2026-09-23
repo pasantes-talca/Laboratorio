@@ -6,8 +6,6 @@ import {
   PauseCircle,
   Save,
   RotateCcw,
-  CheckCircle2,
-  XCircle,
   Clock,
   X,
   User,
@@ -20,9 +18,6 @@ import { useToast } from '../context/ToastContext';
 import SidebarInfo from '../components/SidebarInfo';
 import {
   getResponsables,
-  getSabores,
-  getTiposConcentrado,
-  getMarcas,
   getTanques,
   submitControlBebida,
   submitControlJarabe,
@@ -38,26 +33,17 @@ export default function CalidadPage() {
 
   const [activeTab, setActiveTab] = useState('bebida');
   const [responsables, setResponsables] = useState([]);
-  const [sabores, setSabores] = useState([]);
-  const [concentrados, setConcentrados] = useState([]);
-  const [marcas, setMarcas] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
 
   // Load catalogs on mount
   useEffect(() => {
     async function loadData() {
       try {
-        const [r, s, c, m, t] = await Promise.all([
+        const [r, t] = await Promise.all([
           getResponsables(),
-          getSabores(),
-          getTiposConcentrado(),
-          getMarcas(),
           getTanques(),
         ]);
         setResponsables(r);
-        setSabores(s);
-        setConcentrados(c);
-        setMarcas(m);
         setTanquesCatalog(t);
       } catch (err) {
         console.error(err);
@@ -346,7 +332,7 @@ function getColorBySabor(sabor) {
             <button
               type="button"
               className="btn btn-secondary"
-              style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem', color: '#f97316', borderColor: '#f97316' }}
+              style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem', color: 'var(--color-alerta, #D69E2E)', borderColor: 'var(--color-alerta, #D69E2E)' }}
               onClick={() => setShowPausaModal(true)}
             >
               <PauseCircle size={15} style={{ marginRight: '0.3rem' }} />
@@ -697,9 +683,9 @@ function getColorBySabor(sabor) {
                         type="button"
                         onClick={() => removeCabezal(idx)}
                         style={{
-                          background: 'rgba(244,63,94,0.12)',
-                          border: '1px solid rgba(244,63,94,0.4)',
-                          color: '#fb7185',
+                          background: 'var(--color-error-bg, #FFF5F5)',
+                          border: '1px solid rgba(229, 62, 62, 0.3)',
+                          color: 'var(--color-error, #E53E3E)',
                           borderRadius: 'var(--radius-sm)',
                           padding: '0.4rem 0.6rem',
                           cursor: 'pointer',
@@ -718,9 +704,9 @@ function getColorBySabor(sabor) {
                 onClick={addCabezal}
                 style={{
                   marginTop: '0.5rem',
-                  background: 'rgba(138,43,226,0.1)',
-                  border: '1px dashed rgba(168,85,247,0.4)',
-                  color: '#c084fc',
+                  background: 'var(--color-azul-hielo, #E8F4F8)',
+                  border: '1px dashed var(--color-azul-clinico, #0077B6)',
+                  color: 'var(--color-azul-clinico, #0077B6)',
                   borderRadius: 'var(--radius-md)',
                   padding: '0.5rem 1rem',
                   cursor: 'pointer',

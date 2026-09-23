@@ -3,8 +3,6 @@ import {
   getConcentradosForSabor,
   getTamanosForSabor,
   getNormalizedSaborKey,
-  SABOR_CONCENTRADOS_MAP,
-  SABOR_TAMANOS_MAP,
 } from './productRules';
 
 describe('productRules', () => {

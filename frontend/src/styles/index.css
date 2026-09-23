@@ -32,70 +32,100 @@
 }
 
 /* ==========================================================================
-   CSS Custom Properties — Design System Tokens
+   CSS Custom Properties — Design System Tokens (DESIGN.md §8)
    ========================================================================== */
 :root {
-  /* --- Paleta Primaria (Rojo Talca) --- */
-  --color-primary:        #E31B23;
-  --color-primary-dark:   #B31219;
-  --color-primary-light:  #FFF5F5;
-  --color-primary-glow:   rgba(227, 27, 35, 0.15);
+  /* --- Colores Primarios (DESIGN.md §2.1 & §8) --- */
+  --color-rojo:               #E31B23;
+  --color-rojo-hover:         #B31219;
+  --color-blanco:             #FFFFFF;
 
-  /* --- Paleta Secundaria (Azul Clínico) --- */
-  --color-accent:         #0077B6;
-  --color-accent-light:   #E8F4F8;
-  --color-accent-glow:    rgba(0, 119, 182, 0.2);
-  --color-clinical-dark:  #0F2C45;
+  /* --- Colores Secundarios (Azules) (DESIGN.md §2.2 & §8) --- */
+  --color-azul-marino:        #0F2C45;
+  --color-azul-institucional: #1E4E8C;
+  --color-azul-clinico:       #0077B6;
+  --color-azul-hielo:         #E8F4F8;
 
-  /* --- Semánticos --- */
-  --color-ok:             #2F855A;
-  --color-ok-bg:          #F0FFF4;
-  --color-ok-glow:        rgba(47, 133, 90, 0.2);
-  --color-nok:            #E53E3E;
-  --color-nok-bg:         #FFF5F5;
-  --color-nok-glow:       rgba(229, 62, 62, 0.18);
-  --color-warning:        #D69E2E;
-  --color-warning-bg:     #FFFFF0;
-  --color-info:           #3182CE;
-  --color-info-bg:        #EBF8FF;
+  /* --- Colores Neutros (DESIGN.md §2.3 & §8) --- */
+  --color-negro:              #000000;
+  --color-gris-900:           #1A202C;
+  --color-gris-700:           #4A5568;
+  --color-gris-500:           #A0AEC0;
+  --color-gris-300:           #E2E8F0;
+  --color-gris-100:           #F7FAFC;
 
-  /* --- Fondo y Superficies --- */
-  --bg-base:              #F7FAFC;   /* Gris 100 */
-  --bg-card:              #FFFFFF;
-  --bg-section:           #E8F4F8;   /* Azul Hielo */
-  --bg-input:             #FFFFFF;
+  /* --- Colores Semánticos (DESIGN.md §2.4 & §8) --- */
+  --color-exito:              #2F855A;
+  --color-exito-bg:           #F0FFF4;
+  --color-alerta:             #D69E2E;
+  --color-alerta-bg:          #FFFFF0;
+  --color-error:              #E53E3E;
+  --color-error-bg:           #FFF5F5;
 
-  /* --- Texto --- */
-  --text-primary:         #1A202C;   /* Gris 900 — body */
-  --text-dark:            #0F2C45;   /* Azul Profundo — headers */
-  --text-secondary:       #4A5568;   /* Gris 700 */
-  --text-muted:           #A0AEC0;   /* Gris 500 */
+  /* --- Tipografía (DESIGN.md §3 & §8) --- */
+  --font-heading:             'Poppins', sans-serif;
+  --font-body:                'Inter', sans-serif;
+  --font-main:                'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-alt:                 'Inter', sans-serif;
+  --font-tech:                'Inter', monospace;
 
-  /* --- Bordes --- */
-  --border-glass:         #E2E8F0;   /* Gris 300 */
-  --border-glass-hover:   #A0AEC0;   /* Gris 500 */
-  --border-glass-focus:   #0077B6;   /* Azul Clínico */
+  /* --- Espaciado (DESIGN.md §4.1 & §8) --- */
+  --space-2:                  0.5rem;  /* 8px */
+  --space-4:                  1rem;    /* 16px */
+  --space-6:                  1.5rem;  /* 24px */
+  --space-8:                  2rem;    /* 32px */
 
-  /* --- Tipografía --- */
-  --font-heading: 'Poppins', sans-serif;
-  --font-main:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-alt:     'Inter', sans-serif;
-  --font-tech:    'Inter', monospace;   /* datos numéricos */
+  /* --- Bordes y Sombras (DESIGN.md §5 & §8) --- */
+  --radius-sm:                4px;     /* 4px — inputs, badges */
+  --radius-md:                8px;     /* 8px — botones, tarjetas */
+  --radius-lg:                12px;
+  --radius-full:              9999px;  /* tags, FAB */
 
-  /* --- Border Radius (DESIGN.md §5.1) --- */
-  --radius-sm:   0.25rem;   /* 4px  — inputs, badges */
-  --radius-md:   0.5rem;    /* 8px  — botones, tarjetas */
-  --radius-lg:   0.75rem;   /* 12px — cards */
-  --radius-xl:   1rem;      /* 16px — contenedores grandes */
-  --radius-full: 9999px;    /* tags, FAB */
+  --shadow-sm:                0 1px 3px rgba(15, 44, 69, 0.08);
+  --shadow-md:                0 4px 6px rgba(15, 44, 69, 0.1);
+  --shadow-subtle:            0 1px 3px rgba(15, 44, 69, 0.08);
+  --shadow-medium:            0 4px 6px rgba(15, 44, 69, 0.1);
+  --shadow-high:              0 10px 15px rgba(15, 44, 69, 0.12);
+  --shadow-dropdown:          0 20px 25px rgba(15, 44, 69, 0.15);
+  --shadow-card:              0 1px 3px rgba(15, 44, 69, 0.08);
 
-  /* --- Sombras (DESIGN.md §5.2) --- */
-  --shadow-subtle:   0 1px 3px rgba(15, 44, 69, 0.08);
-  --shadow-medium:   0 4px 6px rgba(15, 44, 69, 0.1);
-  --shadow-high:     0 10px 15px rgba(15, 44, 69, 0.12);
-  --shadow-dropdown: 0 20px 25px rgba(15, 44, 69, 0.15);
-  --shadow-card:     0 1px 3px rgba(15, 44, 69, 0.08);
+  /* --- Mapeos funcionales para compatibilidad --- */
+  --color-primary:            var(--color-rojo);
+  --color-primary-dark:       var(--color-rojo-hover);
+  --color-primary-light:      #FFF5F5;
+  --color-primary-glow:       rgba(227, 27, 35, 0.15);
+
+  --color-accent:             var(--color-azul-clinico);
+  --color-accent-light:       var(--color-azul-hielo);
+  --color-accent-glow:        rgba(0, 119, 182, 0.2);
+  --color-clinical-dark:      var(--color-azul-marino);
+
+  --color-ok:                 var(--color-exito);
+  --color-ok-bg:              var(--color-exito-bg);
+  --color-ok-glow:            rgba(47, 133, 90, 0.2);
+  --color-nok:                var(--color-error);
+  --color-nok-bg:             var(--color-error-bg);
+  --color-nok-glow:           rgba(229, 62, 62, 0.18);
+  --color-warning:            var(--color-alerta);
+  --color-warning-bg:         var(--color-alerta-bg);
+  --color-info:               var(--color-azul-institucional);
+  --color-info-bg:            var(--color-azul-hielo);
+
+  --bg-base:                  var(--color-gris-100);
+  --bg-card:                  var(--color-blanco);
+  --bg-section:               var(--color-azul-hielo);
+  --bg-input:                 var(--color-blanco);
+
+  --text-primary:             var(--color-gris-900);
+  --text-dark:                var(--color-azul-marino);
+  --text-secondary:           var(--color-gris-700);
+  --text-muted:               var(--color-gris-500);
+
+  --border-glass:             var(--color-gris-300);
+  --border-glass-hover:       var(--color-gris-500);
+  --border-glass-focus:       var(--color-azul-clinico);
 }
+
 
 /* ==========================================================================
    Reset & Base
@@ -150,18 +180,18 @@ h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Header & Navbar (DESIGN.md §10.1 — White bg, shadow-sm, Rojo Talca for CTA)
+   Header & Navbar (Azul Marino con alto contraste para componentes)
    ========================================================================== */
 .main-header {
-  background: #FFFFFF;
-  color: var(--text-dark);
+  background: var(--color-azul-marino);
+  color: #FFFFFF;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.875rem 1.5rem;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-subtle);
-  border: 1px solid var(--border-glass);
+  box-shadow: 0 4px 14px rgba(15, 44, 69, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -181,7 +211,7 @@ h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(227, 27, 35, 0.3);
+  box-shadow: 0 2px 8px rgba(227, 27, 35, 0.4);
   flex-shrink: 0;
 }
 
@@ -189,13 +219,14 @@ h4, h5, h6 {
   font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: #FFFFFF;
   letter-spacing: -0.01em;
 }
 
 .header-subtitle {
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  color: var(--color-azul-hielo);
+  opacity: 0.85;
   font-weight: 400;
   margin-top: 0.1rem;
 }
@@ -213,28 +244,68 @@ h4, h5, h6 {
   font-weight: 500;
   font-size: 0.88rem;
   text-decoration: none;
-  color: var(--text-secondary);
+  color: var(--color-azul-hielo);
   border: 1px solid transparent;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   transition: all 0.18s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   cursor: pointer;
 }
 
-.nav-link:hover {
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-  border-color: rgba(227, 27, 35, 0.15);
+.nav-link svg {
+  color: var(--color-azul-hielo);
+  opacity: 0.85;
+  transition: all 0.18s ease;
 }
 
-/* Active nav link — Rojo Talca accent */
+.nav-link:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.nav-link:hover svg {
+  color: #FFFFFF;
+  opacity: 1;
+}
+
+/* Active nav link — Fondo blanco puro, texto Azul Marino e ícono Rojo Talca para máximo contraste */
 .nav-link.active {
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-  border-color: rgba(227, 27, 35, 0.25);
+  color: var(--color-azul-marino);
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.nav-link.active svg {
+  color: var(--color-rojo);
+  opacity: 1;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-linea1 {
+  background: rgba(0, 119, 182, 0.35);
+  color: #FFFFFF;
+  border: 1px solid rgba(0, 119, 182, 0.7);
+}
+
+.badge-linea2 {
+  background: rgba(227, 27, 35, 0.3);
+  color: #FFFFFF;
+  border: 1px solid rgba(227, 27, 35, 0.6);
 }
 
 .btn-production-config {
@@ -261,7 +332,7 @@ h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Tabs
+   Tabs (DESIGN.md §1.2 30% Azul Marino para estructura / navegación)
    ========================================================================== */
 .tabs-container {
   display: flex;
@@ -272,9 +343,9 @@ h4, h5, h6 {
 }
 
 .tab-button {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  color: var(--text-secondary);
+  background: var(--color-blanco);
+  border: 1px solid var(--color-gris-300);
+  color: var(--color-gris-700);
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
   font-size: 0.88rem;
@@ -290,18 +361,60 @@ h4, h5, h6 {
 }
 
 .tab-button:hover {
-  color: var(--color-primary);
-  border-color: rgba(227, 27, 35, 0.2);
-  background: var(--color-primary-light);
+  color: var(--color-azul-clinico);
+  border-color: var(--color-azul-clinico);
+  background: var(--color-azul-hielo);
 }
 
 .tab-button.active {
-  background: var(--color-primary);
-  color: #FFFFFF;
-  border-color: var(--color-primary);
+  background: var(--color-azul-marino);
+  color: var(--color-blanco);
+  border-color: var(--color-azul-marino);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(227, 27, 35, 0.25);
+  box-shadow: var(--shadow-md);
 }
+
+/* ==========================================================================
+   Tablas de Datos (DESIGN.md §6.3 — Header Azul Marino, Zebra Gris 100)
+   ========================================================================== */
+table, .standards-official-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-main);
+  background: var(--color-blanco);
+  border: 1px solid var(--color-gris-300);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+table th, .standards-official-table th {
+  background-color: var(--color-azul-marino);
+  color: var(--color-blanco);
+  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+table td, .standards-official-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-gris-900);
+  border-bottom: 1px solid var(--color-gris-300);
+  border-right: 1px solid var(--color-gris-300);
+  min-height: 56px;
+}
+
+table tr:nth-child(even), .standards-official-table tbody tr:nth-child(even) {
+  background-color: var(--color-gris-100);
+}
+
+table tr:hover, .standards-official-table tbody tr:hover {
+  background-color: var(--color-azul-hielo);
+}
+
 
 /* ==========================================================================
    Main Grid Layout & Cards (DESIGN.md §6.3)
@@ -1416,4 +1529,16 @@ select option {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
+}
+.alert {
+  width: min(100%, 52rem);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9rem;
+}
+
+.alert-error {
+  color: var(--color-error, #e53e3e);
+  background: var(--color-error-bg, #fff5f5);
+  border: 1px solid rgba(229, 62, 62, 0.3);
 }

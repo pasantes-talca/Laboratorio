@@ -1,7 +1,8 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
+from backend.app.core.time import local_now
 from backend.app.models.ops import ControlTorque, ControlPausa
 from backend.app.schemas.ops import ControlTorqueCreate, ControlPausaCreate
 
@@ -9,17 +10,17 @@ router = APIRouter(prefix="/api", tags=["Operaciones"])
 
 
 @router.post("/calidad/torque", status_code=status.HTTP_201_CREATED)
-@router.post("/calidad/control-torque", status_code=status.HTTP_201_CREATED)
-@router.post("/calidad/controles-torque", status_code=status.HTTP_201_CREATED)
-@router.post("/controles-torque", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/control-torque", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/calidad/controles-torque", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/controles-torque", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_torque guardando strings directamente."""
-    now = datetime.now()
+    now = local_now()
     if data.hora and data.hora.strip():
         try:
             hora_obj = datetime.strptime(data.hora.strip(), "%H:%M").time()
-        except ValueError:
-            hora_obj = now.time().replace(second=0, microsecond=0)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM") from exc
     else:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
@@ -47,11 +48,19 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
 
 
 @router.get("/calidad/torque")
-@router.get("/calidad/control-torque")
-@router.get("/calidad/controles-torque")
-@router.get("/controles-torque")
-def get_controles_torque(db: Session = Depends(get_db)):
-    controles = db.query(ControlTorque).order_by(ControlTorque.id.desc()).all()
+@router.get("/calidad/control-torque", include_in_schema=False)
+@router.get("/calidad/controles-torque", include_in_schema=False)
+@router.get("/controles-torque", include_in_schema=False)
+def get_controles_torque(
+    linea: int | None = Query(None, ge=1, le=2),
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(ControlTorque)
+    if linea is not None:
+        query = query.filter(ControlTorque.linea == linea)
+    controles = query.order_by(ControlTorque.id.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": c.id,
@@ -71,9 +80,9 @@ def get_controles_torque(db: Session = Depends(get_db)):
 
 
 @router.delete("/calidad/torque/{control_id}")
-@router.delete("/calidad/control-torque/{control_id}")
-@router.delete("/calidad/controles-torque/{control_id}")
-@router.delete("/controles-torque/{control_id}")
+@router.delete("/calidad/control-torque/{control_id}", include_in_schema=False)
+@router.delete("/calidad/controles-torque/{control_id}", include_in_schema=False)
+@router.delete("/controles-torque/{control_id}", include_in_schema=False)
 def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlTorque).filter(ControlTorque.id == control_id).first()
     if not control:
@@ -88,7 +97,7 @@ def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
 @router.post("/pausas", status_code=status.HTTP_201_CREATED)
 def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
     """Registra una pausa de línea guardando strings directamente."""
-    now = datetime.now()
+    now = local_now()
     linea_num = 1 if (data.linea or "") == "linea1" else (2 if (data.linea or "") == "linea2" else 1)
     turno_val = (data.turno or "").capitalize() if (data.turno or "").lower() in ["mañana", "tarde", "noche"] else data.turno
 
@@ -110,8 +119,12 @@ def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
 @router.get("/calidad/pausa")
 @router.get("/calidad/pausas")
 @router.get("/pausas")
-def get_pausas(db: Session = Depends(get_db)):
-    pausas = db.query(ControlPausa).order_by(ControlPausa.id.desc()).all()
+def get_pausas(
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    pausas = db.query(ControlPausa).order_by(ControlPausa.id.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": p.id,

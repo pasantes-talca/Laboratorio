@@ -1,8 +1,10 @@
 import json
 from datetime import datetime, date as date_type
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
+from backend.app.core.config import MAX_UPLOAD_BYTES
+from backend.app.core.time import local_now
 from backend.app.models.jarabe import (
     ControlJarabe,
     JarabeSimple,
@@ -26,23 +28,30 @@ router = APIRouter(prefix="/api", tags=["Sala de Jarabe"])
 async def parse_jarabe_excel(file: UploadFile = File(...)):
     """Parsea el reporte Excel/HTML de Sala de Jarabe y extrae las cantidades e identificación."""
     try:
-        content = await file.read()
+        filename = (file.filename or "").lower()
+        if not filename.endswith((".html", ".htm", ".xls")):
+            raise HTTPException(status_code=415, detail="Formato no admitido; use HTML o XLS exportado como HTML")
+        content = await file.read(MAX_UPLOAD_BYTES + 1)
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="El archivo supera el tamaño máximo permitido")
         datos = extraer_datos_reporte(content, es_ruta=False)
         return {"status": "success", "data": datos}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail=f"Error al procesar el archivo Excel: {str(e)}",
+            detail="El archivo no tiene el formato esperado de trazabilidad",
         )
 
 
 @router.post("/calidad/jarabe", status_code=status.HTTP_201_CREATED)
-@router.post("/calidad/control-jarabe", status_code=status.HTTP_201_CREATED)
-@router.post("/calidad/controles-jarabe", status_code=status.HTTP_201_CREATED)
-@router.post("/controles-jarabe", status_code=status.HTTP_201_CREATED)
+@router.post("/calidad/control-jarabe", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/calidad/controles-jarabe", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/controles-jarabe", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_jarabe guardando strings directamente."""
-    now = datetime.now()
+    now = local_now()
     hora_str = data.hora if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
@@ -69,11 +78,15 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
 
 
 @router.get("/calidad/jarabe")
-@router.get("/calidad/control-jarabe")
-@router.get("/calidad/controles-jarabe")
-@router.get("/controles-jarabe")
-def get_controles_jarabe(db: Session = Depends(get_db)):
-    controles = db.query(ControlJarabe).order_by(ControlJarabe.id.desc()).all()
+@router.get("/calidad/control-jarabe", include_in_schema=False)
+@router.get("/calidad/controles-jarabe", include_in_schema=False)
+@router.get("/controles-jarabe", include_in_schema=False)
+def get_controles_jarabe(
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    controles = db.query(ControlJarabe).order_by(ControlJarabe.id.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": c.id,
@@ -93,9 +106,9 @@ def get_controles_jarabe(db: Session = Depends(get_db)):
 
 
 @router.delete("/calidad/jarabe/{control_id}")
-@router.delete("/calidad/control-jarabe/{control_id}")
-@router.delete("/calidad/controles-jarabe/{control_id}")
-@router.delete("/controles-jarabe/{control_id}")
+@router.delete("/calidad/control-jarabe/{control_id}", include_in_schema=False)
+@router.delete("/calidad/controles-jarabe/{control_id}", include_in_schema=False)
+@router.delete("/controles-jarabe/{control_id}", include_in_schema=False)
 def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
     control = db.query(ControlJarabe).filter(ControlJarabe.id == control_id).first()
     if not control:
@@ -151,7 +164,14 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
 
 
 @router.get("/jarabe-simple")
-def get_jarabe_simples(tanque: str = None, fecha: str = None, sabor: str = None, db: Session = Depends(get_db)):
+def get_jarabe_simples(
+    tanque: str = None,
+    fecha: str = None,
+    sabor: str = None,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
     """Devuelve registros de jarabe simple. Permite filtrar por tanque, fecha y/o sabor."""
     query = db.query(JarabeSimple).order_by(JarabeSimple.id.desc())
     if tanque:
@@ -164,7 +184,7 @@ def get_jarabe_simples(tanque: str = None, fecha: str = None, sabor: str = None,
             pass
     if sabor:
         query = query.filter(JarabeSimple.azucar_marca.ilike(f"%{sabor.strip()}%"))
-    registros = query.all()
+    registros = query.offset(offset).limit(limit).all()
     return [
         {
             "id": r.id,

@@ -1,9 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from backend.app.core.config import FRONTEND_ASSETS, STATIC_DIR
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+from backend.app.core.config import ALLOWED_ORIGINS, FRONTEND_ASSETS, STATIC_DIR
 from backend.app.core.database import init_db
+from backend.app.core.security import security_and_audit_middleware
 from backend.app.api.routers import (
     maestros_router,
     calidad_router,
@@ -12,6 +18,7 @@ from backend.app.api.routers import (
     spa_router,
     agua_router,
     saneado_router,
+    reportes_router,
 )
 
 @asynccontextmanager
@@ -28,11 +35,41 @@ app = FastAPI(
 # Configurar CORS para frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.middleware("http")(security_and_audit_middleware)
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request: Request, exc: IntegrityError):
+    logging.getLogger("laboratorio.error").warning("Integrity error: %s", exc)
+    return JSONResponse(
+        status_code=409,
+        content={
+            "detail": "El registro incumple una restricción de datos",
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def database_error_handler(request: Request, exc: SQLAlchemyError):
+    logging.getLogger("laboratorio.error").exception("Database error")
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "La base de datos no está disponible temporalmente",
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
+
+@app.get("/api/health", tags=["Sistema"])
+def healthcheck():
+    return {"status": "ok", "service": "laboratorio-calidad"}
 
 # Rutas estáticas de React (frontend/dist)
 if FRONTEND_ASSETS.exists():
@@ -48,6 +85,7 @@ app.include_router(jarabe_router)
 app.include_router(ops_router)
 app.include_router(agua_router)
 app.include_router(saneado_router)
+app.include_router(reportes_router)
 app.include_router(spa_router)
 
 

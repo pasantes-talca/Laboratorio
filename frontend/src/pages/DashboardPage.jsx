@@ -2,9 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   BarChart3,
   RefreshCw,
-  SlidersHorizontal,
-  CheckCircle2,
-  AlertTriangle,
   Info,
   Calendar,
   Layers,
@@ -12,9 +9,10 @@ import {
   Droplet,
   Sparkles,
   BookOpen,
+  Download,
 } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
-import { getControlesBebida, getControlesJarabe, getControlesTorque } from '../services/api';
+import { downloadQualityCsv, getControlesBebida, getControlesJarabe, getControlesTorque } from '../services/api';
 import { PRODUCT_STANDARDS, findProductStandard } from '../data/productStandards';
 import ControlChart from '../components/ControlChart';
 
@@ -51,6 +49,15 @@ export default function DashboardPage() {
       if (bebidaRes.status === 'fulfilled') setBebidaData(bebidaRes.value || []);
       if (jarabeRes.status === 'fulfilled') setJarabeData(jarabeRes.value || []);
       if (torqueRes.status === 'fulfilled') setTorqueData(torqueRes.value || []);
+
+      const failedSources = [
+        bebidaRes.status === 'rejected' ? 'bebida terminada' : null,
+        jarabeRes.status === 'rejected' ? 'jarabe' : null,
+        torqueRes.status === 'rejected' ? 'torque' : null,
+      ].filter(Boolean);
+      if (failedSources.length) {
+        setError(`No se pudieron actualizar: ${failedSources.join(', ')}. El resto de los datos sigue disponible.`);
+      }
 
       setLastUpdated(new Date());
     } catch (err) {
@@ -251,7 +258,7 @@ export default function DashboardPage() {
         const month = months[monthNum - 1] || parts[1];
         return `${day} ${month} ${time}`.trim();
       }
-    } catch (_) {}
+    } catch {}
     return `${dateStr} ${time}`.trim();
   };
 
@@ -440,7 +447,7 @@ export default function DashboardPage() {
         <div className="dashboard-header-left">
           <div className="dashboard-title-group">
             <div className="dashboard-icon-badge">
-              <BarChart3 size={24} color="#00f2fe" />
+              <BarChart3 size={24} color="var(--color-rojo)" />
             </div>
             <div>
               <h2>Dashboard de Control Estadístico de Procesos</h2>
@@ -485,6 +492,16 @@ export default function DashboardPage() {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
+            onClick={() => downloadQualityCsv().catch((err) => setError(err.message))}
+            title="Exportar controles compatibles con Excel"
+          >
+            <Download size={16} />
+            Exportar CSV
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
             onClick={loadDashboardData}
             disabled={loading}
             title="Actualizar datos"
@@ -495,6 +512,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div aria-live="polite" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+        {error ? <div className="alert alert-error" role="alert">{error}</div> : <span />}
+        <small style={{ color: 'var(--color-gris-700)' }}>
+          Última actualización: {lastUpdated.toLocaleString('es-AR')}
+        </small>
+      </div>
+
       {/* Barra de Filtros Principales (Línea, Mes, Fecha, Producto) */}
       <div className="dashboard-filters-card card">
         <div className="filters-grid">
@@ -502,7 +526,7 @@ export default function DashboardPage() {
           {/* 1. Filtro de Línea */}
           <div className="filter-group">
             <label>
-              <Gauge size={14} color="#00f2fe" />
+              <Gauge size={14} color="var(--color-azul-clinico)" />
               1. Línea de Producción
             </label>
             <select
@@ -561,8 +585,8 @@ export default function DashboardPage() {
           {/* 4. Filtro de Producto / Sabor (Filtrado según lo elaborado en la fecha) */}
           <div className="filter-group">
             <label>
-              <Sparkles size={14} color="#fbbf24" />
-              4. Producto / Sabor {selectedFecha !== 'todas' && <span style={{ color: '#00f2fe', fontSize: '0.72rem' }}>(del día)</span>}
+              <Sparkles size={14} color="var(--color-alerta, #D69E2E)" />
+              4. Producto / Sabor {selectedFecha !== 'todas' && <span style={{ color: 'var(--color-azul-clinico, #0077B6)', fontSize: '0.72rem' }}>(del día)</span>}
             </label>
             <select
               value={selectedSabor}
@@ -583,7 +607,7 @@ export default function DashboardPage() {
       {/* Banner Informativo especial si es Soda o Sifón */}
       {isSodaOrSifon && (
         <div className="soda-sifon-notice card">
-          <Info size={22} color="#00f2fe" />
+          <Info size={22} color="var(--color-azul-clinico)" />
           <div>
             <strong>Aviso de Especificación ({currentStandard?.sabor}):</strong>
             <span>
@@ -598,7 +622,7 @@ export default function DashboardPage() {
         {/* Card Brix */}
         <div className={`kpi-card card ${isSodaOrSifon ? 'kpi-card-disabled' : ''}`}>
           <div className="kpi-card-header">
-            <span className="kpi-icon-wrap" style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}>
+            <span className="kpi-icon-wrap" style={{ background: 'rgba(30, 78, 140, 0.12)', color: 'var(--color-azul-institucional, #1E4E8C)' }}>
               <Droplet size={18} />
             </span>
             <span className="kpi-title">°Brix 20° Bebida</span>
@@ -628,7 +652,7 @@ export default function DashboardPage() {
         {/* Card TA */}
         <div className={`kpi-card card ${isSodaOrSifon ? 'kpi-card-disabled' : ''}`}>
           <div className="kpi-card-header">
-            <span className="kpi-icon-wrap" style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}>
+            <span className="kpi-icon-wrap" style={{ background: 'rgba(47, 133, 90, 0.12)', color: 'var(--color-exito, #2F855A)' }}>
               <Layers size={18} />
             </span>
             <span className="kpi-title">TA Gasto NaOH</span>
@@ -658,7 +682,7 @@ export default function DashboardPage() {
         {/* Card Carbonatación */}
         <div className="kpi-card card">
           <div className="kpi-card-header">
-            <span className="kpi-icon-wrap" style={{ background: 'rgba(0, 242, 254, 0.15)', color: '#00f2fe' }}>
+            <span className="kpi-icon-wrap" style={{ background: 'rgba(0, 119, 182, 0.12)', color: 'var(--color-azul-clinico, #0077B6)' }}>
               <Sparkles size={18} />
             </span>
             <span className="kpi-title">Carbonatación CO2</span>
@@ -676,7 +700,7 @@ export default function DashboardPage() {
         {/* Card Torque */}
         <div className="kpi-card card">
           <div className="kpi-card-header">
-            <span className="kpi-icon-wrap" style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24' }}>
+            <span className="kpi-icon-wrap" style={{ background: 'rgba(214, 158, 46, 0.12)', color: 'var(--color-alerta, #D69E2E)' }}>
               <Gauge size={18} />
             </span>
             <span className="kpi-title">
@@ -764,7 +788,7 @@ export default function DashboardPage() {
           >
             <div className="modal-header">
               <h3>
-                <BookOpen size={20} color="#00f2fe" />
+                <BookOpen size={20} color="var(--color-rojo)" />
                 ESTÁNDAR DE PRODUCTOS - FÓRMULA NUEVA (BPM)
               </h3>
               <button

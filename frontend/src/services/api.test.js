@@ -29,9 +29,9 @@ describe('fetchJson (core transport)', () => {
     const fetchMock = stubFetch(jsonResponse({ data: [1, 2] }));
 
     await expect(api.fetchJson('/marcas')).resolves.toEqual({ data: [1, 2] });
-    expect(fetchMock).toHaveBeenCalledWith('/api/marcas', {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/marcas', expect.objectContaining({
+      headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+    }));
   });
 
   it('propagates detail from a non-ok JSON error response', async () => {
@@ -96,22 +96,22 @@ describe('catalog getters hit correct endpoints', () => {
 });
 
 describe('quality control endpoints', () => {
-  it('getControlesBebida GETs /api/control-bebida', async () => {
+  it('getControlesBebida GETs canonical endpoint', async () => {
     const fetchMock = stubFetch(jsonResponse([]));
     await api.getControlesBebida();
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/control-bebida');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/calidad/bebidas');
   });
 
-  it('getControlesJarabe GETs /api/controles-jarabe', async () => {
+  it('getControlesJarabe GETs canonical endpoint', async () => {
     const fetchMock = stubFetch(jsonResponse([]));
     await api.getControlesJarabe();
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/controles-jarabe');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/calidad/jarabe');
   });
 
-  it('getControlesTorque GETs /api/controles-torque', async () => {
+  it('getControlesTorque GETs canonical endpoint', async () => {
     const fetchMock = stubFetch(jsonResponse([]));
     await api.getControlesTorque();
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/controles-torque');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/calidad/torque');
   });
 
   it('getPausas GETs /api/pausas', async () => {
@@ -121,9 +121,9 @@ describe('quality control endpoints', () => {
   });
 
   it.each([
-    ['submitControlBebida', '/control-bebida'],
-    ['submitControlJarabe', '/controles-jarabe'],
-    ['submitControlTorque', '/controles-torque'],
+    ['submitControlBebida', '/calidad/bebidas'],
+    ['submitControlJarabe', '/calidad/jarabe'],
+    ['submitControlTorque', '/calidad/torque'],
     ['submitControlPausa', '/pausas'],
   ])('%s POSTs serialized JSON to /api%s', async (fnName, endpoint) => {
     const fetchMock = stubFetch(jsonResponse({ id: 9 }));
@@ -190,7 +190,7 @@ describe('parseJarabeExcel', () => {
     expect(init.method).toBe('POST');
     expect(init.body).toBeInstanceOf(FormData);
     // browser must set multipart boundary itself -> no explicit Content-Type
-    expect(init.headers).toBeUndefined();
+    expect(init.headers['Content-Type']).toBeUndefined();
     expect(init.body.get('file')).toBe(file);
   });
 

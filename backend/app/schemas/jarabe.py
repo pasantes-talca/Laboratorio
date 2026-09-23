@@ -1,17 +1,17 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ControlJarabeCreate(BaseModel):
     hora: Optional[str] = None
     turno: Optional[str] = None
     linea: Optional[str] = None
-    sabor: str
-    concentrado: str
-    tanque: str
-    bx_patron: float
-    ta: float
-    responsable: str
+    sabor: str = Field(min_length=2, max_length=100)
+    concentrado: str = Field(min_length=1, max_length=50)
+    tanque: str = Field(min_length=1, max_length=20)
+    bx_patron: float = Field(ge=0, le=100)
+    ta: float = Field(ge=0)
+    responsable: str = Field(min_length=2, max_length=100)
     observacion: Optional[str] = None
     numero_carga_trilay: Optional[str] = None
 
@@ -20,8 +20,8 @@ class JarabeSimpleCreate(BaseModel):
     fecha: str
     hora: Optional[str] = None
     tanque: str
-    volcado_numero: int
-    cantidad_bolsas: int
+    volcado_numero: int = Field(ge=1)
+    cantidad_bolsas: int = Field(ge=0)
     azucar_tipo: str
     azucar_marca: str
     azucar_ntu: Optional[str] = None
@@ -38,7 +38,7 @@ class JarabeTerminadoCreate(BaseModel):
     sabor: str
     concentrado: str
     tanque: str
-    unidades: int
+    unidades: int = Field(ge=0)
     volcado_numero: str
     tiempo_filtrado: Optional[str] = None
     be_jarabe_simple: Optional[float] = None

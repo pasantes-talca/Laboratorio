@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { ProductionProvider } from './context/ProductionContext';
 import Navbar from './components/Navbar';
 import ProductionModal from './components/ProductionModal';
-import CalidadPage from './pages/CalidadPage';
-import SalaJarabePage from './pages/SalaJarabePage';
-import DashboardPage from './pages/DashboardPage';
-import AguaPage from './pages/AguaPage';
-import AreaSaneadoPage from './pages/AreaSaneadoPage';
 import './styles/index.css';
 
+const CalidadPage = lazy(() => import('./pages/CalidadPage'));
+const SalaJarabePage = lazy(() => import('./pages/SalaJarabePage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const AguaPage = lazy(() => import('./pages/AguaPage'));
+const AreaSaneadoPage = lazy(() => import('./pages/AreaSaneadoPage'));
+const PortalPage = lazy(() => import('./pages/PortalPage'));
+
 const ROUTE_MAP = {
-  '/': 'calidad',
+  '/': 'portal',
   '/calidad': 'calidad',
   '/jarabe': 'jarabe',
   '/sala-jarabe': 'jarabe',
@@ -22,10 +24,11 @@ const ROUTE_MAP = {
   '/area-saneado': 'saneado',
   '/sala-saneado': 'saneado',
   '/dashboard': 'dashboard',
-  '/portal': 'dashboard',
+  '/portal': 'portal',
 };
 
 const PAGE_TO_PATH = {
+  portal: '/portal',
   calidad: '/calidad',
   jarabe: '/jarabe',
   agua: '/agua',
@@ -34,6 +37,7 @@ const PAGE_TO_PATH = {
 };
 
 const PAGE_TITLES = {
+  portal: 'Inicio - Laboratorio Talca',
   calidad: 'Control de Calidad - Laboratorio Talca',
   jarabe: 'Sala de Jarabe - Laboratorio Talca',
   agua: 'Control de Agua - Laboratorio Talca',
@@ -83,11 +87,14 @@ function AppContent() {
       <div className="app-layout">
         <Navbar activePage={activePage} setActivePage={handleNavigate} />
 
-        {activePage === 'calidad' && <CalidadPage />}
-        {activePage === 'jarabe' && <SalaJarabePage />}
-        {activePage === 'agua' && <AguaPage />}
-        {activePage === 'saneado' && <AreaSaneadoPage />}
-        {activePage === 'dashboard' && <DashboardPage />}
+        <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
+          {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
+          {activePage === 'calidad' && <CalidadPage />}
+          {activePage === 'jarabe' && <SalaJarabePage />}
+          {activePage === 'agua' && <AguaPage />}
+          {activePage === 'saneado' && <AreaSaneadoPage />}
+          {activePage === 'dashboard' && <DashboardPage />}
+        </Suspense>
 
         <ProductionModal />
       </div>

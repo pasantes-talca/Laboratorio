@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from backend.app.core.config import (
     DB_USER,
@@ -27,6 +27,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.execute(text("CREATE SCHEMA IF NOT EXISTS laboratorio"))
     Base.metadata.create_all(bind=engine)
 
 
@@ -34,6 +37,9 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

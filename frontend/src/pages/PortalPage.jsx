@@ -7,7 +7,6 @@ import {
   Sparkles,
   ShieldCheck,
   FileSpreadsheet,
-  CheckCircle,
   ArrowRight,
   Database,
 } from 'lucide-react';
@@ -23,8 +22,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Dashboard de Gráficos y Procesos',
       desc: 'Gráficos de control estadístico para °Brix, TA, Gas CO2 y Torques según límites BPM.',
       icon: Gauge,
-      color: '#00f2fe',
-      bg: 'rgba(0, 242, 254, 0.1)',
+      color: 'var(--color-azul-clinico)',
+      bg: 'var(--color-azul-hielo)',
     },
     {
       id: 'calidad-bebida',
@@ -32,8 +31,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Control de Bebida Terminada',
       desc: 'Registro en tiempo real de volumen neto, °Brix, presión, temperatura y gas.',
       icon: Beer,
-      color: '#818cf8',
-      bg: 'rgba(99, 102, 241, 0.1)',
+      color: 'var(--color-rojo)',
+      bg: 'var(--color-brand-light)',
     },
     {
       id: 'calidad-jarabe',
@@ -41,8 +40,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Control de Jarabe',
       desc: 'Verificación de °Brix patrón, acidez titulable y asignación de tanques.',
       icon: Droplet,
-      color: '#34d399',
-      bg: 'rgba(52, 211, 153, 0.1)',
+      color: 'var(--color-azul-institucional)',
+      bg: 'var(--color-azul-hielo)',
     },
     {
       id: 'calidad-torque',
@@ -50,8 +49,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Control de Torque',
       desc: 'Medición de apriete en cabezales con avance automático secuencial.',
       icon: Gauge,
-      color: '#fbbf24',
-      bg: 'rgba(251, 191, 36, 0.1)',
+      color: 'var(--color-alerta)',
+      bg: 'var(--color-alerta-bg)',
     },
     {
       id: 'jarabe-simple',
@@ -59,8 +58,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Preparación Jarabe Simple',
       desc: 'Pesada de bolsas de azúcar, marca, turbidez NTU y pasteurizado.',
       icon: Layers,
-      color: '#f472b6',
-      bg: 'rgba(244, 114, 182, 0.1)',
+      color: 'var(--color-azul-marino)',
+      bg: 'var(--color-azul-hielo)',
     },
     {
       id: 'jarabe-terminado',
@@ -68,8 +67,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Jarabe Terminado',
       desc: 'Dosificación de concentrados, tiempos de filtrado y rendimientos.',
       icon: Sparkles,
-      color: '#38bdf8',
-      bg: 'rgba(56, 189, 248, 0.1)',
+      color: 'var(--color-azul-clinico)',
+      bg: 'var(--color-azul-hielo)',
     },
     {
       id: 'jarabe-saneo',
@@ -77,8 +76,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Saneo de Tanques (CIP)',
       desc: 'Registro higiénico con horarios de inicio/fin y agentes de limpieza.',
       icon: ShieldCheck,
-      color: '#a78bfa',
-      bg: 'rgba(167, 139, 250, 0.1)',
+      color: 'var(--color-azul-institucional)',
+      bg: 'var(--color-azul-hielo)',
     },
     {
       id: 'jarabe-parte',
@@ -86,8 +85,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Parte de Jarabe & Excel',
       desc: 'Carga automatizada de pesadas desde reportes de Sala de Jarabe.',
       icon: FileSpreadsheet,
-      color: '#10b981',
-      bg: 'rgba(16, 185, 129, 0.1)',
+      color: 'var(--color-exito)',
+      bg: 'var(--color-exito-bg)',
     },
   ];
 
@@ -97,8 +96,9 @@ export default function PortalPage({ onNavigate }) {
       <div
         className="card"
         style={{
-          background: 'linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(0, 242, 254, 0.08))',
-          border: '1px solid rgba(168, 85, 247, 0.3)',
+          background: 'linear-gradient(135deg, var(--color-azul-marino) 0%, var(--color-azul-institucional) 100%)',
+          border: '1px solid var(--color-azul-marino)',
+          color: '#ffffff',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -107,23 +107,23 @@ export default function PortalPage({ onNavigate }) {
         }}
       >
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#10b981', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#68D391', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>
             <Database size={16} /> PostgreSQL Online
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff' }}>
             Sistema Integrado de Calidad y Procesos
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '650px', marginTop: '0.4rem' }}>
+          <p style={{ color: 'var(--color-azul-hielo)', fontSize: '0.95rem', maxWidth: '650px', marginTop: '0.4rem' }}>
             Plataforma centralizada para la auditoría, control de envasado, dosificación de jarabes y trazabilidad operativa de planta.
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-glass)' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Línea en operación:</span>
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>Línea en operación:</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
             {production.linea === 'linea2' ? 'Línea 2 (14 cabezales)' : 'Línea 1 (12 cabezales)'}
           </span>
-          <span style={{ fontSize: '0.85rem', color: '#00f2fe' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-azul-hielo)' }}>
             Turno {production.turno} {production.sabor ? `· ${production.sabor}` : ''}
           </span>
         </div>
@@ -131,7 +131,7 @@ export default function PortalPage({ onNavigate }) {
 
       {/* Grid of Modules */}
       <div>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-azul-marino)', marginBottom: '1.25rem' }}>
           Módulos del Sistema
         </h3>
 
@@ -159,11 +159,13 @@ export default function PortalPage({ onNavigate }) {
                 onClick={() => onNavigate(m.page)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                  e.currentTarget.style.borderColor = 'var(--color-azul-clinico)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.borderColor = 'var(--border-glass)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                 }}
               >
                 <div>
@@ -182,7 +184,7 @@ export default function PortalPage({ onNavigate }) {
                   >
                     <Icon size={24} />
                   </div>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '0.4rem' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-gris-900)', marginBottom: '0.4rem' }}>
                     {m.title}
                   </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>

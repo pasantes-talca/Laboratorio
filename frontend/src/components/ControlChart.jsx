@@ -1,4 +1,4 @@
-import React, { useState, useId } from 'react';
+import React, { useState } from 'react';
 
 /**
  * ControlChart - Gráfico de control de calidad según diseño oficial.
@@ -32,8 +32,6 @@ export default function ControlChart({
   valorSecundarioLabel = 'PATRON',
 }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  const chartId = useId();
-
   if (notApplicable) {
     return (
       <div className="control-chart-container">

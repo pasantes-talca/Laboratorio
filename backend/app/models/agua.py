@@ -53,3 +53,43 @@ class SalaSaneado(Base):
     # CIP fields (Enjuague Desinfectante)
     cip_enjuague_desinfectante_inicio = Column(Time, nullable=True)
     cip_enjuague_desinfectante_fin = Column(Time, nullable=True)
+
+
+class AnalisisCloro(Base):
+    __tablename__ = "analisis_cloro_agua"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha_registro = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    hora = Column(Time, nullable=True)
+    tanque_agua_osmosis = Column(Float, nullable=False)
+    filtro_carbon_a = Column(String(20), nullable=False)
+    filtro_carbon_b = Column(String(20), nullable=False)
+    filtro_carbon_c = Column(String(20), nullable=False)
+    contralavado_tanque_a = Column(Time, nullable=True)
+    contralavado_tanque_b = Column(Time, nullable=True)
+    cloro_riser_linea = Column(String(20), nullable=False)
+    cloro_riser_resultado = Column(Float, nullable=False)
+    responsable = Column(String(100), nullable=False)
+
+
+class OsmosisInversa(Base):
+    __tablename__ = "osmosis_inversa"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha_registro = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    hora = Column(Time, nullable=True)
+    k = Column(Float, nullable=False)
+    h = Column(Float, nullable=False)
+    q_perm = Column(Float, nullable=False)
+    q_mezcla = Column(Float, nullable=False)
+    q_rechazo = Column(Float, nullable=False)
+    p_select = Column(String(10), nullable=False)
+    p_valor = Column(Float, nullable=False)
+
+
+class FiltroArena(Base):
+    __tablename__ = "filtro_arena"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    fecha_registro = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    hora = Column(Time, nullable=True)
+    presion_interno = Column(Float, nullable=False)
+    presion_externo = Column(Float, nullable=False)
+    fecha_contralavado = Column(Date, nullable=True)

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Settings2, Sparkles } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 import { useToast } from '../context/ToastContext';
-import { getMarcas, getTiposConcentrado, getTamanos } from '../services/api';
+import { getMarcas } from '../services/api';
 import { getConcentradosForSabor, getTamanosForSabor } from '../utils/productRules';
 
 export default function ProductionModal() {
@@ -11,7 +11,6 @@ export default function ProductionModal() {
 
   const [formData, setFormData] = useState({ ...production });
   const [marcas, setMarcas] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -22,13 +21,10 @@ export default function ProductionModal() {
 
   const loadCatalogs = async () => {
     try {
-      setLoading(true);
       const m = await getMarcas();
       setMarcas(m);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

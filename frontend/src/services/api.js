@@ -1,9 +1,15 @@
 const API_BASE = '/api';
 
 export async function fetchJson(endpoint, options = {}) {
+  const apiKey = import.meta.env.VITE_API_KEY;
+  const user = localStorage.getItem('laboratorio_user') || 'operador-web';
+  const role = localStorage.getItem('laboratorio_role') || 'operador';
   const res = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+      'X-User': user,
+      'X-Role': role,
       ...options.headers,
     },
     ...options,
@@ -14,7 +20,7 @@ export async function fetchJson(endpoint, options = {}) {
     try {
       const err = await res.json();
       errorDetail = err.detail || err.message || errorDetail;
-    } catch (_) {}
+    } catch {}
     throw new Error(errorDetail);
   }
 
@@ -52,33 +58,33 @@ export async function getSabores() {
 
 // Quality Control endpoints
 export async function getControlesBebida() {
-  return fetchJson('/control-bebida');
+  return fetchJson('/calidad/bebidas');
 }
 
 export async function submitControlBebida(payload) {
-  return fetchJson('/control-bebida', {
+  return fetchJson('/calidad/bebidas', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export async function getControlesJarabe() {
-  return fetchJson('/controles-jarabe');
+  return fetchJson('/calidad/jarabe');
 }
 
 export async function submitControlJarabe(payload) {
-  return fetchJson('/controles-jarabe', {
+  return fetchJson('/calidad/jarabe', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export async function getControlesTorque() {
-  return fetchJson('/controles-torque');
+  return fetchJson('/calidad/torque');
 }
 
 export async function submitControlTorque(payload) {
-  return fetchJson('/controles-torque', {
+  return fetchJson('/calidad/torque', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -136,6 +142,11 @@ export async function parseJarabeExcel(file) {
   
   const res = await fetch(`${API_BASE}/parse-jarabe-excel`, {
     method: 'POST',
+    headers: {
+      ...(import.meta.env.VITE_API_KEY ? { 'X-API-Key': import.meta.env.VITE_API_KEY } : {}),
+      'X-User': localStorage.getItem('laboratorio_user') || 'operador-web',
+      'X-Role': localStorage.getItem('laboratorio_role') || 'operador',
+    },
     body: formData,
   });
 
@@ -144,7 +155,7 @@ export async function parseJarabeExcel(file) {
     try {
       const err = await res.json();
       errorDetail = err.detail || errorDetail;
-    } catch (_) {}
+    } catch {}
     throw new Error(errorDetail);
   }
 
@@ -166,10 +177,6 @@ export async function submitSalaSaneado(payload) {
   });
 }
 
-export async function submitAreaSaneado(payload) {
-  return submitSalaSaneado(payload);
-}
-
 export async function submitAnalisisCloro(payload) {
   return fetchJson('/agua/analisis-cloro', {
     method: 'POST',
@@ -189,4 +196,21 @@ export async function submitFiltroArena(payload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function downloadQualityCsv() {
+  const headers = {
+    ...(import.meta.env.VITE_API_KEY ? { 'X-API-Key': import.meta.env.VITE_API_KEY } : {}),
+    'X-User': localStorage.getItem('laboratorio_user') || 'operador-web',
+    'X-Role': localStorage.getItem('laboratorio_role') || 'operador',
+  };
+  const response = await fetch(`${API_BASE}/reportes/calidad.csv`, { headers });
+  if (!response.ok) throw new Error('No se pudo exportar el reporte');
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'controles-calidad.csv';
+  anchor.click();
+  URL.revokeObjectURL(url);
 }

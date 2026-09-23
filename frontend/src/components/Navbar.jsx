@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Layers, LineChart, Droplet, Waves } from 'lucide-react';
+import { CheckSquare, Home, Layers, LineChart, Droplet, Waves } from 'lucide-react';
 import logoImg from '../assets/logo-color-fondo.png';
 import { useProduction } from '../context/ProductionContext';
 
@@ -15,7 +15,7 @@ export default function Navbar({ activePage, setActivePage }) {
         <img
           src={logoImg}
           alt="Laboratorio Talca"
-          style={{ height: '3rem', width: '3rem', objectFit: 'contain', borderRadius: '0.5rem' }}
+          style={{ height: '3rem', width: '3rem', objectFit: 'contain', borderRadius: '0.5rem', background: '#FFFFFF', padding: '0.2rem', boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }}
         />
         <div>
           <h1>Laboratorio de Calidad</h1>
@@ -24,6 +24,15 @@ export default function Navbar({ activePage, setActivePage }) {
       </div>
 
       <nav className="header-nav">
+        <button
+          type="button"
+          className={`nav-link ${activePage === 'portal' ? 'active' : ''}`}
+          onClick={() => setActivePage('portal')}
+        >
+          <Home size={18} />
+          Inicio
+        </button>
+
         <button
           type="button"
           className={`nav-link ${activePage === 'calidad' ? 'active' : ''}`}
