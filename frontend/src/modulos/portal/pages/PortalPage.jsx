@@ -10,10 +10,8 @@ import {
   ArrowRight,
   Database,
 } from 'lucide-react';
-import { useProduction } from '../context/ProductionContext';
 
 export default function PortalPage({ onNavigate }) {
-  const { production } = useProduction();
 
   const modules = [
     {
@@ -28,6 +26,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'calidad-bebida',
       page: 'calidad',
+      form: 'bebida',
       title: 'Control de Bebida Terminada',
       desc: 'Registro en tiempo real de volumen neto, °Brix, presión, temperatura y gas.',
       icon: Beer,
@@ -37,6 +36,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'calidad-jarabe',
       page: 'calidad',
+      form: 'jarabe',
       title: 'Control de Jarabe',
       desc: 'Verificación de °Brix patrón, acidez titulable y asignación de tanques.',
       icon: Droplet,
@@ -46,6 +46,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'calidad-torque',
       page: 'calidad',
+      form: 'torque',
       title: 'Control de Torque',
       desc: 'Medición de apriete en cabezales con avance automático secuencial.',
       icon: Gauge,
@@ -55,6 +56,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'jarabe-simple',
       page: 'jarabe',
+      form: 'simple',
       title: 'Preparación Jarabe Simple',
       desc: 'Pesada de bolsas de azúcar, marca, turbidez NTU y pasteurizado.',
       icon: Layers,
@@ -64,6 +66,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'jarabe-terminado',
       page: 'jarabe',
+      form: 'terminado',
       title: 'Jarabe Terminado',
       desc: 'Dosificación de concentrados, tiempos de filtrado y rendimientos.',
       icon: Sparkles,
@@ -73,6 +76,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'jarabe-saneo',
       page: 'jarabe',
+      form: 'saneo',
       title: 'Saneo de Tanques (CIP)',
       desc: 'Registro higiénico con horarios de inicio/fin y agentes de limpieza.',
       icon: ShieldCheck,
@@ -82,6 +86,7 @@ export default function PortalPage({ onNavigate }) {
     {
       id: 'jarabe-parte',
       page: 'jarabe',
+      form: 'parte',
       title: 'Parte de Jarabe & Excel',
       desc: 'Carga automatizada de pesadas desde reportes de Sala de Jarabe.',
       icon: FileSpreadsheet,
@@ -118,15 +123,6 @@ export default function PortalPage({ onNavigate }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.2)' }}>
-          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>Línea en operación:</span>
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
-            {production.linea === 'linea2' ? 'Línea 2 (14 cabezales)' : 'Línea 1 (12 cabezales)'}
-          </span>
-          <span style={{ fontSize: '0.85rem', color: 'var(--color-azul-hielo)' }}>
-            Turno {production.turno} {production.sabor ? `· ${production.sabor}` : ''}
-          </span>
-        </div>
       </div>
 
       {/* Grid of Modules */}
@@ -156,7 +152,7 @@ export default function PortalPage({ onNavigate }) {
                   justifyContent: 'space-between',
                   gap: '1.25rem',
                 }}
-                onClick={() => onNavigate(m.page)}
+                onClick={() => onNavigate(m.page, m.form)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-3px)';
                   e.currentTarget.style.borderColor = 'var(--color-azul-clinico)';

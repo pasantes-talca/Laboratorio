@@ -13,9 +13,9 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import { useProduction } from '../context/ProductionContext';
-import { useToast } from '../context/ToastContext';
-import SidebarInfo from '../components/SidebarInfo';
+import { useProduction } from '../../../context/ProductionContext';
+import { useToast } from '../../../context/ToastContext';
+import SidebarInfo from '../../../componentes/SidebarInfo';
 import {
   getResponsables,
   getTanques,
@@ -23,15 +23,20 @@ import {
   submitControlJarabe,
   submitControlTorque,
   submitControlPausa,
-} from '../services/api';
+} from '../../../services/api';
 
-export default function CalidadPage() {
-  const { production, updateProduction } = useProduction();
+export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
+  const { production } = useProduction();
   const { showToast } = useToast();
 
   const [showPausaModal, setShowPausaModal] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('bebida');
+  const [activeTab, setActiveTab] = useState(initialTab);
+  useEffect(() => setActiveTab(initialTab), [initialTab]);
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [responsables, setResponsables] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
 
@@ -282,13 +287,13 @@ function getColorBySabor(sabor) {
   return (
     <div className="content-grid">
       <main className="card">
-        {/* Header: Tabs + Línea buttons + Pausa */}
+        {/* Header: Tabs + Pausa */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
           <div className="tabs-container" style={{ marginBottom: 0 }}>
             <button
               type="button"
               className={`tab-button ${activeTab === 'bebida' ? 'active' : ''}`}
-              onClick={() => setActiveTab('bebida')}
+              onClick={() => selectTab('bebida')}
             >
               <Beer size={18} />
               Bebida Terminada
@@ -296,7 +301,7 @@ function getColorBySabor(sabor) {
             <button
               type="button"
               className={`tab-button ${activeTab === 'jarabe' ? 'active' : ''}`}
-              onClick={() => setActiveTab('jarabe')}
+              onClick={() => selectTab('jarabe')}
             >
               <Droplet size={18} />
               Control de Jarabe
@@ -304,31 +309,14 @@ function getColorBySabor(sabor) {
             <button
               type="button"
               className={`tab-button ${activeTab === 'torque' ? 'active' : ''}`}
-              onClick={() => setActiveTab('torque')}
+              onClick={() => selectTab('torque')}
             >
               <Gauge size={18} />
               Control de Torque
             </button>
           </div>
 
-          {/* Quick-line + Pausa */}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button
-              type="button"
-              className={`btn ${production.linea === 'linea1' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem' }}
-              onClick={() => updateProduction({ linea: 'linea1' })}
-            >
-              Línea 1
-            </button>
-            <button
-              type="button"
-              className={`btn ${production.linea === 'linea2' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem' }}
-              onClick={() => updateProduction({ linea: 'linea2' })}
-            >
-              Línea 2
-            </button>
             <button
               type="button"
               className="btn btn-secondary"

@@ -9,12 +9,11 @@ import {
   Droplet,
   Sparkles,
   BookOpen,
-  Download,
 } from 'lucide-react';
-import { useProduction } from '../context/ProductionContext';
-import { downloadQualityCsv, getControlesBebida, getControlesJarabe, getControlesTorque } from '../services/api';
-import { PRODUCT_STANDARDS, findProductStandard } from '../data/productStandards';
-import ControlChart from '../components/ControlChart';
+import { useProduction } from '../../../context/ProductionContext';
+import { getControlesBebida, getControlesJarabe, getControlesTorque } from '../../../services/api';
+import { PRODUCT_STANDARDS, findProductStandard } from '../../../data/productStandards';
+import ControlChart from '../componentes/ControlChart';
 
 export default function DashboardPage() {
   const { production } = useProduction();
@@ -487,16 +486,6 @@ export default function DashboardPage() {
           >
             <BookOpen size={16} />
             Estándares BPM
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => downloadQualityCsv().catch((err) => setError(err.message))}
-            title="Exportar controles compatibles con Excel"
-          >
-            <Download size={16} />
-            Exportar CSV
           </button>
 
           <button

@@ -14,8 +14,8 @@ import {
   User,
   PackageCheck,
 } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
-import MultiInputList from '../components/MultiInputList';
+import { useToast } from '../../../context/ToastContext';
+import MultiInputList from '../../../componentes/MultiInputList';
 import {
   getResponsablesJarabe,
   getSabores,
@@ -26,12 +26,17 @@ import {
   submitSaneoTanque,
   submitParteJarabe,
   parseJarabeExcel,
-} from '../services/api';
-import { getConcentradosForSabor } from '../utils/productRules';
+} from '../../../services/api';
+import { getConcentradosForSabor } from '../../../utils/productRules';
 
-export default function SalaJarabePage() {
+export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('simple');
+  const [activeTab, setActiveTab] = useState(initialTab);
+  useEffect(() => setActiveTab(initialTab), [initialTab]);
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [responsables, setResponsables] = useState([]);
   const [sabores, setSabores] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
@@ -113,7 +118,7 @@ export default function SalaJarabePage() {
         fecha: simpleForm.fecha,
         hora: simpleForm.hora || null,
         tanque: simpleForm.tanque,
-        volcado_numero: parseInt(simpleForm.volcado_numero, 10) || 1,
+        volcado_numero: parseInt(simpleForm.volcado_numero || volcadoAuto, 10) || 1,
         cantidad_bolsas: parseInt(simpleForm.cantidad_bolsas, 10) || 0,
         azucar_tipo: simpleForm.azucar_tipo,
         azucar_marca: simpleForm.marcas.filter(Boolean).join(', '),
@@ -398,7 +403,7 @@ export default function SalaJarabePage() {
           <button
             type="button"
             className={`tab-button ${activeTab === 'simple' ? 'active' : ''}`}
-            onClick={() => setActiveTab('simple')}
+            onClick={() => selectTab('simple')}
           >
             <Layers size={18} />
             Jarabe Simple
@@ -406,7 +411,7 @@ export default function SalaJarabePage() {
           <button
             type="button"
             className={`tab-button ${activeTab === 'terminado' ? 'active' : ''}`}
-            onClick={() => setActiveTab('terminado')}
+            onClick={() => selectTab('terminado')}
           >
             <Sparkles size={18} />
             Jarabe Terminado
@@ -414,7 +419,7 @@ export default function SalaJarabePage() {
           <button
             type="button"
             className={`tab-button ${activeTab === 'saneo' ? 'active' : ''}`}
-            onClick={() => setActiveTab('saneo')}
+            onClick={() => selectTab('saneo')}
           >
             <ShieldCheck size={18} />
             Saneo de Tanques
@@ -422,7 +427,7 @@ export default function SalaJarabePage() {
           <button
             type="button"
             className={`tab-button ${activeTab === 'parte' ? 'active' : ''}`}
-            onClick={() => setActiveTab('parte')}
+            onClick={() => selectTab('parte')}
           >
             <FileSpreadsheet size={18} />
             Parte de Jarabe

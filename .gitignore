@@ -16,3 +16,4 @@ node_modules
 !DESIGN.md
 !frontend/README.md
 !migrations/README.md
+.agents

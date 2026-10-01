@@ -1,16 +1,18 @@
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useCallback } from 'react';
+import { Menu } from 'lucide-react';
 import { ToastProvider } from './context/ToastContext';
 import { ProductionProvider } from './context/ProductionContext';
-import Navbar from './components/Navbar';
-import ProductionModal from './components/ProductionModal';
+import SidebarNav from './componentes/SidebarNav';
+import ProductionModal from './componentes/ProductionModal';
+import { FORM_NAV, defaultFormFor } from './navigation';
 import './styles/index.css';
 
-const CalidadPage = lazy(() => import('./pages/CalidadPage'));
-const SalaJarabePage = lazy(() => import('./pages/SalaJarabePage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const AguaPage = lazy(() => import('./pages/AguaPage'));
-const AreaSaneadoPage = lazy(() => import('./pages/AreaSaneadoPage'));
-const PortalPage = lazy(() => import('./pages/PortalPage'));
+const CalidadPage = lazy(() => import('./modulos/calidad/pages/CalidadPage'));
+const SalaJarabePage = lazy(() => import('./modulos/jarabe/pages/SalaJarabePage'));
+const DashboardPage = lazy(() => import('./modulos/dashboard/pages/DashboardPage'));
+const AguaPage = lazy(() => import('./modulos/agua/pages/AguaPage'));
+const AreaSaneadoPage = lazy(() => import('./modulos/saneado/pages/AreaSaneadoPage'));
+const PortalPage = lazy(() => import('./modulos/portal/pages/PortalPage'));
 
 const ROUTE_MAP = {
   '/': 'portal',
@@ -45,18 +47,23 @@ const PAGE_TITLES = {
   dashboard: 'Dashboard - Laboratorio Talca',
 };
 
-function getPageFromPath() {
-  if (typeof window === 'undefined') return 'calidad';
+function getRouteFromPath() {
+  if (typeof window === 'undefined') return { page: 'calidad', form: 'bebida' };
   const pathname = window.location.pathname.replace(/\/$/, '') || '/';
-  return ROUTE_MAP[pathname] || 'calidad';
+  const parts = pathname.split('/').filter(Boolean);
+  const page = ROUTE_MAP[parts.length ? `/${parts[0]}` : '/'] || 'calidad';
+  const form = FORM_NAV[page]?.find((item) => item.slug === parts[1])?.id || defaultFormFor(page);
+  return { page, form };
 }
 
 function AppContent() {
-  const [activePage, setActivePage] = useState(getPageFromPath);
+  const [route, setRoute] = useState(getRouteFromPath);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { page: activePage, form: activeForm } = route;
 
   useEffect(() => {
     const onPopState = () => {
-      setActivePage(getPageFromPath());
+      setRoute(getRouteFromPath());
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -65,7 +72,10 @@ function AppContent() {
   useEffect(() => {
     const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
     const targetPath = PAGE_TO_PATH[activePage];
-    if (targetPath && (currentPath === '/' || !ROUTE_MAP[currentPath])) {
+    const [base, slug] = currentPath.split('/').filter(Boolean);
+    const knownPage = ROUTE_MAP[base ? `/${base}` : '/'];
+    const isKnownPath = !slug ? Boolean(knownPage) : Boolean(FORM_NAV[knownPage]?.some((item) => item.slug === slug));
+    if (targetPath && (currentPath === '/' || !isKnownPath)) {
       window.history.replaceState(null, '', targetPath);
     }
     if (PAGE_TITLES[activePage]) {
@@ -73,30 +83,53 @@ function AppContent() {
     }
   }, [activePage]);
 
-  const handleNavigate = (page) => {
-    setActivePage(page);
-    const targetPath = PAGE_TO_PATH[page] || `/${page}`;
+  const handleNavigate = (page, form) => {
+    const selectedForm = FORM_NAV[page]?.find((item) => item.id === form);
+    setRoute({ page, form: selectedForm?.id || defaultFormFor(page) });
+    const basePath = PAGE_TO_PATH[page] || `/${page}`;
+    const targetPath = selectedForm ? `${basePath}/${selectedForm.slug}` : basePath;
     if (window.location.pathname !== targetPath) {
       window.history.pushState(null, '', targetPath);
     }
   };
 
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
     <>
       <div className="background-glow" />
       <div className="app-layout">
-        <Navbar activePage={activePage} setActivePage={handleNavigate} />
+        <SidebarNav activePage={activePage} activeForm={activeForm} onNavigate={handleNavigate} isOpen={sidebarOpen} onClose={closeSidebar} />
 
-        <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
-          {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
-          {activePage === 'calidad' && <CalidadPage />}
-          {activePage === 'jarabe' && <SalaJarabePage />}
-          {activePage === 'agua' && <AguaPage />}
-          {activePage === 'saneado' && <AreaSaneadoPage />}
-          {activePage === 'dashboard' && <DashboardPage />}
-        </Suspense>
+        <div className="app-main">
+          <header className="app-topbar">
+            <button
+              type="button"
+              className="mobile-menu-button"
+              aria-label="Abrir menú"
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} aria-hidden="true" />
+            </button>
+            <div>
+              <span className="app-topbar-eyebrow">LABORATORIO TALCA</span>
+              <h1>{PAGE_TITLES[activePage]?.split(' - ')[0] || 'Laboratorio de Calidad'}</h1>
+            </div>
+            <span className="app-topbar-line">{activePage === 'calidad' ? 'Control de procesos' : 'Sistema de calidad'}</span>
+          </header>
 
-        <ProductionModal />
+          <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
+            {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
+            {activePage === 'calidad' && <CalidadPage initialTab={activeForm} onTabChange={(form) => handleNavigate('calidad', form)} />}
+            {activePage === 'jarabe' && <SalaJarabePage initialTab={activeForm} onTabChange={(form) => handleNavigate('jarabe', form)} />}
+            {activePage === 'agua' && <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />}
+            {activePage === 'saneado' && <AreaSaneadoPage />}
+            {activePage === 'dashboard' && <DashboardPage />}
+          </Suspense>
+
+          <ProductionModal />
+        </div>
       </div>
     </>
   );

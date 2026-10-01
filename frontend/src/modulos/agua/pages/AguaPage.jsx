@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Droplet, Save, RotateCcw, Clock, Calendar, Beaker, User, Activity, Droplets, Filter } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
-import { getResponsables, submitControlFisicoQuimico, submitAnalisisCloro, submitOsmosisInversa, submitFiltroArena } from '../services/api';
+import { useToast } from '../../../context/ToastContext';
+import { getResponsables, submitControlFisicoQuimico, submitAnalisisCloro, submitOsmosisInversa, submitFiltroArena } from '../../../services/api';
 
-export default function AguaPage() {
+export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState('fisicoQuimico');
+  const [activeTab, setActiveTab] = useState(initialTab);
+  useEffect(() => setActiveTab(initialTab), [initialTab]);
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [responsables, setResponsables] = useState([]);
   const [saving, setSaving] = useState(null);
 
@@ -181,7 +186,7 @@ export default function AguaPage() {
             <button
               type="button"
               className={`tab-button ${activeTab === 'fisicoQuimico' ? 'active' : ''}`}
-              onClick={() => setActiveTab('fisicoQuimico')}
+              onClick={() => selectTab('fisicoQuimico')}
             >
               <Droplet size={18} />
               Control Físico Químico
@@ -189,7 +194,7 @@ export default function AguaPage() {
             <button
               type="button"
               className={`tab-button ${activeTab === 'analisisCloro' ? 'active' : ''}`}
-              onClick={() => setActiveTab('analisisCloro')}
+              onClick={() => selectTab('analisisCloro')}
             >
               <Activity size={18} />
               Análisis de Cloro
@@ -197,7 +202,7 @@ export default function AguaPage() {
             <button
               type="button"
               className={`tab-button ${activeTab === 'osmosisInversa' ? 'active' : ''}`}
-              onClick={() => setActiveTab('osmosisInversa')}
+              onClick={() => selectTab('osmosisInversa')}
             >
               <Droplets size={18} />
               Osmosis Inversa
@@ -205,7 +210,7 @@ export default function AguaPage() {
             <button
               type="button"
               className={`tab-button ${activeTab === 'filtroArena' ? 'active' : ''}`}
-              onClick={() => setActiveTab('filtroArena')}
+              onClick={() => selectTab('filtroArena')}
             >
               <Filter size={18} />
               Filtro de Arena
