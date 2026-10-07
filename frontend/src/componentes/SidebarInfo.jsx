@@ -1,68 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { PackageCheck, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { AlertCircle, PackageCheck, RefreshCw, Settings2 } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
-import { getMarcas } from '../services/api';
-import { getConcentradosForSabor, getTamanosForSabor } from '../utils/productRules';
 
-const DEFAULT_MARCAS = [
-  { id: 1, nombre: 'Cola' },
-  { id: 2, nombre: 'Naranja' },
-  { id: 3, nombre: 'Lima' },
-  { id: 4, nombre: 'Pomelo' },
-  { id: 5, nombre: 'Manzana' },
-  { id: 6, nombre: 'Sifon' },
-  { id: 7, nombre: 'Soda' },
-];
+export default function SidebarInfo({ customHint }) {
+  const {
+    production, selectedLine, selectLine, refreshProduction, openModal,
+    productionLoaded, productionLoading, productionError,
+  } = useProduction();
 
-export default function SidebarInfo({ customHint, showLoteTapa = false }) {
-  const { production, updateProduction } = useProduction();
-  const [marcasCatalog, setMarcasCatalog] = useState(DEFAULT_MARCAS);
-
-  useEffect(() => {
-    async function loadCatalog() {
-      try {
-        const m = await getMarcas();
-        if (m && m.length) setMarcasCatalog(m);
-      } catch {
-        // use default marcas
-      }
-    }
-    loadCatalog();
-  }, []);
-
-  const availableConcentrados = getConcentradosForSabor(production.sabor);
-  const availableTamanos = getTamanosForSabor(production.sabor);
-
-  const handleSaborChange = (newSabor) => {
-    const validConc = getConcentradosForSabor(newSabor);
-    const validTam = getTamanosForSabor(newSabor);
-
-    const nextConc = validConc.includes(production.tipoConcentrado)
-      ? production.tipoConcentrado
-      : (validConc[0] || '');
-
-    const nextTam = validTam.includes(production.tamano)
-      ? production.tamano
-      : (validTam[0] || '');
-
-    updateProduction({
-      sabor: newSabor,
-      tipoConcentrado: nextConc,
-      tamano: nextTam,
-    });
-  };
-
-  const selectStyle = {
-    background: '#ffffff',
-    border: '1px solid var(--border-glass)',
-    color: 'var(--text-primary)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '0.3rem 0.5rem',
-    fontSize: '0.85rem',
-    cursor: 'pointer',
-    maxWidth: '170px',
-    outline: 'none',
-  };
+  const details = [
+    ['Turno', production.turno],
+    ['Sabor', production.sabor],
+    ['Concentrado', production.tipoConcentrado],
+    ['Tamaño', production.tamano],
+  ];
 
   return (
     <aside className="sidebar-card">
@@ -73,99 +24,60 @@ export default function SidebarInfo({ customHint, showLoteTapa = false }) {
 
       <div className="sidebar-data-list">
         <div className="sidebar-data-item">
-          <span className="sidebar-data-label">Línea:</span>
+          <label className="sidebar-data-label" htmlFor="quality-work-line">Línea de trabajo:</label>
           <select
-            value={production.linea}
-            onChange={(e) => updateProduction({ linea: e.target.value })}
-            style={selectStyle}
+            id="quality-work-line"
+            value={selectedLine}
+            onChange={(event) => selectLine(event.target.value)}
+            aria-label="Línea de trabajo"
           >
             <option value="linea1">Línea 1</option>
             <option value="linea2">Línea 2</option>
           </select>
         </div>
-
-        <div className="sidebar-data-item">
-          <span className="sidebar-data-label">Turno:</span>
-          <select
-            value={production.turno}
-            onChange={(e) => updateProduction({ turno: e.target.value })}
-            style={selectStyle}
-          >
-            <option value="Mañana">Mañana</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noche">Noche</option>
-          </select>
-        </div>
-
-        <div className="sidebar-data-item">
-          <span className="sidebar-data-label">Sabor:</span>
-          <select
-            value={production.sabor}
-            onChange={(e) => handleSaborChange(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="" disabled>Seleccione sabor...</option>
-            {marcasCatalog.map((m) => (
-              <option key={m.id} value={m.nombre}>{m.nombre}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="sidebar-data-item">
-          <span className="sidebar-data-label">Concentrado:</span>
-          <select
-            value={production.tipoConcentrado}
-            onChange={(e) => updateProduction({ tipoConcentrado: e.target.value })}
-            style={selectStyle}
-            disabled={!production.sabor}
-          >
-            <option value="" disabled>Seleccione...</option>
-            {availableConcentrados.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="sidebar-data-item">
-          <span className="sidebar-data-label">Tamaño:</span>
-          <select
-            value={production.tamano}
-            onChange={(e) => updateProduction({ tamano: e.target.value })}
-            style={selectStyle}
-            disabled={!production.sabor}
-          >
-            <option value="" disabled>Seleccione...</option>
-            {availableTamanos.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-
-        {showLoteTapa && (
-          <div className="sidebar-data-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.25rem' }}>
-            <span className="sidebar-data-label">Lote de Tapa <span className="required-star">*</span></span>
-            <input
-              type="text"
-              placeholder="Ej: LOTE-T-2026"
-              value={production.loteTapa}
-              onChange={(e) => updateProduction({ loteTapa: e.target.value })}
-              style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-            />
+        {productionLoading && <p role="status">Cargando producción…</p>}
+        {productionError && <p className="alert alert-error" role="alert">{productionError}</p>}
+        {productionLoaded && production.version === 0 && (
+          <p className="sidebar-hint">Esta línea todavía no tiene producción configurada.</p>
+        )}
+        {production.version > 0 && details.map(([label, value]) => (
+          <div className="sidebar-data-item" key={label}>
+            <span className="sidebar-data-label">{label}:</span>
+            <strong className="sidebar-data-val">{value || '—'}</strong>
+          </div>
+        ))}
+        {production.version > 0 && (
+          <div className="sidebar-data-item">
+            <span className="sidebar-data-label">Actualizada por:</span>
+            <strong className="sidebar-data-val">{production.actualizadaPor || '—'}</strong>
           </div>
         )}
       </div>
 
-      {customHint ? (
-        <div className="sidebar-hint">
-          <AlertCircle size={16} color="#94a3b8" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <span>{customHint}</span>
-        </div>
-      ) : (
-        <div className="sidebar-hint">
-          <AlertCircle size={16} color="#94a3b8" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <span>Los controles registrados se asociarán automáticamente a estos datos de producción.</span>
-        </div>
-      )}
+      <div className="sidebar-production-actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => refreshProduction().catch(() => {})}
+          aria-label="Actualizar producción"
+          disabled={productionLoading}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={openModal}
+          disabled={!productionLoaded || productionLoading || Boolean(productionError)}
+        >
+          <Settings2 size={16} aria-hidden="true" /> Cambiar producción
+        </button>
+      </div>
+
+      <div className="sidebar-hint">
+        <AlertCircle size={16} color="#94a3b8" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <span>{customHint || 'Los controles se registran con la producción guardada para esta línea.'}</span>
+      </div>
     </aside>
   );
 }

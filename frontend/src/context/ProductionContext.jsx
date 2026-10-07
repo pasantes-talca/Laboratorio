@@ -1,95 +1,103 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { getActiveProduction, saveActiveProduction } from '../services/api';
 
 const ProductionContext = createContext(null);
-
-const STORAGE_KEY = 'calidad_active_production_v2';
-const LEGACY_STORAGE_KEY = 'calidad_active_production';
-
-const DEFAULT_LINE_STATE = {
-  turno: 'Mañana',
-  sabor: '',
-  tipoConcentrado: '',
-  tamano: '',
-  loteTapa: '',
+const LINE_KEY = 'calidad_selected_line';
+const EMPTY_PRODUCTION = {
+  turno: 'Mañana', sabor: '', tipoConcentrado: '', tamano: '',
+  version: 0, actualizadaEn: null, actualizadaPor: null,
 };
 
-const DEFAULT_STATE = {
-  activeLine: 'linea1',
-  linea1: { ...DEFAULT_LINE_STATE },
-  linea2: { ...DEFAULT_LINE_STATE },
-};
-
-function loadFromStorage() {
+function storedLine() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        activeLine: parsed.activeLine || 'linea1',
-        linea1: { ...DEFAULT_LINE_STATE, ...parsed.linea1 },
-        linea2: { ...DEFAULT_LINE_STATE, ...parsed.linea2 },
-      };
-    }
-    const legacySaved = localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (legacySaved) {
-      const legacy = JSON.parse(legacySaved);
-      const activeLine = legacy.linea === 'linea2' ? 'linea2' : 'linea1';
-      const lineData = { ...legacy };
-      delete lineData.linea;
-      return {
-        ...DEFAULT_STATE,
-        activeLine,
-        [activeLine]: { ...DEFAULT_LINE_STATE, ...lineData },
-      };
-    }
-  } catch {}
-  return DEFAULT_STATE;
+    return sessionStorage.getItem(LINE_KEY) === 'linea2' ? 'linea2' : 'linea1';
+  } catch {
+    return 'linea1';
+  }
+}
+
+function normalize(record, line) {
+  return {
+    linea: line,
+    turno: record.turno || 'Mañana',
+    sabor: record.sabor || '',
+    tipoConcentrado: record.concentrado || '',
+    tamano: record.tamano || '',
+    version: record.version || 0,
+    actualizadaEn: record.actualizada_en || null,
+    actualizadaPor: record.actualizada_por || null,
+  };
 }
 
 export function ProductionProvider({ children }) {
-  const [state, setState] = useState(loadFromStorage);
+  const [selectedLine, setSelectedLine] = useState(storedLine);
+  const [byLine, setByLine] = useState({});
+  const [loadingLine, setLoadingLine] = useState(null);
+  const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Derived: the active line's full production data exposed as flat object
-  const production = {
-    linea: state.activeLine,
-    ...state[state.activeLine],
-  };
+  const selectLine = useCallback((line) => {
+    if (line !== 'linea1' && line !== 'linea2') return;
+    try { sessionStorage.setItem(LINE_KEY, line); } catch {}
+    setSelectedLine(line);
+  }, []);
+
+  const refreshProduction = useCallback(async (line = selectedLine) => {
+    setLoadingLine(line);
+    try {
+      const record = await getActiveProduction(line === 'linea2' ? 2 : 1);
+      const normalized = normalize(record, line);
+      setByLine((previous) => ({
+        ...previous,
+        [line]: previous[line]?.version > normalized.version ? previous[line] : normalized,
+      }));
+      setErrors((previous) => ({ ...previous, [line]: '' }));
+      return normalized;
+    } catch (err) {
+      setErrors((previous) => ({ ...previous, [line]: err.message || 'No se pudo cargar la producción' }));
+      throw err;
+    } finally {
+      setLoadingLine((current) => current === line ? null : current);
+    }
+  }, [selectedLine]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(production));
-    } catch {}
-  }, [state]);
+    refreshProduction().catch(() => {});
+    const timer = setInterval(() => refreshProduction().catch(() => {}), 15000);
+    return () => clearInterval(timer);
+  }, [refreshProduction]);
 
-  /**
-   * updateProduction({ key: value, ... })
-   * - If `linea` changes, switch line and apply any accompanying fields there.
-   * - Otherwise, update the current active line's config.
-   */
-  const updateProduction = (data) => {
-    setState((prev) => {
-      const { linea, ...lineData } = data;
-      const activeLine = linea || prev.activeLine;
-      return {
-        ...prev,
-        activeLine,
-        [activeLine]: { ...prev[activeLine], ...lineData },
-      };
-    });
-  };
+  const saveProduction = useCallback(async (line, form, expectedVersion) => {
+    try {
+      const record = await saveActiveProduction(line === 'linea2' ? 2 : 1, {
+        expected_version: expectedVersion,
+        turno: form.turno,
+        sabor: form.sabor,
+        concentrado: form.tipoConcentrado,
+        tamano: form.tamano,
+      });
+      const normalized = normalize(record, line);
+      setByLine((previous) => ({ ...previous, [line]: normalized }));
+      setErrors((previous) => ({ ...previous, [line]: '' }));
+      return normalized;
+    } catch (err) {
+      await refreshProduction(line).catch(() => {});
+      throw err;
+    }
+  }, [refreshProduction]);
+
+  const production = byLine[selectedLine] || { ...EMPTY_PRODUCTION, linea: selectedLine };
+  const productionLoaded = Boolean(byLine[selectedLine]);
+  const productionLoading = loadingLine === selectedLine || (!productionLoaded && !errors[selectedLine]);
+  const productionError = errors[selectedLine] || '';
+  const productionReady = Boolean(byLine[selectedLine]?.version) && !productionLoading && !productionError;
 
   return (
-    <ProductionContext.Provider
-      value={{
-        production,
-        updateProduction,
-        isModalOpen,
-        openModal: () => setIsModalOpen(true),
-        closeModal: () => setIsModalOpen(false),
-      }}
-    >
+    <ProductionContext.Provider value={{
+      production, selectedLine, selectLine, refreshProduction, saveProduction,
+      productionReady, productionLoaded, productionLoading, productionError,
+      isModalOpen, openModal: () => setIsModalOpen(true), closeModal: () => setIsModalOpen(false),
+    }}>
       {children}
     </ProductionContext.Provider>
   );

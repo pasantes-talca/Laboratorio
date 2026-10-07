@@ -21,7 +21,9 @@ export async function fetchJson(endpoint, options = {}) {
       const err = await res.json();
       errorDetail = err.detail || err.message || errorDetail;
     } catch {}
-    throw new Error(errorDetail);
+    const error = new Error(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
+    error.status = res.status;
+    throw error;
   }
 
   return res.json();
@@ -57,6 +59,17 @@ export async function getSabores() {
 }
 
 // Quality Control endpoints
+export async function getActiveProduction(line) {
+  return fetchJson(`/calidad/produccion/${line}`);
+}
+
+export async function saveActiveProduction(line, payload) {
+  return fetchJson(`/calidad/produccion/${line}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function getControlesBebida() {
   return fetchJson('/calidad/bebidas');
 }

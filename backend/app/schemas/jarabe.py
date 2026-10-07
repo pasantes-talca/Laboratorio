@@ -6,6 +6,7 @@ class ControlJarabeCreate(BaseModel):
     hora: Optional[str] = None
     turno: Optional[str] = None
     linea: Optional[str] = None
+    production_version: Optional[int] = Field(default=None, ge=0)
     sabor: str = Field(min_length=2, max_length=100)
     concentrado: str = Field(min_length=1, max_length=50)
     tanque: str = Field(min_length=1, max_length=20)

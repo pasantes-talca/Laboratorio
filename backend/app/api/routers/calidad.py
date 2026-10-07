@@ -10,6 +10,7 @@ from backend.app.schemas.calidad import (
     RegistroCalidadCreate,
     RegistroCalidadResponse,
 )
+from backend.app.services.production import require_production, attach_control_production
 
 router = APIRouter(prefix="/api", tags=["Calidad"])
 
@@ -65,6 +66,7 @@ def delete_control(control_id: int, db: Session = Depends(get_db)):
 @router.post("/control-bebida", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
     now = local_now()
+    production = require_production(db, data.linea, data.production_version)
 
     if data.hora and data.hora.strip():
         try:
@@ -74,16 +76,16 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
     else:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
-    linea_num = 1 if (data.linea or "") == "linea1" else 2
+    linea_num = production.linea
 
     registro = ControlBebida(
-        marca=data.marca,
-        concentrado=data.tipo_concentrado,
-        tamano=data.tamano,
+        marca=production.sabor,
+        concentrado=production.concentrado,
+        tamano=production.tamano,
         responsable=data.responsable,
         tanque=data.tanque if hasattr(data, "tanque") else None,
         linea=linea_num,
-        turno=data.turno,
+        turno=production.turno,
         fecha=now.date(),
         hora=hora_obj,
         carac_organolep=data.carac_organolep,
@@ -97,15 +99,17 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
         control_video_jet=data.control_videojet,
     )
     db.add(registro)
+    db.flush()
+    attach_control_production(db, "bebida", registro.id, production, data.lote_tapa)
     db.commit()
     db.refresh(registro)
     return {
         "id": registro.id,
         "message": "Control de bebida registrado con éxito",
         "bottle_visual": {
-            "brand": data.marca,
-            "color": BRAND_BOTTLE_COLOR.get(data.marca.lower(), "#CCCCCC"),
-            "label": data.marca.lower(),
+            "brand": production.sabor,
+            "color": BRAND_BOTTLE_COLOR.get(production.sabor.lower(), "#CCCCCC"),
+            "label": production.sabor.lower(),
         },
     }
 

@@ -13,6 +13,10 @@ vi.mock('../src/services/api', () => ({
   getControlesBebida: vi.fn().mockResolvedValue([]),
   getControlesJarabe: vi.fn().mockResolvedValue([]),
   getControlesTorque: vi.fn().mockResolvedValue([]),
+  getActiveProduction: vi.fn().mockResolvedValue({
+    linea: 1, turno: 'Mañana', sabor: '', concentrado: '', tamano: '', version: 0,
+  }),
+  saveActiveProduction: vi.fn().mockResolvedValue({}),
 }));
 
 beforeEach(() => {

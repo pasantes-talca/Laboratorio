@@ -5,6 +5,7 @@ from backend.app.core.database import get_db
 from backend.app.core.time import local_now
 from backend.app.models.ops import ControlTorque, ControlPausa
 from backend.app.schemas.ops import ControlTorqueCreate, ControlPausaCreate
+from backend.app.services.production import require_production, attach_control_production, linea_numero
 
 router = APIRouter(prefix="/api", tags=["Operaciones"])
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/api", tags=["Operaciones"])
 def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_torque guardando strings directamente."""
     now = local_now()
+    production = require_production(db, data.linea, data.production_version)
     if data.hora and data.hora.strip():
         try:
             hora_obj = datetime.strptime(data.hora.strip(), "%H:%M").time()
@@ -24,8 +26,8 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
     else:
         hora_obj = now.time().replace(second=0, microsecond=0)
 
-    linea_num = 1 if (data.linea or "") == "linea1" else (2 if (data.linea or "") == "linea2" else 1)
-    turno_final = data.noche if ((data.turno or "").lower() == "noche" and data.noche) else data.turno
+    linea_num = production.linea
+    turno_final = data.noche if (production.turno.lower() == "noche" and data.noche) else production.turno
     if turno_final and turno_final.lower() in ["mañana", "tarde", "noche"]:
         turno_final = turno_final.capitalize()
 
@@ -35,13 +37,15 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
         turno=turno_final,
         linea=linea_num,
         numero_cabezal=data.numero_cabezal,
-        sabor=data.sabor,
+        sabor=production.sabor,
         color=data.color,
         marca_tapa=data.marca_tapa,
         valor=data.valor,
         responsable=data.responsable,
     )
     db.add(registro)
+    db.flush()
+    attach_control_production(db, "torque", registro.id, production)
     db.commit()
     db.refresh(registro)
     return {"id": registro.id, "message": "Control de torque registrado con éxito"}
@@ -98,7 +102,7 @@ def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
 def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
     """Registra una pausa de línea guardando strings directamente."""
     now = local_now()
-    linea_num = 1 if (data.linea or "") == "linea1" else (2 if (data.linea or "") == "linea2" else 1)
+    linea_num = linea_numero(data.linea)
     turno_val = (data.turno or "").capitalize() if (data.turno or "").lower() in ["mañana", "tarde", "noche"] else data.turno
 
     registro = ControlPausa(

@@ -8,6 +8,7 @@ class ControlTorqueCreate(BaseModel):
     turno: Optional[str] = None
     noche: Optional[str] = None
     linea: Optional[str] = None
+    production_version: Optional[int] = Field(default=None, ge=0)
     valor: float = Field(ge=0, le=500)
     sabor: str = Field(min_length=2, max_length=100)
     marca: Optional[str] = None

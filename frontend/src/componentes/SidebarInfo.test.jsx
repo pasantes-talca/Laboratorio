@@ -1,116 +1,50 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import SidebarInfo from './SidebarInfo';
+import ProductionModal from './ProductionModal';
 import { ProductionProvider } from '../context/ProductionContext';
+import { ToastProvider } from '../context/ToastContext';
+import { getActiveProduction, saveActiveProduction } from '../services/api';
 
-function seedProduction(data) {
-  localStorage.setItem('calidad_active_production', JSON.stringify(data));
-}
-
-function renderSidebar(props = {}) {
-  return render(
-    <ProductionProvider>
-      <SidebarInfo {...props} />
-    </ProductionProvider>
-  );
-}
+vi.mock('../services/api', () => ({
+  getActiveProduction: vi.fn(), saveActiveProduction: vi.fn(),
+  getMarcas: vi.fn().mockResolvedValue([{ id: 1, nombre: 'Cola' }]),
+}));
 
 beforeEach(() => {
-  localStorage.clear();
+  vi.clearAllMocks();
+  sessionStorage.clear();
+  getActiveProduction.mockImplementation(async (line) => ({
+    linea: line, turno: 'Mañana', sabor: line === 1 ? 'Cola' : 'Soda',
+    concentrado: line === 1 ? 'XQ' : 'TALCA', tamano: '500ml', version: 1,
+  }));
 });
 
-describe('SidebarInfo', () => {
-  it('renders interactive selects initialized with active production state', () => {
-    seedProduction({
-      linea: 'linea2',
-      turno: 'Tarde',
-      sabor: 'Cola',
-      tipoConcentrado: 'XQ',
-      tamano: '3L',
+describe('Producción Activa', () => {
+  it('muestra cada línea sin edición directa', async () => {
+    render(<ProductionProvider><ToastProvider><SidebarInfo /></ToastProvider></ProductionProvider>);
+    await waitFor(() => expect(screen.getByText('Cola')).toBeInTheDocument());
+    expect(screen.getAllByRole('combobox')).toHaveLength(1);
+    expect(screen.queryByText('Lote de tapa')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Línea de trabajo' }), { target: { value: 'linea2' } });
+    await waitFor(() => expect(screen.getByText('Soda')).toBeInTheDocument());
+    expect(screen.queryByText('Lote de tapa')).not.toBeInTheDocument();
+  });
+
+  it('solo guarda mediante Cambiar producción', async () => {
+    saveActiveProduction.mockResolvedValue({
+      linea: 1, turno: 'Tarde', sabor: 'Cola', concentrado: 'XQ', tamano: '500ml', version: 2,
     });
-    renderSidebar();
-
-    const selects = screen.getAllByRole('combobox');
-    expect(selects.length).toBeGreaterThanOrEqual(5);
-
-    // Linea select
-    expect(selects[0]).toHaveValue('linea2');
-    // Turno select
-    expect(selects[1]).toHaveValue('Tarde');
-  });
-
-  it('updates linea and turno directly through selects', () => {
-    seedProduction({ linea: 'linea1', turno: 'Mañana' });
-    renderSidebar();
-
-    const selects = screen.getAllByRole('combobox');
-    fireEvent.change(selects[0], { target: { value: 'linea2' } });
-    expect(selects[0]).toHaveValue('linea2');
-
-    fireEvent.change(selects[1], { target: { value: 'Noche' } });
-    expect(selects[1]).toHaveValue('Noche');
-  });
-
-  it('filters concentrados and tamanos dynamically when flavor changes', () => {
-    seedProduction({ sabor: 'Cola' });
-    renderSidebar();
-
-    const selects = screen.getAllByRole('combobox');
-    const saborSelect = selects[2];
-    const concentradoSelect = selects[3];
-    const tamanoSelect = selects[4];
-
-    // Select Cola -> should have XQ, KG, IFF
-    fireEvent.change(saborSelect, { target: { value: 'Cola' } });
-    expect(concentradoSelect).not.toBeDisabled();
-    expect(tamanoSelect).not.toBeDisabled();
-
-    // Select Soda -> should have TALCA concentrado
-    fireEvent.change(saborSelect, { target: { value: 'Soda' } });
-    expect(concentradoSelect).toHaveValue('TALCA');
-  });
-
-  it('shows default association hint when no customHint given', () => {
-    seedProduction({});
-    renderSidebar();
-    expect(
-      screen.getByText(/se asociarán automáticamente/)
-    ).toBeInTheDocument();
-  });
-
-  it('renders customHint instead of the default hint when provided', () => {
-    seedProduction({});
-    renderSidebar({ customHint: 'Registre el torque antes del envasado.' });
-
-    expect(
-      screen.getByText('Registre el torque antes del envasado.')
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/se asociarán automáticamente/)).not.toBeInTheDocument();
-  });
-
-  describe('showLoteTapa input', () => {
-    it('does not render the lote tapa field by default', () => {
-      seedProduction({});
-      renderSidebar();
-      expect(
-        screen.queryByPlaceholderText('Ej: LOTE-T-2026')
-      ).not.toBeInTheDocument();
-    });
-
-    it('renders a controlled input seeded from context and persists edits', async () => {
-      seedProduction({ loteTapa: 'L-100' });
-      renderSidebar({ showLoteTapa: true });
-
-      const input = screen.getByPlaceholderText('Ej: LOTE-T-2026');
-      expect(input).toHaveValue('L-100');
-
-      fireEvent.change(input, { target: { value: 'LOTE-T-2026' } });
-      expect(input).toHaveValue('LOTE-T-2026');
-
-      // edit round-trips through ProductionContext -> localStorage
-      const stored = JSON.parse(localStorage.getItem('calidad_active_production'));
-      expect(stored.loteTapa).toBe('LOTE-T-2026');
-    });
+    render(<ProductionProvider><ToastProvider><SidebarInfo /><ProductionModal /></ToastProvider></ProductionProvider>);
+    await waitFor(() => expect(screen.getByText('Cola')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar producción' }));
+    await waitFor(() => expect(screen.getByRole('option', { name: 'Cola' })).toBeInTheDocument());
+    expect(screen.queryByRole('textbox', { name: /Lote de tapa/ })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: /Turno/ }), { target: { value: 'Tarde' } });
+    expect(saveActiveProduction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambio' }));
+    await waitFor(() => expect(saveActiveProduction).toHaveBeenCalledWith(1, expect.objectContaining({ expected_version: 1, turno: 'Tarde' })));
+    await waitFor(() => expect(screen.getByText('Tarde')).toBeInTheDocument());
   });
 });

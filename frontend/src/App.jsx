@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 import { ToastProvider } from './context/ToastContext';
-import { ProductionProvider } from './context/ProductionContext';
+import { ProductionProvider, useProduction } from './context/ProductionContext';
 import SidebarNav from './componentes/SidebarNav';
 import ProductionModal from './componentes/ProductionModal';
 import { FORM_NAV, defaultFormFor } from './navigation';
@@ -57,6 +57,7 @@ function getRouteFromPath() {
 }
 
 function AppContent() {
+  const { selectedLine, production } = useProduction();
   const [route, setRoute] = useState(getRouteFromPath);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { page: activePage, form: activeForm } = route;
@@ -121,7 +122,7 @@ function AppContent() {
 
           <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
             {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
-            {activePage === 'calidad' && <CalidadPage initialTab={activeForm} onTabChange={(form) => handleNavigate('calidad', form)} />}
+            {activePage === 'calidad' && <CalidadPage key={`${selectedLine}-${production.version}`} initialTab={activeForm} onTabChange={(form) => handleNavigate('calidad', form)} />}
             {activePage === 'jarabe' && <SalaJarabePage initialTab={activeForm} onTabChange={(form) => handleNavigate('jarabe', form)} />}
             {activePage === 'agua' && <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />}
             {activePage === 'saneado' && <AreaSaneadoPage />}

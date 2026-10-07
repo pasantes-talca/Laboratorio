@@ -1061,6 +1061,37 @@ select option {
   gap: 0.625rem;
 }
 
+.sidebar-production-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.production-status-banner {
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-azul-hielo, #e8f4f8);
+  color: var(--text-dark);
+  border: 1px solid var(--border-glass);
+  font-size: 0.88rem;
+}
+
+.sidebar-production-actions .btn {
+  justify-content: center;
+  padding: 0.65rem 0.8rem;
+}
+
+.sidebar-production-actions .btn-primary {
+  flex: 1;
+}
+
+.sidebar-production-actions .btn:disabled,
+.form-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
 .sidebar-data-item {
   display: flex;
   justify-content: space-between;

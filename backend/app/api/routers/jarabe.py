@@ -20,6 +20,7 @@ from backend.app.schemas.jarabe import (
     ParteJarabeCreate,
 )
 from backend.app.services.excel_parser import extraer_datos_reporte
+from backend.app.services.production import require_production, attach_control_production
 
 router = APIRouter(prefix="/api", tags=["Sala de Jarabe"])
 
@@ -52,6 +53,7 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
 def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_jarabe guardando strings directamente."""
     now = local_now()
+    production = require_production(db, data.linea, data.production_version)
     hora_str = data.hora if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
@@ -59,11 +61,11 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
         hora_obj = now.time().replace(second=0, microsecond=0)
 
     registro = ControlJarabe(
-        turno=data.turno,
+        turno=production.turno,
         fecha=now.date(),
         hora=hora_obj,
-        sabor=data.sabor,
-        concentrado=data.concentrado,
+        sabor=production.sabor,
+        concentrado=production.concentrado,
         tanque=data.tanque.strip(),
         grados_brix_patron=data.bx_patron,
         t_a=data.ta,
@@ -72,6 +74,8 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
         numero_carga_trilay=data.numero_carga_trilay.strip() if data.numero_carga_trilay and data.numero_carga_trilay.strip() else None,
     )
     db.add(registro)
+    db.flush()
+    attach_control_production(db, "jarabe", registro.id, production)
     db.commit()
     db.refresh(registro)
     return {"id": registro.id, "message": "Control de jarabe registrado con éxito"}

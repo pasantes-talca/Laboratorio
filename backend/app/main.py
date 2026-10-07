@@ -19,6 +19,7 @@ from backend.app.api.routers import (
     agua_router,
     saneado_router,
     reportes_router,
+    production_router,
 )
 
 @asynccontextmanager
@@ -86,6 +87,7 @@ app.include_router(ops_router)
 app.include_router(agua_router)
 app.include_router(saneado_router)
 app.include_router(reportes_router)
+app.include_router(production_router)
 app.include_router(spa_router)
 
 

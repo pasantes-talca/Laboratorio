@@ -1,108 +1,63 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { ProductionProvider, useProduction } from './ProductionContext';
+import { getActiveProduction, saveActiveProduction } from '../services/api';
 
-const STORAGE_KEY = 'calidad_active_production';
+vi.mock('../services/api', () => ({ getActiveProduction: vi.fn(), saveActiveProduction: vi.fn() }));
 
-const DEFAULT_STATE = {
-  linea: 'linea1',
-  turno: 'Mañana',
-  sabor: '',
-  tipoConcentrado: '',
-  tamano: '',
-  loteTapa: '',
-};
-
-function wrapper({ children }) {
-  return <ProductionProvider>{children}</ProductionProvider>;
-}
+const first = { linea: 1, turno: 'Mañana', sabor: 'Cola', concentrado: 'XQ', tamano: '3L', version: 1 };
+const second = { linea: 2, turno: 'Tarde', sabor: 'Soda', concentrado: 'TALCA', tamano: '500ml', version: 4 };
+const wrapper = ({ children }) => <ProductionProvider>{children}</ProductionProvider>;
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  sessionStorage.clear();
   localStorage.clear();
+  getActiveProduction.mockImplementation(async (line) => line === 1 ? first : second);
 });
 
-describe('useProduction', () => {
-  it('throws when used outside ProductionProvider', () => {
-    expect(() => renderHook(() => useProduction())).toThrow(
-      'useProduction must be used within ProductionProvider'
-    );
+describe('producción por línea', () => {
+  it('carga del servidor y conserva la línea elegida en este puesto', async () => {
+    const { result } = renderHook(() => useProduction(), { wrapper });
+    await waitFor(() => expect(result.current.productionReady).toBe(true));
+    expect(result.current.production.sabor).toBe('Cola');
+    act(() => result.current.selectLine('linea2'));
+    await waitFor(() => expect(result.current.production.sabor).toBe('Soda'));
+    expect(result.current.production.version).toBe(4);
+    expect(sessionStorage.getItem('calidad_selected_line')).toBe('linea2');
+    expect(getActiveProduction).toHaveBeenCalledWith(2);
+    expect(localStorage.getItem('calidad_active_production')).toBeNull();
   });
 
-  it('provides defaults when localStorage is empty', () => {
+  it('guarda solo la línea seleccionada con su versión', async () => {
+    saveActiveProduction.mockResolvedValue({ ...second, version: 5, turno: 'Noche' });
     const { result } = renderHook(() => useProduction(), { wrapper });
-
-    expect(result.current.production).toEqual(DEFAULT_STATE);
-    expect(result.current.isModalOpen).toBe(false);
+    await waitFor(() => expect(result.current.productionReady).toBe(true));
+    act(() => result.current.selectLine('linea2'));
+    await waitFor(() => expect(result.current.production.version).toBe(4));
+    await act(async () => result.current.saveProduction('linea2', {
+      turno: 'Noche', sabor: 'Soda', tipoConcentrado: 'TALCA', tamano: '500ml',
+    }, 4));
+    expect(saveActiveProduction).toHaveBeenCalledWith(2, expect.objectContaining({ expected_version: 4, turno: 'Noche' }));
+    expect(saveActiveProduction.mock.calls[0][1]).not.toHaveProperty('lote_tapa');
+    expect(result.current.production.version).toBe(5);
+    act(() => result.current.selectLine('linea1'));
+    expect(result.current.production.sabor).toBe('Cola');
   });
 
-  it('rehydrates from pre-seeded localStorage merged over defaults', () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ sabor: 'COLA', turno: 'Noche' })
-    );
-
+  it('recarga la versión nueva cuando otro puesto cambió la producción', async () => {
+    const conflict = Object.assign(new Error('La producción cambió'), { status: 409 });
+    saveActiveProduction.mockRejectedValue(conflict);
     const { result } = renderHook(() => useProduction(), { wrapper });
-
-    // seeded fields win, unspecified fields keep defaults
-    expect(result.current.production).toEqual({
-      ...DEFAULT_STATE,
-      sabor: 'COLA',
-      turno: 'Noche',
+    await waitFor(() => expect(result.current.productionReady).toBe(true));
+    getActiveProduction.mockResolvedValue({ ...first, version: 2, sabor: 'Pomelo' });
+    await act(async () => {
+      await expect(result.current.saveProduction('linea1', {
+        turno: 'Mañana', sabor: 'Cola', tipoConcentrado: 'XQ', tamano: '3L',
+      }, 1)).rejects.toBe(conflict);
     });
-  });
-
-  it('falls back to defaults when stored value is corrupt JSON', () => {
-    localStorage.setItem(STORAGE_KEY, '{not valid json');
-
-    const { result } = renderHook(() => useProduction(), { wrapper });
-    expect(result.current.production).toEqual(DEFAULT_STATE);
-  });
-
-  it('updateProduction merges partial data and persists to localStorage', () => {
-    const { result } = renderHook(() => useProduction(), { wrapper });
-
-    act(() => {
-      result.current.updateProduction({ sabor: 'SODA', linea: 'linea2' });
-    });
-
-    expect(result.current.production).toEqual({
-      ...DEFAULT_STATE,
-      sabor: 'SODA',
-      linea: 'linea2',
-    });
-
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    expect(stored.sabor).toBe('SODA');
-    expect(stored.linea).toBe('linea2');
-  });
-
-  it('successive updates accumulate without losing previous keys', () => {
-    const { result } = renderHook(() => useProduction(), { wrapper });
-
-    act(() => {
-      result.current.updateProduction({ sabor: 'MANZANA' });
-    });
-    act(() => {
-      result.current.updateProduction({ tamano: '500 ml' });
-    });
-
-    expect(result.current.production.sabor).toBe('MANZANA');
-    expect(result.current.production.tamano).toBe('500 ml');
-    expect(localStorage.getItem(STORAGE_KEY)).toContain('"tamano":"500 ml"');
-  });
-
-  it('openModal / closeModal toggle isModalOpen', () => {
-    const { result } = renderHook(() => useProduction(), { wrapper });
-
-    act(() => {
-      result.current.openModal();
-    });
-    expect(result.current.isModalOpen).toBe(true);
-
-    act(() => {
-      result.current.closeModal();
-    });
-    expect(result.current.isModalOpen).toBe(false);
+    await waitFor(() => expect(result.current.production.version).toBe(2));
+    expect(result.current.production.sabor).toBe('Pomelo');
   });
 });

@@ -25,9 +25,30 @@ import {
   submitControlPausa,
 } from '../../../services/api';
 
+const loteStorageKey = (linea) => `calidad_lote_tapa_${linea}`;
+
+function readLoteTapa(linea) {
+  try {
+    return localStorage.getItem(loteStorageKey(linea)) || '';
+  } catch {
+    return '';
+  }
+}
+
+function rememberLoteTapa(linea, value) {
+  try {
+    localStorage.setItem(loteStorageKey(linea), value);
+  } catch {}
+}
+
 export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
-  const { production } = useProduction();
+  const { production, productionReady, productionLoading, productionError, refreshProduction } = useProduction();
   const { showToast } = useToast();
+
+  const handleProductionConflict = (err) => {
+    if (err.status === 409) refreshProduction().catch(() => {});
+    showToast(err.message, 'error');
+  };
 
   const [showPausaModal, setShowPausaModal] = useState(false);
 
@@ -69,12 +90,18 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
     temperatura: '',
     vol_gas: '',
     brix: '',
+    lote_tapa: readLoteTapa(production.linea),
     control_videojet: 'OK',
     responsable: '',
   });
 
+  useEffect(() => {
+    setBebidaForm((previous) => ({ ...previous, lote_tapa: readLoteTapa(production.linea) }));
+  }, [production.linea]);
+
   const handleBebidaSubmit = async (e) => {
     e.preventDefault();
+    if (!productionReady) return;
     try {
       const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
@@ -88,9 +115,10 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
         marca: production.sabor || 'N/A',
         tipo_concentrado: production.tipoConcentrado || 'N/A',
         tamano: production.tamano || 'N/A',
-        lote_tapa: production.loteTapa || 'N/A',
+        lote_tapa: bebidaForm.lote_tapa.trim(),
         linea: production.linea,
         turno: production.turno,
+        production_version: production.version,
       };
       await submitControlBebida(payload);
       showToast('Control de Bebida registrado con éxito', 'success');
@@ -104,7 +132,7 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
         brix: '',
       }));
     } catch (err) {
-      showToast(err.message, 'error');
+      handleProductionConflict(err);
     }
   };
 
@@ -121,6 +149,7 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
 
   const handleJarabeSubmit = async (e) => {
     e.preventDefault();
+    if (!productionReady) return;
     try {
       const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
@@ -132,6 +161,7 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
         concentrado: production.tipoConcentrado || 'N/A',
         linea: production.linea,
         turno: production.turno,
+        production_version: production.version,
       };
       await submitControlJarabe(payload);
       showToast('Control de Jarabe registrado con éxito', 'success');
@@ -142,7 +172,7 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
         ta: '',
       }));
     } catch (err) {
-      showToast(err.message, 'error');
+      handleProductionConflict(err);
     }
   };
 
@@ -221,6 +251,7 @@ function getColorBySabor(sabor) {
 
   const handleTorqueSubmit = async (e) => {
     e.preventDefault();
+    if (!productionReady) return;
     try {
       const nowTime = new Date().toTimeString().slice(0, 5);
       const hora = torqueForm.hora && torqueForm.hora.trim() ? torqueForm.hora.trim() : nowTime;
@@ -236,6 +267,7 @@ function getColorBySabor(sabor) {
           sabor: production.sabor || 'N/A',
           linea: production.linea,
           turno: production.turno,
+          production_version: production.version,
         };
         await submitControlTorque(payload);
       }
@@ -255,7 +287,7 @@ function getColorBySabor(sabor) {
         };
       });
     } catch (err) {
-      showToast(err.message, 'error');
+      handleProductionConflict(err);
     }
   };
 
@@ -288,6 +320,15 @@ function getColorBySabor(sabor) {
     <div className="content-grid">
       <main className="card">
         {/* Header: Tabs + Pausa */}
+        {!productionReady && (
+          <div role="status" className="production-status-banner">
+            {productionError
+              ? `No se pudo cargar la producción: ${productionError}`
+              : productionLoading
+                ? 'Cargando producción de esta línea…'
+                : 'Configure la producción de esta línea con “Cambiar producción” antes de registrar controles.'}
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
           <div className="tabs-container" style={{ marginBottom: 0 }}>
             <button
@@ -450,6 +491,22 @@ function getColorBySabor(sabor) {
                 </select>
               </div>
 
+              <div className="field-container">
+                <label htmlFor="bebida-lote-tapa">Lote de tapa <span className="required-star">*</span></label>
+                <input
+                  id="bebida-lote-tapa"
+                  type="text"
+                  required
+                  maxLength={50}
+                  placeholder="Ej: LOTE-T-2026"
+                  value={bebidaForm.lote_tapa}
+                  onChange={(e) => {
+                    rememberLoteTapa(production.linea, e.target.value);
+                    setBebidaForm({ ...bebidaForm, lote_tapa: e.target.value });
+                  }}
+                />
+              </div>
+
               <div className="field-container col-span-2">
                 <label>Respons. <span className="required-star">*</span></label>
                 <div className="input-wrapper">
@@ -481,13 +538,14 @@ function getColorBySabor(sabor) {
                   temperatura: '',
                   vol_gas: '',
                   brix: '',
+                  lote_tapa: bebidaForm.lote_tapa,
                   control_videojet: 'OK',
                   responsable: '',
                 })}
               >
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
                 <Save size={16} /> Registrar Control de Bebida
               </button>
             </div>
@@ -577,7 +635,7 @@ function getColorBySabor(sabor) {
               >
                 <RotateCcw size={16} /> Limpiar
               </button>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
                 <Save size={16} /> Registrar Control de Jarabe
               </button>
             </div>
@@ -718,7 +776,7 @@ function getColorBySabor(sabor) {
               >
                 <RotateCcw size={16} /> Reiniciar al Cabezal 1
               </button>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
                 <Save size={16} /> Registrar Torque
               </button>
             </div>
@@ -727,7 +785,7 @@ function getColorBySabor(sabor) {
 
       </main>
 
-      <SidebarInfo showLoteTapa={activeTab === 'bebida'} />
+      <SidebarInfo />
 
       {/* Modal de Pausa */}
       {showPausaModal && (

@@ -1,4 +1,5 @@
 from backend.app.models.base import Base, metadata
+from backend.app.models.production import ProduccionActiva, ControlProduccion
 from backend.app.models.calidad import RegistroCalidad, ControlBebida
 from backend.app.models.jarabe import (
     ControlJarabe,
@@ -19,6 +20,8 @@ from backend.app.models.agua import (
 __all__ = [
     "Base",
     "metadata",
+    "ProduccionActiva",
+    "ControlProduccion",
     "RegistroCalidad",
     "ControlBebida",
     "ControlJarabe",

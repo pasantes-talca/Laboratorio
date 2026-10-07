@@ -20,6 +20,7 @@ class RegistroCalidadCreate(BaseModel):
     hora: Optional[str] = None
     turno: Optional[str] = None
     linea: Optional[str] = None
+    production_version: Optional[int] = Field(default=None, ge=0)
     carac_organolep: str = Field(..., description="okey o no okey")
     nivel_llenado: str
     contenido: float = Field(ge=0)
@@ -34,7 +35,7 @@ class RegistroCalidadCreate(BaseModel):
     marca: str
     tipo_concentrado: str
     tamano: str
-    lote_tapa: str
+    lote_tapa: str = Field(max_length=50)
     tanque: Optional[str] = None
 
     @field_validator("responsable", "marca", "tamano", "lote_tapa")

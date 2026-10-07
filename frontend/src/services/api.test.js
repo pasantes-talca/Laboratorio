@@ -40,6 +40,13 @@ describe('fetchJson (core transport)', () => {
     await expect(api.fetchJson('/tanques')).rejects.toThrow('Tanque inexistente');
   });
 
+  it('includes status 409 so the production form can reload a conflict', async () => {
+    stubFetch(jsonResponse({ detail: 'La producción cambió' }, { ok: false, status: 409 }));
+    await expect(api.fetchJson('/calidad/produccion/1')).rejects.toMatchObject({
+      message: 'La producción cambió', status: 409,
+    });
+  });
+
   it('falls back to message field when detail is absent', async () => {
     stubFetch(jsonResponse({ message: 'boom' }, { ok: false, status: 500 }));
 
@@ -96,6 +103,15 @@ describe('catalog getters hit correct endpoints', () => {
 });
 
 describe('quality control endpoints', () => {
+  it('reads and saves production for a specific line', async () => {
+    const fetchMock = stubFetch(jsonResponse({ version: 2 }));
+    await api.getActiveProduction(2);
+    await api.saveActiveProduction(2, { expected_version: 1, sabor: 'Soda' });
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/calidad/produccion/2');
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/calidad/produccion/2');
+    expect(fetchMock.mock.calls[1][1].method).toBe('PUT');
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).expected_version).toBe(1);
+  });
   it('getControlesBebida GETs canonical endpoint', async () => {
     const fetchMock = stubFetch(jsonResponse([]));
     await api.getControlesBebida();
