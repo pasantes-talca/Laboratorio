@@ -128,12 +128,12 @@ export default function AnalisisCloroForm({ responsables }) {
         <Field {...fieldProps} name="contralavado_tanque_b" label="Contralavado tanque B" type="time" optional />
       </FormSection>
 
-      <FormSection number="04" title="Rinser" description="Seleccione la línea y cargue los resultados de cloro en ppm.">
+      <FormSection number="04" title="Rinser" description="Seleccione la línea y registre el resultado de cloro y la presión del rinser.">
         <Field {...fieldProps} name="cloro_riser_linea" label="Cloro Rinser Línea">
           <option value="Linea 1">Línea 1</option><option value="Linea 2">Línea 2</option>
         </Field>
         <Field {...fieldProps} name="cloro_riser_resultado" label="Cloro Rinser Resultado" unit="ppm" />
-        <Field {...fieldProps} name="acondicionamiento_rinser" label="Acondicionamiento rinser" unit="ppm" optional />
+        <Field {...fieldProps} name="acondicionamiento_rinser" label="Presión del rinser" optional />
       </FormSection>
 
       <FormSection number="05" title="Responsable" description="Seleccione quién realizó el análisis.">

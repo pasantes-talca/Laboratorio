@@ -59,9 +59,11 @@ beforeEach(() => {
 });
 
 describe('ingreso de datos en formularios', () => {
-  it('registra el acondicionamiento rinser y muestra los títulos corregidos en análisis de cloro', async () => {
+  it('registra la presión del rinser y muestra los títulos corregidos en análisis de cloro', async () => {
     renderPage(<AguaPage initialTab="analisisCloro" />);
-    const description = screen.getByRole('spinbutton', { name: 'Acondicionamiento rinser (ppm)' });
+    const description = screen.getByRole('spinbutton', { name: /^Presión del rinser/ });
+    expect(description.parentElement.querySelector('.chlorine-unit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acondicionamiento rinser')).not.toBeInTheDocument();
     expect(description).toHaveAttribute('min', '0');
     expect(description).toHaveAttribute('step', 'any');
     expect(screen.getByLabelText(/Cloro Rinser Línea/)).toBeInTheDocument();
