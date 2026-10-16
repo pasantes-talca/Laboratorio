@@ -1,11 +1,13 @@
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
 from backend.app.core.database import get_db
 from backend.app.core.time import local_now
-from backend.app.models.ops import ControlTorque, ControlPausa
-from backend.app.schemas.ops import ControlTorqueCreate, ControlPausaCreate
-from backend.app.services.production import require_production, attach_control_production, linea_numero
+from backend.app.models.ops import ControlPausa, ControlTorque
+from backend.app.schemas.ops import ControlPausaCreate, ControlTorqueCreate
+from backend.app.services.production import attach_control_production, linea_numero, require_production
 
 router = APIRouter(prefix="/api", tags=["Operaciones"])
 

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
+from sqlalchemy import URL
 
 load_dotenv()
 
@@ -17,20 +19,25 @@ DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "calidad")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = os.getenv("DATABASE_URL") or URL.create(
+    "postgresql+psycopg2", username=DB_USER, password=DB_PASSWORD,
+    host=DB_HOST, port=int(DB_PORT), database=DB_NAME,
+).render_as_string(hide_password=False)
 
 
 def _csv_env(name: str, default: str) -> list[str]:
     return [value.strip() for value in os.getenv(name, default).split(",") if value.strip()]
 
 
-# Runtime/security configuration. API_KEY is optional so local development remains simple.
+# Credentials and roles are resolved only by the server.
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 ALLOWED_ORIGINS = _csv_env(
     "ALLOWED_ORIGINS",
     "http://127.0.0.1:5173,http://localhost:5173",
 )
-API_KEY = os.getenv("API_KEY", "").strip()
+AUTH_USERS = os.getenv("AUTH_USERS", "{}").strip()
+SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip()
+SESSION_SECONDS = 8 * 60 * 60
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(2 * 1024 * 1024)))
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "America/Argentina/Buenos_Aires")
 

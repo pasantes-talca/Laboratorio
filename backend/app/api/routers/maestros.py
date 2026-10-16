@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from backend.app.services.maestros import load_maestros
 
 router = APIRouter(prefix="/api", tags=["Maestros"])

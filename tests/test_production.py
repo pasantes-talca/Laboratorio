@@ -92,3 +92,21 @@ def test_controls_use_server_snapshot_and_reject_stale_production():
         assert (control.sabor, control.turno) == ("Soda", "Mañana")
         assert (snapshot.linea, snapshot.produccion_version) == (1, 2)
         assert snapshot.lote_tapa == ""
+
+
+def test_syrup_history_includes_line_and_filters_by_snapshot():
+    client, _ = make_client()
+    for line in (1, 2):
+        assert client.put(f"/api/calidad/produccion/{line}", json=production("Cola")).status_code == 200
+        response = client.post("/api/calidad/jarabe", json={
+            "linea": f"linea{line}", "production_version": 1, "sabor": "Cola",
+            "concentrado": "XQ", "tanque": "1", "bx_patron": 54.2,
+            "ta": line, "responsable": "Operador",
+        })
+        assert response.status_code == 201
+    history = client.get("/api/calidad/jarabe").json()
+    assert {row["linea"] for row in history} == {1, 2}
+    line_two = client.get("/api/calidad/jarabe?linea=2").json()
+    assert len(line_two) == 1
+    assert line_two[0]["linea"] == 2
+    assert client.get("/api/calidad/jarabe?limit=1&offset=1").json()[0]["linea"] == 1

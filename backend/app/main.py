@@ -1,5 +1,5 @@
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,23 +7,27 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from backend.app.api.routers import (
+    agua_router,
+    calidad_router,
+    jarabe_router,
+    maestros_router,
+    ops_router,
+    production_router,
+    reportes_router,
+    saneado_router,
+    spa_router,
+)
+from backend.app.api.routers.auth import router as auth_router
+from backend.app.core.auth import validate_auth_config
 from backend.app.core.config import ALLOWED_ORIGINS, FRONTEND_ASSETS, STATIC_DIR
 from backend.app.core.database import init_db
 from backend.app.core.security import security_and_audit_middleware
-from backend.app.api.routers import (
-    maestros_router,
-    calidad_router,
-    jarabe_router,
-    ops_router,
-    spa_router,
-    agua_router,
-    saneado_router,
-    reportes_router,
-    production_router,
-)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_auth_config()
     init_db()
     yield
 
@@ -81,6 +85,7 @@ if STATIC_DIR.exists():
 
 # Incluir routers
 app.include_router(maestros_router)
+app.include_router(auth_router)
 app.include_router(calidad_router)
 app.include_router(jarabe_router)
 app.include_router(ops_router)

@@ -1,56 +1,56 @@
-"""Small deployment-friendly write protection and audit middleware.
+"""Authenticate API requests and authorize writes using server-owned roles."""
 
-When API_KEY is configured, every mutating /api request must provide X-API-Key
-and an allowed X-Role. Read-only endpoints remain available to dashboards.
-"""
-
-import hmac
 import logging
 from uuid import uuid4
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from backend.app.core.config import API_KEY
+from backend.app.core import auth
+from backend.app.core.config import ALLOWED_ORIGINS
 
 AUDIT_LOG = logging.getLogger("laboratorio.audit")
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
-WRITE_ROLES = {"operador", "supervisor", "administrador"}
 DELETE_ROLES = {"supervisor", "administrador"}
+PUBLIC_PATHS = {"/api/health", "/api/auth/session", "/api/auth/login", "/api/auth/logout"}
 
 
 async def security_and_audit_middleware(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID") or str(uuid4())
+    request_id = str(uuid4())
     request.state.request_id = request_id
-    actor = request.headers.get("X-User", "anonimo").strip()[:100] or "anonimo"
-    role = request.headers.get("X-Role", "operador").strip().lower()
+    secured = auth.enabled()
+    identity = auth.read_session(request.cookies.get(auth.COOKIE_NAME)) if secured else None
+    actor = identity["username"] if identity else ("anonimo" if secured else "desarrollo-local")
+    role = identity["role"] if identity else ("sin-sesion" if secured else "operador")
+    request.state.actor = actor
+    request.state.role = role
+    path = request.url.path
+    is_api = path == "/api" or path.startswith("/api/")
 
-    if request.url.path.startswith("/api") and request.method in WRITE_METHODS and API_KEY:
-        supplied_key = request.headers.get("X-API-Key", "")
-        allowed_roles = DELETE_ROLES if request.method == "DELETE" else WRITE_ROLES
-        if not hmac.compare_digest(supplied_key, API_KEY):
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Credencial de API inválida", "request_id": request_id},
-                headers={"X-Request-ID": request_id},
-            )
-        if role not in allowed_roles:
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "El rol no está autorizado para esta operación", "request_id": request_id},
-                headers={"X-Request-ID": request_id},
-            )
+    def reject(status, detail):
+        return JSONResponse(
+            status_code=status, content={"detail": detail, "request_id": request_id},
+            headers={"X-Request-ID": request_id},
+        )
+
+    if is_api and request.method != "OPTIONS":
+        if request.method in WRITE_METHODS:
+            origin = request.headers.get("origin")
+            if origin and origin != str(request.base_url).rstrip("/") and origin not in ALLOWED_ORIGINS:
+                return reject(403, "Origen no autorizado")
+        if secured and path not in PUBLIC_PATHS:
+            if not identity:
+                return reject(401, "Inicie sesion para continuar")
+            if request.method == "DELETE" and role not in DELETE_ROLES:
+                return reject(403, "El rol no esta autorizado para esta operacion")
+        if not secured and request.method == "DELETE":
+            return reject(403, "Configure un usuario supervisor para eliminar registros")
 
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
-    if request.url.path.startswith("/api") and request.method in WRITE_METHODS:
+    if is_api and request.method in WRITE_METHODS:
         AUDIT_LOG.info(
             "request_id=%s actor=%s role=%s method=%s path=%s status=%s",
-            request_id,
-            actor,
-            role,
-            request.method,
-            request.url.path,
-            response.status_code,
+            request_id, actor, role, request.method, path, response.status_code,
         )
     return response

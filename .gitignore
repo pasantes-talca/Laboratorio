@@ -17,3 +17,7 @@ node_modules
 !frontend/README.md
 !migrations/README.md
 .agents
+.venv/
+.pytest_cache/
+.ruff_cache/
+.tests/

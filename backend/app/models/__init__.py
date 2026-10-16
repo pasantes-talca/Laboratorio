@@ -1,14 +1,3 @@
-from backend.app.models.base import Base, metadata
-from backend.app.models.production import ProduccionActiva, ControlProduccion
-from backend.app.models.calidad import RegistroCalidad, ControlBebida
-from backend.app.models.jarabe import (
-    ControlJarabe,
-    JarabeSimple,
-    JarabeTerminado,
-    SaneoTanque,
-    ParteJarabe,
-)
-from backend.app.models.ops import ControlTorque, ControlPausa
 from backend.app.models.agua import (
     AnalisisCloro,
     ControlFisicoQuimico,
@@ -16,6 +5,17 @@ from backend.app.models.agua import (
     OsmosisInversa,
     SalaSaneado,
 )
+from backend.app.models.base import Base, metadata
+from backend.app.models.calidad import ControlBebida, RegistroCalidad
+from backend.app.models.jarabe import (
+    ControlJarabe,
+    JarabeSimple,
+    JarabeTerminado,
+    ParteJarabe,
+    SaneoTanque,
+)
+from backend.app.models.ops import ControlPausa, ControlTorque
+from backend.app.models.production import ControlProduccion, ProduccionActiva
 
 __all__ = [
     "Base",

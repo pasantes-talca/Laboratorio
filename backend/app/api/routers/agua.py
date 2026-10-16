@@ -1,9 +1,23 @@
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
 from backend.app.core.database import get_db
-from backend.app.models.agua import AnalisisCloro, ControlFisicoQuimico, FiltroArena, OsmosisInversa, SalaSaneado
-from backend.app.schemas.agua import AnalisisCloroCreate, ControlFisicoQuimicoCreate, FiltroArenaCreate, OsmosisInversaCreate, SalaSaneadoCreate
+from backend.app.models.agua import (
+    AnalisisCloro,
+    ControlFisicoQuimico,
+    FiltroArena,
+    OsmosisInversa,
+    SalaSaneado,
+)
+from backend.app.schemas.agua import (
+    AnalisisCloroCreate,
+    ControlFisicoQuimicoCreate,
+    FiltroArenaCreate,
+    OsmosisInversaCreate,
+    SalaSaneadoCreate,
+)
 
 router = APIRouter(prefix="/api/agua", tags=["Agua"])
 

@@ -1,6 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Date, Time
+
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, Integer, String, Time
+
 from backend.app.models.base import Base
+
 
 class ControlFisicoQuimico(Base):
     __tablename__ = "control_fisico_quimico_agua"
@@ -68,6 +71,7 @@ class AnalisisCloro(Base):
     contralavado_tanque_b = Column(Time, nullable=True)
     cloro_riser_linea = Column(String(20), nullable=False)
     cloro_riser_resultado = Column(Float, nullable=False)
+    acondicionamiento_rinser = Column(Float, nullable=True)
     responsable = Column(String(100), nullable=False)
 
 

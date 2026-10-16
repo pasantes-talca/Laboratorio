@@ -44,6 +44,18 @@ export default function ControlChart({
     );
   }
 
+  if (!data.some((point) => Number.isFinite(point.valor) || Number.isFinite(point.valorSecundario))) {
+    return (
+      <div className="control-chart-container">
+        {title && <div className="control-chart-title">{title}</div>}
+        <div className="control-chart-na-box" role="status">
+          <strong>Sin mediciones</strong>
+          <p>No hay controles registrados para los filtros seleccionados. Cambie los filtros o registre un control.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Dimensiones del SVG
   const width = 800;
   const height = 380;

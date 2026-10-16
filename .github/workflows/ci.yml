@@ -15,7 +15,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
       - run: pytest
-      - run: ruff check backend tests main.py
+      - run: ruff check backend tests migrations main.py
 
   frontend:
     runs-on: ubuntu-latest

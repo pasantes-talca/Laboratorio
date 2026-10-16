@@ -25,6 +25,16 @@ afterEach(() => {
 });
 
 describe('fetchJson (core transport)', () => {
+  it('uses the session cookie and never trusts browser-owned identity headers', async () => {
+    localStorage.setItem('laboratorio_role', 'administrador');
+    localStorage.setItem('laboratorio_user', 'jefe');
+    const fetchMock = stubFetch(jsonResponse({ ok: true }));
+    await api.fetchJson('/marcas', { headers: { Accept: 'application/json' } });
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.credentials).toBe('same-origin');
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json', Accept: 'application/json' });
+    localStorage.clear();
+  });
   it('calls relative /api URLs and parses JSON on success', async () => {
     const fetchMock = stubFetch(jsonResponse({ data: [1, 2] }));
 

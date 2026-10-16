@@ -1,23 +1,20 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { ProductionProvider } from '../context/ProductionContext';
 import SidebarNav from './SidebarNav';
 
 function renderSidebar(props = {}) {
   const onNavigate = vi.fn();
   const onClose = vi.fn();
   render(
-    <ProductionProvider>
-      <SidebarNav
+    <SidebarNav
         activePage="calidad"
         activeForm="bebida"
         onNavigate={onNavigate}
         isOpen={false}
         onClose={onClose}
         {...props}
-      />
-    </ProductionProvider>,
+    />,
   );
   return { onNavigate, onClose };
 }

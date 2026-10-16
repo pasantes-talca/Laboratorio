@@ -1,26 +1,30 @@
 import json
-from datetime import datetime, date as date_type
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
+from datetime import date as date_type
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
+
 from backend.app.core.config import MAX_UPLOAD_BYTES
+from backend.app.core.database import get_db
 from backend.app.core.time import local_now
 from backend.app.models.jarabe import (
     ControlJarabe,
     JarabeSimple,
     JarabeTerminado,
-    SaneoTanque,
     ParteJarabe,
+    SaneoTanque,
 )
+from backend.app.models.production import ControlProduccion
 from backend.app.schemas.jarabe import (
     ControlJarabeCreate,
     JarabeSimpleCreate,
     JarabeTerminadoCreate,
-    SaneoTanqueCreate,
     ParteJarabeCreate,
+    SaneoTanqueCreate,
 )
 from backend.app.services.excel_parser import extraer_datos_reporte
-from backend.app.services.production import require_production, attach_control_production
+from backend.app.services.production import attach_control_production, require_production
 
 router = APIRouter(prefix="/api", tags=["Sala de Jarabe"])
 
@@ -39,7 +43,7 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
         return {"status": "success", "data": datos}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=422,
             detail="El archivo no tiene el formato esperado de trazabilidad",
@@ -86,14 +90,23 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
 @router.get("/calidad/controles-jarabe", include_in_schema=False)
 @router.get("/controles-jarabe", include_in_schema=False)
 def get_controles_jarabe(
+    linea: int | None = Query(None, ge=1, le=2),
     limit: int = Query(500, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
-    controles = db.query(ControlJarabe).order_by(ControlJarabe.id.desc()).offset(offset).limit(limit).all()
+    query = db.query(ControlJarabe, ControlProduccion.linea).outerjoin(
+        ControlProduccion,
+        (ControlProduccion.tipo_control == "jarabe")
+        & (ControlProduccion.control_id == ControlJarabe.id),
+    )
+    if linea is not None:
+        query = query.filter(ControlProduccion.linea == linea)
+    controles = query.order_by(ControlJarabe.id.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": c.id,
+            "linea": control_linea,
             "turno": c.turno,
             "fecha": str(c.fecha) if c.fecha else None,
             "hora": c.hora.strftime("%H:%M") if c.hora else None,
@@ -105,7 +118,7 @@ def get_controles_jarabe(
             "responsable": c.responsable,
             "observacion": c.observacion,
         }
-        for c in controles
+        for c, control_linea in controles
     ]
 
 

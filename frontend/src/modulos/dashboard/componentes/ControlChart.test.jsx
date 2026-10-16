@@ -10,6 +10,11 @@ const sampleData = [
 ];
 
 describe('ControlChart (smoke)', () => {
+  it('shows an explicit empty state when there are only specification limits', () => {
+    render(<ControlChart data={[]} staticLimits={{ min: 4, max: 5, objetivo: 4.5 }} />);
+    expect(screen.getByText('Sin mediciones')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeNull();
+  });
   it('renders title and SVG chart for time series data', () => {
     render(
       <ControlChart

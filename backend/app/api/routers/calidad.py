@@ -1,16 +1,18 @@
-from typing import List
 from datetime import datetime
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
 from backend.app.core.config import BRAND_BOTTLE_COLOR
 from backend.app.core.database import get_db
 from backend.app.core.time import local_now
-from backend.app.models.calidad import RegistroCalidad, ControlBebida
+from backend.app.models.calidad import ControlBebida, RegistroCalidad
 from backend.app.schemas.calidad import (
     RegistroCalidadCreate,
     RegistroCalidadResponse,
 )
-from backend.app.services.production import require_production, attach_control_production
+from backend.app.services.production import attach_control_production, require_production
 
 router = APIRouter(prefix="/api", tags=["Calidad"])
 

@@ -14,6 +14,7 @@ import {
   submitControlJarabe,
   submitJarabeSimple,
   submitControlFisicoQuimico,
+  submitAnalisisCloro,
   submitSalaSaneado,
 } from '../src/services/api';
 
@@ -32,6 +33,7 @@ vi.mock('../src/services/api', () => ({
   submitControlJarabe: vi.fn().mockResolvedValue({}),
   submitJarabeSimple: vi.fn().mockResolvedValue({}),
   submitControlFisicoQuimico: vi.fn().mockResolvedValue({}),
+  submitAnalisisCloro: vi.fn().mockResolvedValue({}),
   submitSalaSaneado: vi.fn().mockResolvedValue({}),
 }));
 
@@ -51,6 +53,30 @@ beforeEach(() => {
 });
 
 describe('ingreso de datos en formularios', () => {
+  it('registra el acondicionamiento rinser y muestra los títulos corregidos en análisis de cloro', async () => {
+    renderPage(<AguaPage initialTab="analisisCloro" />);
+    const description = screen.getByRole('spinbutton', { name: 'Acondicionamiento rinser (ppm)' });
+    expect(description).toHaveAttribute('min', '0');
+    expect(description).toHaveAttribute('step', '0.01');
+    expect(screen.getByLabelText(/Cloro Rinser Línea/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Cloro Rinser Resultado/)).toBeInTheDocument();
+    expect(screen.queryByText(/riser/i)).not.toBeInTheDocument();
+    fireEvent.change(description, { target: { value: '1.25' } });
+    const form = description.closest('form');
+    fireEvent.submit(form);
+    await waitFor(() => expect(submitAnalisisCloro).toHaveBeenCalledWith(expect.objectContaining({
+      acondicionamiento_rinser: 1.25,
+    })));
+    await waitFor(() => expect(description).toHaveValue(null));
+    fireEvent.change(description, { target: { value: '0' } });
+    fireEvent.submit(form);
+    await waitFor(() => expect(submitAnalisisCloro).toHaveBeenLastCalledWith(expect.objectContaining({ acondicionamiento_rinser: 0 })));
+    await waitFor(() => expect(description).toHaveValue(null));
+    fireEvent.change(description, { target: { value: '2.5' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Limpiar' }));
+    expect(description).toHaveValue(null);
+  });
+
   it('bloquea los controles hasta configurar la producción de la línea', async () => {
     getActiveProduction.mockResolvedValueOnce({
       linea: 1, turno: 'Mañana', sabor: '', concentrado: '', tamano: '', version: 0,

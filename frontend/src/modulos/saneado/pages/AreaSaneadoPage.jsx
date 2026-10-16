@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, Save, RotateCcw, User } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
-import { getResponsables, submitSalaSaneado } from '../../../services/api';
+import { getResponsables } from '../../../services/api';
+import { submitSalaSaneado } from '../api/saneadoApi';
 
 export default function AreaSaneadoPage() {
   const { showToast } = useToast();

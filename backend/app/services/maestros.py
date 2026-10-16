@@ -1,6 +1,6 @@
 import json
-from backend.app.core.config import MAESTROS_PATH
 
+from backend.app.core.config import MAESTROS_PATH
 
 SABOR_O_MARCA = {
     "Cola": {

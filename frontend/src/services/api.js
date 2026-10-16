@@ -1,33 +1,5 @@
-const API_BASE = '/api';
-
-export async function fetchJson(endpoint, options = {}) {
-  const apiKey = import.meta.env.VITE_API_KEY;
-  const user = localStorage.getItem('laboratorio_user') || 'operador-web';
-  const role = localStorage.getItem('laboratorio_role') || 'operador';
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(apiKey ? { 'X-API-Key': apiKey } : {}),
-      'X-User': user,
-      'X-Role': role,
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!res.ok) {
-    let errorDetail = 'Error en el servidor';
-    try {
-      const err = await res.json();
-      errorDetail = err.detail || err.message || errorDetail;
-    } catch {}
-    const error = new Error(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
-    error.status = res.status;
-    throw error;
-  }
-
-  return res.json();
-}
+import { fetchJson, request } from './httpClient';
+export { fetchJson } from './httpClient';
 
 // Master Catalogs
 export async function getMarcas() {
@@ -70,8 +42,9 @@ export async function saveActiveProduction(line, payload) {
   });
 }
 
-export async function getControlesBebida() {
-  return fetchJson('/calidad/bebidas');
+export async function getControlesBebida(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return fetchJson(`/calidad/bebidas${query ? '?' + query : ''}`);
 }
 
 export async function submitControlBebida(payload) {
@@ -81,8 +54,9 @@ export async function submitControlBebida(payload) {
   });
 }
 
-export async function getControlesJarabe() {
-  return fetchJson('/calidad/jarabe');
+export async function getControlesJarabe(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return fetchJson(`/calidad/jarabe${query ? '?' + query : ''}`);
 }
 
 export async function submitControlJarabe(payload) {
@@ -92,8 +66,9 @@ export async function submitControlJarabe(payload) {
   });
 }
 
-export async function getControlesTorque() {
-  return fetchJson('/calidad/torque');
+export async function getControlesTorque(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return fetchJson(`/calidad/torque${query ? '?' + query : ''}`);
 }
 
 export async function submitControlTorque(payload) {
@@ -153,26 +128,12 @@ export async function parseJarabeExcel(file) {
   const formData = new FormData();
   formData.append('file', file);
   
-  const res = await fetch(`${API_BASE}/parse-jarabe-excel`, {
-    method: 'POST',
-    headers: {
-      ...(import.meta.env.VITE_API_KEY ? { 'X-API-Key': import.meta.env.VITE_API_KEY } : {}),
-      'X-User': localStorage.getItem('laboratorio_user') || 'operador-web',
-      'X-Role': localStorage.getItem('laboratorio_role') || 'operador',
-    },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    let errorDetail = 'Error al parsear el archivo';
-    try {
-      const err = await res.json();
-      errorDetail = err.detail || errorDetail;
-    } catch {}
-    throw new Error(errorDetail);
+  try {
+    return await fetchJson('/parse-jarabe-excel', { method: 'POST', body: formData });
+  } catch (error) {
+    if (error.message === 'Error en el servidor') error.message = 'Error al parsear el archivo';
+    throw error;
   }
-
-  return res.json();
 }
 
 // Agua endpoints
@@ -212,13 +173,7 @@ export async function submitFiltroArena(payload) {
 }
 
 export async function downloadQualityCsv() {
-  const headers = {
-    ...(import.meta.env.VITE_API_KEY ? { 'X-API-Key': import.meta.env.VITE_API_KEY } : {}),
-    'X-User': localStorage.getItem('laboratorio_user') || 'operador-web',
-    'X-Role': localStorage.getItem('laboratorio_role') || 'operador',
-  };
-  const response = await fetch(`${API_BASE}/reportes/calidad.csv`, { headers });
-  if (!response.ok) throw new Error('No se pudo exportar el reporte');
+  const response = await request('/reportes/calidad.csv');
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');

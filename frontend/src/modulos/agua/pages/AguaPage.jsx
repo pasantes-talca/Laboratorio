@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Droplet, Save, RotateCcw, Clock, Calendar, Beaker, User, Activity, Droplets, Filter } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
-import { getResponsables, submitControlFisicoQuimico, submitAnalisisCloro, submitOsmosisInversa, submitFiltroArena } from '../../../services/api';
+import { getResponsables } from '../../../services/api';
+import { submitControlFisicoQuimico, submitAnalisisCloro, submitOsmosisInversa, submitFiltroArena } from '../api/aguaApi';
 
 export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) {
   const { showToast } = useToast();
@@ -84,6 +85,7 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
     contralavado_tanque_b: '',
     cloro_riser_linea: 'Linea 1',
     cloro_riser_resultado: '',
+    acondicionamiento_rinser: '',
     responsable: '',
   };
   const [analisisCloroForm, setAnalisisCloroForm] = useState(initialAnalisisCloroState);
@@ -97,6 +99,8 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
         ...analisisCloroForm,
         tanque_agua_osmosis: parseFloat(analisisCloroForm.tanque_agua_osmosis) || 0,
         cloro_riser_resultado: parseFloat(analisisCloroForm.cloro_riser_resultado) || 0,
+        acondicionamiento_rinser: analisisCloroForm.acondicionamiento_rinser === ''
+          ? null : Number(analisisCloroForm.acondicionamiento_rinser),
       };
       await submitAnalisisCloro(payload);
       showToast('Análisis de Cloro guardado con éxito', 'success');
@@ -398,8 +402,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
               </div>
 
               <div className="field-container">
-                <label>Cloro Riser Línea <span className="required-star">*</span></label>
+                <label htmlFor="cloro-rinser-linea">Cloro Rinser Línea <span className="required-star">*</span></label>
                 <select
+                  id="cloro-rinser-linea"
                   required
                   value={analisisCloroForm.cloro_riser_linea}
                   onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, cloro_riser_linea: e.target.value })}
@@ -410,14 +415,28 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
               </div>
 
               <div className="field-container">
-                <label>Cloro Riser Resultado <span className="required-star">*</span></label>
+                <label htmlFor="cloro-rinser-resultado">Cloro Rinser Resultado <span className="required-star">*</span></label>
                 <input
+                  id="cloro-rinser-resultado"
                   type="number"
+                  min="0"
                   step="0.01"
                   required
                   placeholder="Ej: 1.2"
                   value={analisisCloroForm.cloro_riser_resultado}
                   onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, cloro_riser_resultado: e.target.value })}
+                />
+              </div>
+
+              <div className="field-container">
+                <label htmlFor="acondicionamiento-rinser">Acondicionamiento rinser (ppm)</label>
+                <input
+                  id="acondicionamiento-rinser"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={analisisCloroForm.acondicionamiento_rinser}
+                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, acondicionamiento_rinser: e.target.value })}
                 />
               </div>
 

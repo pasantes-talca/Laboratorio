@@ -1,6 +1,7 @@
-from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 VALID_PRODUCT_OPTIONS = {
     "cola": ({"XQ", "KG", "IFF"}, {"3L", "2,25L", "2.25L", "500ml"}),

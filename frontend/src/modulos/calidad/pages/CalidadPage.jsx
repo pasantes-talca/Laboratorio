@@ -1,3 +1,6 @@
+import BebidaForm from '../componentes/BebidaForm';
+import ControlJarabeForm from '../componentes/ControlJarabeForm';
+import TorqueForm from '../componentes/TorqueForm';
 import React, { useState, useEffect } from 'react';
 import {
   Beer,
@@ -6,24 +9,13 @@ import {
   PauseCircle,
   Save,
   RotateCcw,
-  Clock,
   X,
-  User,
-  FlaskRound as Flask,
-  Plus,
-  Trash2,
 } from 'lucide-react';
 import { useProduction } from '../../../context/ProductionContext';
 import { useToast } from '../../../context/ToastContext';
 import SidebarInfo from '../../../componentes/SidebarInfo';
-import {
-  getResponsables,
-  getTanques,
-  submitControlBebida,
-  submitControlJarabe,
-  submitControlTorque,
-  submitControlPausa,
-} from '../../../services/api';
+import { getResponsables, getTanques } from '../../../services/api';
+import { submitControlBebida, submitControlJarabe, submitControlTorque, submitControlPausa } from '../api/calidadApi';
 
 const loteStorageKey = (linea) => `calidad_lote_tapa_${linea}`;
 
@@ -372,415 +364,43 @@ function getColorBySabor(sabor) {
 
         {/* TAB 1: BEBIDA TERMINADA */}
         {activeTab === 'bebida' && (
-          <form onSubmit={handleBebidaSubmit} style={{ marginTop: '1.25rem' }}>
-            <div className="form-grid">
-              <div className="field-container">
-                <label>Hora</label>
-                <div className="input-wrapper">
-                  <Clock className="input-icon" size={18} />
-                  <input
-                    type="time"
-                    value={bebidaForm.hora}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, hora: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Características Organolépticas <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={bebidaForm.carac_organolep}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, carac_organolep: e.target.value })}
-                >
-                  <option value="OK">OK</option>
-                  <option value="NOK">NOK</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Nivel de Llenado <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={bebidaForm.nivel_llenado}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, nivel_llenado: e.target.value })}
-                >
-                  <option value="OK">OK</option>
-                  <option value="NOK">NOK</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Contenido (ml / L) <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Flask className="input-icon" size={18} />
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="Ej: 2250"
-                    value={bebidaForm.contenido}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, contenido: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Presión (PSI / bar) <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Gauge className="input-icon" size={18} />
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="Ej: 3.2"
-                    value={bebidaForm.presion}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, presion: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Temperat. (°C) <span className="required-star">*</span></label>
-                <input
-                  type="number"
-                  step="0.1"
-                  required
-                  placeholder="Ej: 4.5"
-                  value={bebidaForm.temperatura}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, temperatura: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label>Vol. Gas (GV) <span className="required-star">*</span></label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ej: 3.8"
-                  value={bebidaForm.vol_gas}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, vol_gas: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label>°Brix <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Droplet className="input-icon" size={18} />
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="Ej: 10.45"
-                    value={bebidaForm.brix}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, brix: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Control Video Jet <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={bebidaForm.control_videojet}
-                  onChange={(e) => setBebidaForm({ ...bebidaForm, control_videojet: e.target.value })}
-                >
-                  <option value="OK">OK</option>
-                  <option value="NOK">NOK</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label htmlFor="bebida-lote-tapa">Lote de tapa <span className="required-star">*</span></label>
-                <input
-                  id="bebida-lote-tapa"
-                  type="text"
-                  required
-                  maxLength={50}
-                  placeholder="Ej: LOTE-T-2026"
-                  value={bebidaForm.lote_tapa}
-                  onChange={(e) => {
-                    rememberLoteTapa(production.linea, e.target.value);
-                    setBebidaForm({ ...bebidaForm, lote_tapa: e.target.value });
-                  }}
-                />
-              </div>
-
-              <div className="field-container col-span-2">
-                <label>Respons. <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <User className="input-icon" size={18} />
-                  <select
-                    required
-                    value={bebidaForm.responsable}
-                    onChange={(e) => setBebidaForm({ ...bebidaForm, responsable: e.target.value })}
-                  >
-                    <option value="" disabled>Seleccione responsable...</option>
-                    {responsables.map((r) => (
-                      <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setBebidaForm({
-                  hora: '',
-                  carac_organolep: 'OK',
-                  nivel_llenado: 'OK',
-                  contenido: '',
-                  presion: '',
-                  temperatura: '',
-                  vol_gas: '',
-                  brix: '',
-                  lote_tapa: bebidaForm.lote_tapa,
-                  control_videojet: 'OK',
-                  responsable: '',
-                })}
-              >
-                <RotateCcw size={16} /> Limpiar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
-                <Save size={16} /> Registrar Control de Bebida
-              </button>
-            </div>
-          </form>
+          <BebidaForm
+            production={production}
+            productionReady={productionReady}
+            responsables={responsables}
+            bebidaForm={bebidaForm}
+            setBebidaForm={setBebidaForm}
+            handleBebidaSubmit={handleBebidaSubmit}
+            rememberLoteTapa={rememberLoteTapa}
+          />
         )}
 
         {/* TAB 2: CONTROL DE JARABE */}
         {activeTab === 'jarabe' && (
-          <form onSubmit={handleJarabeSubmit} style={{ marginTop: '1.25rem' }}>
-            <div className="form-grid">
-              <div className="field-container">
-                <label>Hora</label>
-                <div className="input-wrapper">
-                  <Clock className="input-icon" size={18} />
-                  <input
-                    type="time"
-                    value={jarabeForm.hora}
-                    onChange={(e) => setJarabeForm({ ...jarabeForm, hora: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Número de Tanque <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={jarabeForm.tanque}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, tanque: e.target.value })}
-                >
-                  <option value="" disabled>Seleccione tanque...</option>
-                  {tanquesCatalog.map((t) => (
-                    <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>°Bx Patr. <span className="required-star">*</span></label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ej: 54.20"
-                  value={jarabeForm.bx_patron}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, bx_patron: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label>T.A. <span className="required-star">*</span></label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ej: 1.25"
-                  value={jarabeForm.ta}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, ta: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container col-span-2">
-                <label>Respons. <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={jarabeForm.responsable}
-                  onChange={(e) => setJarabeForm({ ...jarabeForm, responsable: e.target.value })}
-                >
-                  <option value="" disabled>Seleccione responsable...</option>
-                  {responsables.map((r) => (
-                    <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setJarabeForm({
-                  hora: '',
-                  tanque: '',
-                  bx_patron: '',
-                  ta: '',
-                  responsable: '',
-                })}
-              >
-                <RotateCcw size={16} /> Limpiar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
-                <Save size={16} /> Registrar Control de Jarabe
-              </button>
-            </div>
-          </form>
+          <ControlJarabeForm
+            productionReady={productionReady}
+            responsables={responsables}
+            tanquesCatalog={tanquesCatalog}
+            jarabeForm={jarabeForm}
+            setJarabeForm={setJarabeForm}
+            handleJarabeSubmit={handleJarabeSubmit}
+          />
         )}
 
         {/* TAB 3: CONTROL DE TORQUE — LISTA DINÁMICA DE CABEZALES */}
         {activeTab === 'torque' && (
-          <form onSubmit={handleTorqueSubmit} style={{ marginTop: '1.25rem' }}>
-            <div className="form-grid">
-              <div className="field-container">
-                <label>Hora</label>
-                <div className="input-wrapper">
-                  <Clock className="input-icon" size={18} />
-                  <input
-                    type="time"
-                    value={torqueForm.hora}
-                    onChange={(e) => setTorqueForm({ ...torqueForm, hora: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Marca de Tapa</label>
-                <select
-                  value={torqueForm.marca_tapa}
-                  onChange={(e) => setTorqueForm({ ...torqueForm, marca_tapa: e.target.value })}
-                >
-                  <option value="">Sin especificar</option>
-                  <option value="PRIVA">PRIVA</option>
-                  <option value="SIDES">SIDES</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Color de Tapa</label>
-                <input
-                  type="text"
-                  placeholder="Automático según sabor"
-                  value={torqueForm.color || '—'}
-                  readOnly
-                  style={{ opacity: 0.85, cursor: 'default' }}
-                />
-              </div>
-
-              <div className="field-container col-span-2">
-                <label>Respons. <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={torqueForm.responsable}
-                  onChange={(e) => setTorqueForm({ ...torqueForm, responsable: e.target.value })}
-                >
-                  <option value="" disabled>Seleccione responsable...</option>
-                  {responsables.map((r) => (
-                    <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Dynamic cabezal list */}
-            <div style={{ marginTop: '1rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-                Cabezales ({production.linea === 'linea2' ? '1 a 14' : '1 a 12'}) <span className="required-star">*</span>
-              </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {torqueForm.cabezales.map((cab, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <select
-                      value={cab.numero}
-                      onChange={(e) => updateCabezal(idx, 'numero', parseInt(e.target.value, 10))}
-                      style={{ minWidth: '160px', width: 'auto', flexShrink: 0, paddingLeft: '1rem' }}
-                    >
-                      {Array.from({ length: maxCabezales }, (_, i) => i + 1).map((num) => (
-                        <option key={num} value={num}>Cabezal {num}</option>
-                      ))}
-                    </select>
-                    <div className="input-wrapper" style={{ flex: 1 }}>
-                      <Gauge className="input-icon" size={18} />
-                      <input
-                        type="number"
-                        step="0.1"
-                        required
-                        placeholder="Valor (Ej: 14.5)"
-                        value={cab.valor}
-                        onChange={(e) => updateCabezal(idx, 'valor', e.target.value)}
-                      />
-                    </div>
-                    {torqueForm.cabezales.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCabezal(idx)}
-                        style={{
-                          background: 'var(--color-error-bg, #FFF5F5)',
-                          border: '1px solid rgba(229, 62, 62, 0.3)',
-                          color: 'var(--color-error, #E53E3E)',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '0.4rem 0.6rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={addCabezal}
-                style={{
-                  marginTop: '0.5rem',
-                  background: 'var(--color-azul-hielo, #E8F4F8)',
-                  border: '1px dashed var(--color-azul-clinico, #0077B6)',
-                  color: 'var(--color-azul-clinico, #0077B6)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '0.5rem 1rem',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  width: '100%',
-                  justifyContent: 'center',
-                }}
-              >
-                <Plus size={15} /> Agregar Cabezal
-              </button>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setTorqueForm((prev) => ({ ...prev, hora: '', cabezales: [{ numero: 1, valor: '' }] }))}
-              >
-                <RotateCcw size={16} /> Reiniciar al Cabezal 1
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={!productionReady}>
-                <Save size={16} /> Registrar Torque
-              </button>
-            </div>
-          </form>
+          <TorqueForm
+            production={production}
+            productionReady={productionReady}
+            responsables={responsables}
+            maxCabezales={maxCabezales}
+            torqueForm={torqueForm}
+            setTorqueForm={setTorqueForm}
+            addCabezal={addCabezal}
+            removeCabezal={removeCabezal}
+            updateCabezal={updateCabezal}
+            handleTorqueSubmit={handleTorqueSubmit}
+          />
         )}
 
       </main>

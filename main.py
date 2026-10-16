@@ -4,6 +4,7 @@ Exposes the FastAPI `app` instance from `backend.app.main` and provides
 a direct execution entry point for `python main.py`.
 """
 import uvicorn
+
 from backend.app.main import app
 
 __all__ = ["app"]

@@ -48,7 +48,7 @@ def update_production(
         "tamano": data.tamano.strip(),
         "lote_tapa": "",  # Campo heredado; el lote se registra en cada control de bebida.
         "actualizada_en": local_now(),
-        "actualizada_por": request.headers.get("X-User", "operador-web").strip()[:100] or "operador-web",
+        "actualizada_por": getattr(request.state, "actor", "desarrollo-local"),
     }
     if any(not values[field] for field in ("turno", "sabor", "concentrado", "tamano")):
         raise HTTPException(status_code=422, detail="Complete todos los datos de producción")

@@ -1,6 +1,7 @@
+from datetime import date, time
 from typing import Optional
-from datetime import date, time, datetime
-from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AguaBase(BaseModel):
@@ -81,6 +82,7 @@ class AnalisisCloroCreate(AguaBase):
     contralavado_tanque_b: Optional[time] = None
     cloro_riser_linea: str = Field(min_length=2, max_length=20)
     cloro_riser_resultado: float = Field(ge=0)
+    acondicionamiento_rinser: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
     responsable: str = Field(min_length=2, max_length=100)
 
 

@@ -42,7 +42,8 @@ describe('producción por línea', () => {
     expect(saveActiveProduction).toHaveBeenCalledWith(2, expect.objectContaining({ expected_version: 4, turno: 'Noche' }));
     expect(saveActiveProduction.mock.calls[0][1]).not.toHaveProperty('lote_tapa');
     expect(result.current.production.version).toBe(5);
-    act(() => result.current.selectLine('linea1'));
+    await act(async () => result.current.selectLine('linea1'));
+    await waitFor(() => expect(result.current.productionReady).toBe(true));
     expect(result.current.production.sabor).toBe('Cola');
   });
 

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, Date, Time, Text
+from sqlalchemy import Column, Date, Float, Integer, String, Text, Time
+
 from backend.app.models.base import Base
 
 
