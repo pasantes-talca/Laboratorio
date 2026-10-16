@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  BarChart3,
-  RefreshCw,
-  Info,
-  Calendar,
-  Layers,
-  Gauge,
-  Droplet,
-  Sparkles,
-  BookOpen,
-} from 'lucide-react';
+import { BarChart3, RefreshCw, Info, Calendar, Layers, Gauge, Droplet, Sparkles, BookOpen } from 'lucide-react';
 import { useProduction } from '../../../context/ProductionContext';
 import { PRODUCT_STANDARDS } from '../../../data/productStandards';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
@@ -78,7 +68,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      
+
       {/* Header del Dashboard */}
       <div className="dashboard-header-bar card">
         <div className="dashboard-header-left">
@@ -154,7 +144,7 @@ export default function DashboardPage() {
       )}
       <div className="dashboard-filters-card card">
         <div className="filters-grid">
-          
+
           {/* 1. Filtro de Línea */}
           <div className="filter-group">
             <label>

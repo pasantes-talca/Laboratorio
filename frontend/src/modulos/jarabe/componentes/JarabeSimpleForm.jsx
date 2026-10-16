@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Save, RotateCcw, Building, Droplets, User } from 'lucide-react';
 import MultiInputList from '../../../componentes/MultiInputList';
@@ -12,10 +13,11 @@ export default function JarabeSimpleForm({
   handleSimpleSubmit,
 }) {
   return (
-    <form id="simple-form" onSubmit={handleSimpleSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-    
-        <div className="field-container">
+    <FormLayout title="Jarabe simple" domain="SALA DE JARABE" description="Registre las materias primas y la preparación del jarabe simple." id="simple-form" onSubmit={handleSimpleSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Carga y materias primas" description="Identifique el volcado y el azúcar utilizada.">
+
+
+        <FormField className="field-container">
           <label>
             N° Volcado <span className="required-star">*</span>
             {volcadoAuto !== null && (
@@ -31,9 +33,9 @@ export default function JarabeSimpleForm({
             value={simpleForm.volcado_numero || (volcadoAuto !== null ? volcadoAuto : '')}
             onChange={(e) => setSimpleForm({ ...simpleForm, volcado_numero: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Cantidad de Bolsas <span className="required-star">*</span></label>
           <input
             type="number"
@@ -42,9 +44,9 @@ export default function JarabeSimpleForm({
             value={simpleForm.cantidad_bolsas}
             onChange={(e) => setSimpleForm({ ...simpleForm, cantidad_bolsas: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Tipo de Azúcar</label>
           <input
             type="text"
@@ -52,9 +54,9 @@ export default function JarabeSimpleForm({
             value={simpleForm.azucar_tipo}
             onChange={(e) => setSimpleForm({ ...simpleForm, azucar_tipo: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Marca(s) de Azúcar <span className="required-star">*</span></label>
           <MultiInputList
             items={simpleForm.marcas}
@@ -64,9 +66,12 @@ export default function JarabeSimpleForm({
             icon={Building}
             required
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Turbidez y auxiliares" description="Complete las mediciones y las cantidades de auxiliares.">
+<FormField className="field-container col-span-2">
           <label>Turbidez (NTU)</label>
           <MultiInputList
             items={simpleForm.ntus}
@@ -75,9 +80,9 @@ export default function JarabeSimpleForm({
             addButtonText="Agregar NTU"
             icon={Droplets}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Auxiliar Standard (kg)</label>
           <input
             type="number"
@@ -86,9 +91,9 @@ export default function JarabeSimpleForm({
             value={simpleForm.aux_standard}
             onChange={(e) => setSimpleForm({ ...simpleForm, aux_standard: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Auxiliar Hyflo (kg)</label>
           <input
             type="number"
@@ -97,27 +102,30 @@ export default function JarabeSimpleForm({
             value={simpleForm.aux_hyflo}
             onChange={(e) => setSimpleForm({ ...simpleForm, aux_hyflo: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="03" title="Pasteurización" description="Indique los horarios y la temperatura del proceso.">
+<FormField className="field-container">
           <label>Pasteurizado Desde</label>
           <input
             type="time"
             value={simpleForm.pasteurizado_desde}
             onChange={(e) => setSimpleForm({ ...simpleForm, pasteurizado_desde: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Pasteurizado Hasta</label>
           <input
             type="time"
             value={simpleForm.pasteurizado_hasta}
             onChange={(e) => setSimpleForm({ ...simpleForm, pasteurizado_hasta: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Temp Pasteurizado (°C)</label>
           <input
             type="number"
@@ -126,9 +134,12 @@ export default function JarabeSimpleForm({
             value={simpleForm.pasteurizado_temp}
             onChange={(e) => setSimpleForm({ ...simpleForm, pasteurizado_temp: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="04" title="Responsables" description="Seleccione las personas que realizaron la preparación.">
+<FormField className="field-container col-span-2">
           <label>Responsables (Sala de Jarabe) <span className="required-star">*</span></label>
           <MultiInputList
             type="select"
@@ -140,9 +151,10 @@ export default function JarabeSimpleForm({
             icon={User}
             required
           />
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -170,6 +182,6 @@ export default function JarabeSimpleForm({
           <Save size={16} /> Registrar Jarabe Simple
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

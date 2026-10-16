@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Save, RotateCcw, User } from 'lucide-react';
 import MultiInputList from '../../../componentes/MultiInputList';
@@ -11,9 +12,10 @@ export default function SaneoTanquesForm({
   handleSaneoSubmit,
 }) {
   return (
-    <form onSubmit={handleSaneoSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-        <div className="field-container">
+    <FormLayout title="Saneo de tanques" domain="SALA DE JARABE" description="Registre el proceso de limpieza de los tanques." onSubmit={handleSaneoSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Datos del saneo" description="Identifique la fecha, el tanque y el número de saneo.">
+
+        <FormField className="field-container">
           <label>Fecha <span className="required-star">*</span></label>
           <input
             type="date"
@@ -21,9 +23,9 @@ export default function SaneoTanquesForm({
             value={saneoForm.fecha}
             onChange={(e) => setSaneoForm({ ...saneoForm, fecha: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Tanque a Sanear <span className="required-star">*</span></label>
           <select
             required
@@ -35,9 +37,9 @@ export default function SaneoTanquesForm({
               <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
             ))}
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>N° Saneo <span className="required-star">*</span></label>
           <input
             type="number"
@@ -46,27 +48,30 @@ export default function SaneoTanquesForm({
             value={saneoForm.numero_saneo}
             onChange={(e) => setSaneoForm({ ...saneoForm, numero_saneo: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Proceso de limpieza" description="Indique los horarios y el producto utilizado.">
+<FormField className="field-container">
           <label>Hora de Inicio</label>
           <input
             type="time"
             value={saneoForm.hora_inicio}
             onChange={(e) => setSaneoForm({ ...saneoForm, hora_inicio: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Hora de Finalización</label>
           <input
             type="time"
             value={saneoForm.hora_fin}
             onChange={(e) => setSaneoForm({ ...saneoForm, hora_fin: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Producto de Saneo / CIP <span className="required-star">*</span></label>
           <input
             type="text"
@@ -75,9 +80,12 @@ export default function SaneoTanquesForm({
             value={saneoForm.producto}
             onChange={(e) => setSaneoForm({ ...saneoForm, producto: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="03" title="Responsables" description="Seleccione quiénes realizaron el saneo.">
+<FormField className="field-container col-span-2">
           <label>Responsables del Saneo <span className="required-star">*</span></label>
           <MultiInputList
             type="select"
@@ -89,9 +97,10 @@ export default function SaneoTanquesForm({
             icon={User}
             required
           />
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -112,6 +121,6 @@ export default function SaneoTanquesForm({
           <Save size={16} /> Registrar Saneo de Tanque
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

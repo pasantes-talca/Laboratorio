@@ -10,6 +10,9 @@ export default function MultiInputList({
   addButtonText = 'Agregar elemento',
   icon: Icon = UserCheck,
   required = false,
+  id,
+  'aria-invalid': invalid,
+  'aria-describedby': describedBy,
 }) {
   const handleItemChange = (index, value) => {
     const updated = [...items];
@@ -36,6 +39,10 @@ export default function MultiInputList({
               {Icon && <Icon className="input-icon" size={18} />}
               {type === 'select' ? (
                 <select
+                  id={id ? (idx === 0 ? id : `${id}-${idx}`) : undefined}
+                  aria-invalid={invalid}
+                  aria-describedby={describedBy}
+                  aria-label={idx > 0 ? `${placeholder} ${idx + 1}` : undefined}
                   value={val}
                   required={required && idx === 0}
                   onChange={(e) => handleItemChange(idx, e.target.value)}
@@ -51,6 +58,10 @@ export default function MultiInputList({
                 </select>
               ) : (
                 <input
+                  id={id ? (idx === 0 ? id : `${id}-${idx}`) : undefined}
+                  aria-invalid={invalid}
+                  aria-describedby={describedBy}
+                  aria-label={idx > 0 ? `${placeholder} ${idx + 1}` : undefined}
                   type={type}
                   value={val}
                   required={required && idx === 0}
@@ -78,3 +89,5 @@ export default function MultiInputList({
     </div>
   );
 }
+
+MultiInputList.formControl = true;

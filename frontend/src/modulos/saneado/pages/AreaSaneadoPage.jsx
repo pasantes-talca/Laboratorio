@@ -1,5 +1,6 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React, { useState, useEffect } from 'react';
-import { Waves, Save, RotateCcw, User } from 'lucide-react';
+import { Save, RotateCcw, User } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { getResponsables } from '../../../services/api';
 import { submitSalaSaneado } from '../api/saneadoApi';
@@ -74,44 +75,9 @@ export default function AreaSaneadoPage() {
   return (
     <div className="content-grid" style={{ gridTemplateColumns: '1fr' }}>
       <main className="card">
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            marginBottom: '1.5rem',
-            borderBottom: '1px solid var(--border-glass)',
-            paddingBottom: '1rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div
-              style={{
-                background: 'var(--color-azul-hielo, #E8F4F8)',
-                padding: '0.6rem',
-                borderRadius: 'var(--radius-md, 8px)',
-                color: 'var(--color-azul-clinico, #0077B6)',
-                border: '1px solid rgba(0, 119, 182, 0.2)',
-              }}
-            >
-              <Waves size={24} />
-            </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 600, color: 'var(--color-azul-marino, #0F2C45)' }}>
-                Área de Saneado
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Control y registro de limpieza y desinfección de líneas (COP / CIP)
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="field-container">
+        <FormLayout title="Control de saneado" domain="ÁREA DE SANEADO" description="Registre la limpieza y desinfección de las líneas (COP / CIP)." onSubmit={handleSubmit}>
+          <FormSection number="01" title="Datos de la limpieza" description="Seleccione la línea y el tipo de procedimiento.">
+            <FormField className="field-container">
               <label>
                 Línea <span className="required-star">*</span>
               </label>
@@ -126,9 +92,9 @@ export default function AreaSaneadoPage() {
                 <option value="1">Línea 1</option>
                 <option value="2">Línea 2</option>
               </select>
-            </div>
+            </FormField>
 
-            <div className="field-container">
+            <FormField className="field-container">
               <label>
                 ¿Es Post Mantenimiento? <span className="required-star">*</span>
               </label>
@@ -142,9 +108,9 @@ export default function AreaSaneadoPage() {
                 <option value="No">No</option>
                 <option value="Si">Si</option>
               </select>
-            </div>
+            </FormField>
 
-            <div className="field-container col-span-2">
+            <FormField className="field-container col-span-2">
               <label>
                 COP o CIP <span className="required-star">*</span>
               </label>
@@ -156,11 +122,12 @@ export default function AreaSaneadoPage() {
                 <option value="COP">COP</option>
                 <option value="CIP">CIP</option>
               </select>
-            </div>
+            </FormField>
 
-            {form.tipo_limpieza === 'COP' && (
+</FormSection>
+<FormSection number="02" title="Proceso de limpieza" description="Complete los productos y las etapas realizadas.">            {form.tipo_limpieza === 'COP' && (
               <>
-                <div className="field-container col-span-2">
+                <FormField className="field-container col-span-2">
                   <label>Químico</label>
                   <input
                     type="text"
@@ -168,23 +135,23 @@ export default function AreaSaneadoPage() {
                     value={form.cop_quimico}
                     onChange={(e) => setForm({ ...form, cop_quimico: e.target.value })}
                   />
-                </div>
-                <div className="field-container">
+                </FormField>
+                <FormField className="field-container">
                   <label>Hora Inicio</label>
                   <input
                     type="time"
                     value={form.cop_hora_inicio}
                     onChange={(e) => setForm({ ...form, cop_hora_inicio: e.target.value })}
                   />
-                </div>
-                <div className="field-container">
+                </FormField>
+                <FormField className="field-container">
                   <label>Hora Fin</label>
                   <input
                     type="time"
                     value={form.cop_hora_fin}
                     onChange={(e) => setForm({ ...form, cop_hora_fin: e.target.value })}
                   />
-                </div>
+                </FormField>
               </>
             )}
 
@@ -193,7 +160,7 @@ export default function AreaSaneadoPage() {
                 className="col-span-2"
                 style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}
               >
-                <div className="field-container">
+                <FormField className="field-container">
                   <label>Etapas CIP a registrar</label>
                   <div
                     style={{
@@ -238,7 +205,7 @@ export default function AreaSaneadoPage() {
                       </label>
                     ))}
                   </div>
-                </div>
+                </FormField>
 
                 {(form.cip_opciones || []).includes('Sanitizante') && (
                   <div
@@ -251,7 +218,7 @@ export default function AreaSaneadoPage() {
                   >
                     <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Sanitizante</h4>
                     <div className="form-grid">
-                      <div className="field-container">
+                      <FormField className="field-container">
                         <label>Temperatura (°C)</label>
                         <input
                           type="number"
@@ -262,8 +229,8 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_sanitizante_temp: e.target.value })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Inicio</label>
                         <input
                           type="time"
@@ -272,8 +239,8 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_sanitizante_inicio: e.target.value })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Fin</label>
                         <input
                           type="time"
@@ -282,7 +249,7 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_sanitizante_fin: e.target.value })
                           }
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
                 )}
@@ -298,7 +265,7 @@ export default function AreaSaneadoPage() {
                   >
                     <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Desinfectante</h4>
                     <div className="form-grid">
-                      <div className="field-container">
+                      <FormField className="field-container">
                         <label>Temperatura (°C)</label>
                         <input
                           type="number"
@@ -309,8 +276,8 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_desinfectante_temp: e.target.value })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Inicio</label>
                         <input
                           type="time"
@@ -319,8 +286,8 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_desinfectante_inicio: e.target.value })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Fin</label>
                         <input
                           type="time"
@@ -329,7 +296,7 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_desinfectante_fin: e.target.value })
                           }
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
                 )}
@@ -347,7 +314,7 @@ export default function AreaSaneadoPage() {
                       Enjuague Sanitizante
                     </h4>
                     <div className="form-grid">
-                      <div className="field-container">
+                      <FormField className="field-container">
                         <label>Hora Inicio</label>
                         <input
                           type="time"
@@ -356,8 +323,8 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_enjuague_sanitizante_inicio: e.target.value })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Fin</label>
                         <input
                           type="time"
@@ -366,7 +333,7 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_enjuague_sanitizante_fin: e.target.value })
                           }
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
                 )}
@@ -384,7 +351,7 @@ export default function AreaSaneadoPage() {
                       Enjuague Desinfectante
                     </h4>
                     <div className="form-grid">
-                      <div className="field-container">
+                      <FormField className="field-container">
                         <label>Hora Inicio</label>
                         <input
                           type="time"
@@ -396,8 +363,8 @@ export default function AreaSaneadoPage() {
                             })
                           }
                         />
-                      </div>
-                      <div className="field-container">
+                      </FormField>
+                      <FormField className="field-container">
                         <label>Hora Fin</label>
                         <input
                           type="time"
@@ -406,14 +373,15 @@ export default function AreaSaneadoPage() {
                             setForm({ ...form, cip_enjuague_desinfectante_fin: e.target.value })
                           }
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="field-container col-span-2">
+            </FormSection>
+<FormSection number="03" title="Responsable" description="Seleccione quién realizó el saneado."><FormField className="field-container col-span-2">
               <label>
                 Responsable <span className="required-star">*</span>
               </label>
@@ -434,8 +402,9 @@ export default function AreaSaneadoPage() {
                   ))}
                 </select>
               </div>
-            </div>
-          </div>
+            </FormField>
+          </FormSection>
+
 
           <div className="form-actions">
             <button
@@ -449,7 +418,7 @@ export default function AreaSaneadoPage() {
               <Save size={16} /> Registrar Saneado
             </button>
           </div>
-        </form>
+        </FormLayout>
       </main>
     </div>
   );

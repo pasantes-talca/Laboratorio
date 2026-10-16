@@ -1,30 +1,19 @@
+import { FormField } from '../../../componentes/FormLayout';
 import JarabeSimpleForm from '../componentes/JarabeSimpleForm';
 import JarabeTerminadoForm from '../componentes/JarabeTerminadoForm';
 import SaneoTanquesForm from '../componentes/SaneoTanquesForm';
 import ParteJarabeForm from '../componentes/ParteJarabeForm';
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Layers,
-  Sparkles,
-  ShieldCheck,
-  FileSpreadsheet,
-  Clock,
-  Calendar,
-  PackageCheck,
-} from 'lucide-react';
+import { Clock, Calendar, PackageCheck } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { getResponsablesJarabe, getSabores, getTanques } from '../../../services/api';
 import { getJarabeSimples, submitJarabeSimple, submitJarabeTerminado, submitSaneoTanque, submitParteJarabe, parseJarabeExcel } from '../api/jarabeApi';
 import { getConcentradosForSabor } from '../../../utils/productRules';
 
-export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
+export default function SalaJarabePage({ initialTab = 'simple' }) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
-  const selectTab = (tab) => {
-    setActiveTab(tab);
-    onTabChange?.(tab);
-  };
   const [responsables, setResponsables] = useState([]);
   const [sabores, setSabores] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
@@ -42,7 +31,7 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
         ]);
         setResponsables(r);
         setSabores(s);
-        const processedTanques = t.map(tanque => 
+        const processedTanques = t.map(tanque =>
           tanque.numero === 'TALCA' ? { ...tanque, numero: 'N/A' } : tanque
         ).reduce((acc, curr) => {
           if (!acc.some(x => x.numero === curr.numero)) acc.push(curr);
@@ -387,40 +376,7 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
     <div className="content-grid">
       <main className="card">
         {/* Tabs Header */}
-        <div className="tabs-container">
-          <button
-            type="button"
-            className={`tab-button ${activeTab === 'simple' ? 'active' : ''}`}
-            onClick={() => selectTab('simple')}
-          >
-            <Layers size={18} />
-            Jarabe Simple
-          </button>
-          <button
-            type="button"
-            className={`tab-button ${activeTab === 'terminado' ? 'active' : ''}`}
-            onClick={() => selectTab('terminado')}
-          >
-            <Sparkles size={18} />
-            Jarabe Terminado
-          </button>
-          <button
-            type="button"
-            className={`tab-button ${activeTab === 'saneo' ? 'active' : ''}`}
-            onClick={() => selectTab('saneo')}
-          >
-            <ShieldCheck size={18} />
-            Saneo de Tanques
-          </button>
-          <button
-            type="button"
-            className={`tab-button ${activeTab === 'parte' ? 'active' : ''}`}
-            onClick={() => selectTab('parte')}
-          >
-            <FileSpreadsheet size={18} />
-            Parte de Jarabe
-          </button>
-        </div>
+
 
         {/* TAB 1: JARABE SIMPLE */}
         {activeTab === 'simple' && (
@@ -477,7 +433,7 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
 
       {/* Sidebar: Producción Activa (Jarabe) */}
       {(activeTab === 'simple' || activeTab === 'terminado') && (
-        <aside className="sidebar-card">
+        <aside className="sidebar-card lab-context">
           <div className="sidebar-header" style={{ justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <PackageCheck size={20} color="var(--color-azul-clinico)" />
@@ -488,7 +444,7 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
           <div className="sidebar-data-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
             {activeTab === 'simple' ? (
               <>
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fecha <span className="required-star">*</span></label>
                   <div className="input-wrapper">
                     <Calendar className="input-icon" size={16} />
@@ -501,9 +457,9 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       style={{ padding: '0.4rem 0.6rem 0.4rem 2.2rem', fontSize: '0.9rem', width: '100%' }}
                     />
                   </div>
-                </div>
+                </FormField>
 
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hora</label>
                   <div className="input-wrapper">
                     <Clock className="input-icon" size={16} />
@@ -515,9 +471,9 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       style={{ padding: '0.4rem 0.6rem 0.4rem 2.2rem', fontSize: '0.9rem', width: '100%' }}
                     />
                   </div>
-                </div>
+                </FormField>
 
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tanque Asignado <span className="required-star">*</span></label>
                   <select
                     required
@@ -531,11 +487,11 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
                     ))}
                   </select>
-                </div>
+                </FormField>
               </>
             ) : (
               <>
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fecha <span className="required-star">*</span></label>
                   <input
                     type="date"
@@ -545,9 +501,9 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                     onChange={(e) => setTerminadoForm({ ...terminadoForm, fecha: e.target.value })}
                     style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem', width: '100%' }}
                   />
-                </div>
+                </FormField>
 
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sabor / Marca <span className="required-star">*</span></label>
                   <select
                     required
@@ -568,9 +524,9 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       <option key={s.id} value={s.nombre}>{s.nombre}</option>
                     ))}
                   </select>
-                </div>
+                </FormField>
 
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tipo de Concentrado <span className="required-star">*</span></label>
                   <select
                     required
@@ -585,9 +541,9 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-                </div>
+                </FormField>
 
-                <div className="field-container" style={{ marginBottom: 0 }}>
+                <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tanque <span className="required-star">*</span></label>
                   <select
                     required
@@ -601,7 +557,7 @@ export default function SalaJarabePage({ initialTab = 'simple', onTabChange }) {
                       <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
                     ))}
                   </select>
-                </div>
+                </FormField>
               </>
             )}
           </div>

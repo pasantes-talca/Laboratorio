@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Save, RotateCcw, User } from 'lucide-react';
 import MultiInputList from '../../../componentes/MultiInputList';
@@ -11,10 +12,11 @@ export default function JarabeTerminadoForm({
   handleTerminadoSubmit,
 }) {
   return (
-    <form id="terminado-form" onSubmit={handleTerminadoSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-    
-        <div className="field-container">
+    <FormLayout title="Jarabe terminado" domain="SALA DE JARABE" description="Registre el filtrado y los volúmenes de jarabe terminado." id="terminado-form" onSubmit={handleTerminadoSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Carga y filtrado" description="Identifique las cargas y los volcados utilizados.">
+
+
+        <FormField className="field-container">
           <label>Unidades / Cargas <span className="required-star">*</span></label>
           <input
             type="number"
@@ -23,9 +25,9 @@ export default function JarabeTerminadoForm({
             value={terminadoForm.unidades}
             onChange={(e) => setTerminadoForm({ ...terminadoForm, unidades: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Tiempo Filtrado (min / hs)</label>
           <input
             type="text"
@@ -33,9 +35,9 @@ export default function JarabeTerminadoForm({
             value={terminadoForm.tiempo_filtrado}
             onChange={(e) => setTerminadoForm({ ...terminadoForm, tiempo_filtrado: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Número(s) de Volcado <span className="required-star">*</span></label>
           {availableVolcados.length > 0 ? (
             <MultiInputList
@@ -61,9 +63,12 @@ export default function JarabeTerminadoForm({
               </span>
             </div>
           )}
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Mediciones y volúmenes" description="Registre el Brix y los volúmenes del proceso.">
+<FormField className="field-container">
           <label>°Brix Jarabe Simple</label>
           <input
             type="number"
@@ -72,9 +77,9 @@ export default function JarabeTerminadoForm({
             value={terminadoForm.be_jarabe_simple}
             onChange={(e) => setTerminadoForm({ ...terminadoForm, be_jarabe_simple: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Volumen Jarabe Simple (Lts)</label>
           <input
             type="number"
@@ -83,9 +88,9 @@ export default function JarabeTerminadoForm({
             value={terminadoForm.vol_jarabe_simple}
             onChange={(e) => setTerminadoForm({ ...terminadoForm, vol_jarabe_simple: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Litros Jarabe Terminado (Lts)</label>
           <input
             type="number"
@@ -94,9 +99,12 @@ export default function JarabeTerminadoForm({
             value={terminadoForm.lts_jarabe_terminado}
             onChange={(e) => setTerminadoForm({ ...terminadoForm, lts_jarabe_terminado: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="03" title="Responsables" description="Seleccione las personas que realizaron la preparación.">
+<FormField className="field-container col-span-2">
           <label>Responsables (Sala de Jarabe) <span className="required-star">*</span></label>
           <MultiInputList
             type="select"
@@ -108,9 +116,10 @@ export default function JarabeTerminadoForm({
             icon={User}
             required
           />
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -135,6 +144,6 @@ export default function JarabeTerminadoForm({
           <Save size={16} /> Registrar Jarabe Terminado
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

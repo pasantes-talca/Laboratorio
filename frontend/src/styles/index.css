@@ -1874,3 +1874,88 @@ select option {
 @media (max-width: 1000px) {
   .session-bar { margin-left: 0; }
 }
+:is(.chlorine-form, .lab-form) { max-width: 980px; margin: 0 auto; }
+html:has(:is(.chlorine-form, .lab-form)) { scroll-padding-bottom: 170px; }
+:is(.chlorine-heading, .lab-heading) { display: flex; align-items: center; gap: 1rem; padding: .5rem 0 1.25rem; }
+:is(.chlorine-heading-icon, .lab-heading-icon) { display: grid; place-items: center; flex: none; width: 54px; height: 54px; color: var(--color-azul-clinico); background: var(--color-azul-hielo); border-radius: 12px; }
+:is(.chlorine-eyebrow, .lab-eyebrow) { font-size: .68rem; font-weight: 700; letter-spacing: .12em; color: var(--color-azul-clinico); }
+:is(.chlorine-heading, .lab-heading) h2 { font-size: clamp(1.4rem, 2.5vw, 1.85rem); margin: .2rem 0 .35rem; }
+:is(.chlorine-heading, .lab-heading) p, :is(.chlorine-required-note, .lab-required-note) { color: var(--text-secondary); font-size: .85rem; }
+:is(.chlorine-required-note, .lab-required-note) { margin-bottom: 1.75rem; }
+:is(.chlorine-editable, .lab-editable) { border: 0; min-width: 0; }
+:is(.chlorine-section, .lab-section) { min-width: 0; border: 0; border-top: 1px solid var(--border-glass); margin: 0 0 1.75rem; padding: 1rem 0 0; }
+:is(.chlorine-section, .lab-section) legend { padding-right: 1rem; font-size: 1rem; font-weight: 650; color: var(--text-dark); }
+:is(.chlorine-section-number, .lab-section-number) { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: .65rem; color: var(--color-azul-clinico); background: var(--color-azul-hielo); border-radius: 8px; font-size: .72rem; font-variant-numeric: tabular-nums; }
+:is(.chlorine-section-description, .lab-section-description) { color: var(--text-secondary); font-size: .81rem; margin-bottom: 1.15rem; }
+.chlorine-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
+.chlorine-field { min-width: 0; display: flex; flex-direction: column; gap: .5rem; scroll-margin-block: 5rem 10rem; }
+.chlorine-field label { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; color: var(--text-dark); font-size: .85rem; font-weight: 550; }
+.chlorine-optional { color: var(--text-secondary); font-weight: 400; font-size: .7rem; }
+.chlorine-control { position: relative; }
+.chlorine-control input, .chlorine-control select { min-height: 48px; padding-left: .9rem; border-radius: 8px; background-color: #fff; scroll-margin-block: 5rem 10rem; }
+.chlorine-control:has(.chlorine-unit) input { padding-right: 3.4rem; }
+.chlorine-unit { position: absolute; top: 50%; right: 1rem; transform: translateY(-50%); pointer-events: none; color: var(--text-secondary); font-size: .75rem; }
+.chlorine-field.has-error input, .chlorine-field.has-error select { border-color: var(--color-error); }
+.chlorine-field-error { font-size: .78rem; color: #B91C1C; }
+.chlorine-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; background: #fff; border-top: 1px solid var(--border-glass); box-shadow: 0 -12px 20px -20px rgba(15, 44, 69, .4); }
+.chlorine-action-buttons { display: flex; flex: none; align-items: center; gap: .65rem; }
+.chlorine-action-buttons .btn { white-space: nowrap; }
+.chlorine-action-buttons .btn:disabled { cursor: not-allowed; opacity: .6; transform: none; }
+.chlorine-clear { color: var(--text-secondary); background: transparent; border: 1px solid transparent; }
+.chlorine-clear:hover { background: var(--bg-base); }
+.chlorine-feedback { color: var(--text-secondary); font-size: .8rem; }
+.chlorine-message { display: flex; align-items: center; gap: .5rem; }
+.chlorine-message svg { flex: none; }
+.chlorine-message.success { color: var(--color-exito); }
+.chlorine-message.error { color: #B91C1C; }
+:is(.chlorine-form, .lab-form) button:focus-visible { outline: 3px solid var(--color-azul-clinico); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .chlorine-fields { grid-template-columns: minmax(0, 1fr); }
+  :is(.chlorine-heading, .lab-heading) { align-items: flex-start; gap: .75rem; }
+  :is(.chlorine-heading-icon, .lab-heading-icon) { width: 42px; height: 42px; }
+  .chlorine-actions { align-items: stretch; flex-direction: column; gap: .6rem; padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+  .chlorine-action-buttons { width: 100%; }
+  .chlorine-action-buttons .btn-primary { flex: 1; justify-content: center; padding-inline: .8rem; }
+  .chlorine-clear { padding-inline: .7rem; }
+}
+@media (max-width: 360px) {
+  .chlorine-action-buttons { flex-direction: column-reverse; align-items: stretch; }
+  html:has(:is(.chlorine-form, .lab-form)) { scroll-padding-bottom: 220px; }
+}
+.lab-form .form-grid, .lab-form .form-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
+.lab-form .field-container { min-width: 0; scroll-margin-block: 5rem 10rem; }
+.lab-form .field-container label { text-transform: none; color: var(--text-dark); font-size: .85rem; font-weight: 550; letter-spacing: normal; justify-content: space-between; flex-wrap: wrap; }
+.lab-form input, .lab-form select, .lab-form textarea { min-height: 48px; border-radius: 8px; scroll-margin-block: 5rem 10rem; }
+.lab-form .field-container > input, .lab-form .field-container > select, .lab-form .field-container > textarea { padding-left: .9rem; }
+.lab-optional { margin-left: auto; font-size: .7rem; font-weight: 400; color: var(--text-secondary); }
+.lab-field-error { color: #B91C1C; font-size: .78rem; }
+.lab-field-invalid input, .lab-field-invalid select, .lab-field-invalid textarea { border-color: #B91C1C; }
+.lab-form .form-actions { position: sticky; bottom: 0; z-index: 5; background: #fff; margin-top: 1.5rem; padding: 1rem 0; flex-wrap: wrap; box-shadow: 0 -12px 20px -20px rgba(15, 44, 69, .4); }
+.lab-form .form-actions .btn-secondary { color: var(--text-secondary); background: transparent; border-color: transparent; box-shadow: none; }
+.lab-form .form-actions .btn-secondary:hover { background: var(--bg-base); }
+.lab-form button:focus-visible { outline: 3px solid var(--color-azul-clinico); outline-offset: 3px; }
+.lab-form .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.lab-save-status { position: fixed; bottom: 1rem; right: 1rem; z-index: 120; padding: .65rem 1rem; border-radius: 8px; color: var(--text-dark); background: var(--color-azul-hielo); box-shadow: var(--shadow-medium); }
+.modal-card .lab-form .form-actions { position: static; box-shadow: none; }
+.modal-card .lab-editable { display: flex; flex-direction: column; gap: 1.2rem; }
+html:has(.lab-form) { scroll-padding-bottom: 170px; }
+@media (max-width: 1280px) {
+  .content-grid:has(> .sidebar-card) { grid-template-columns: minmax(0, 1fr); }
+  .content-grid > .sidebar-card { grid-row: 1; }
+}
+@media (max-width: 640px) {
+  .lab-form .form-grid, .lab-form .form-grid-2 { grid-template-columns: minmax(0, 1fr); }
+  .lab-form .form-actions { flex-direction: column-reverse; align-items: stretch; padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+  .lab-form .form-actions .btn { justify-content: center; }
+  .lab-form .col-span-2 { grid-column: 1 / -1; }
+  .lab-form .lab-section-content select { min-width: 0 !important; }
+  .lab-form .lab-section-content input { min-width: 0; }
+}
+.lab-context .field-container label { text-transform: none; color: var(--text-dark); font-size: .85rem; font-weight: 550; gap: .5rem; }
+.lab-context input, .lab-context select { min-height: 48px; border-radius: 8px; }
+.lab-row-unit { color: var(--text-secondary); font-size: .73rem; flex: none; }
+.lab-torque-row .input-wrapper { min-width: 0; }
+@media (max-width: 640px) {
+  .lab-torque-row { flex-wrap: wrap; }
+  .lab-torque-row > select { flex-basis: 100%; }
+}

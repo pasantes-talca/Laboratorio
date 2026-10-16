@@ -1,16 +1,9 @@
+import FormLayout, { FormField } from '../../../componentes/FormLayout';
 import BebidaForm from '../componentes/BebidaForm';
 import ControlJarabeForm from '../componentes/ControlJarabeForm';
 import TorqueForm from '../componentes/TorqueForm';
 import React, { useState, useEffect } from 'react';
-import {
-  Beer,
-  Droplet,
-  Gauge,
-  PauseCircle,
-  Save,
-  RotateCcw,
-  X,
-} from 'lucide-react';
+import { PauseCircle, Save, RotateCcw, X } from 'lucide-react';
 import { useProduction } from '../../../context/ProductionContext';
 import { useToast } from '../../../context/ToastContext';
 import SidebarInfo from '../../../componentes/SidebarInfo';
@@ -33,7 +26,7 @@ function rememberLoteTapa(linea, value) {
   } catch {}
 }
 
-export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
+export default function CalidadPage({ initialTab = 'bebida' }) {
   const { production, productionReady, productionLoading, productionError, refreshProduction } = useProduction();
   const { showToast } = useToast();
 
@@ -46,10 +39,6 @@ export default function CalidadPage({ initialTab = 'bebida', onTabChange }) {
 
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
-  const selectTab = (tab) => {
-    setActiveTab(tab);
-    onTabChange?.(tab);
-  };
   const [responsables, setResponsables] = useState([]);
   const [tanquesCatalog, setTanquesCatalog] = useState([]);
 
@@ -321,33 +310,8 @@ function getColorBySabor(sabor) {
                 : 'Configure la producción de esta línea con “Cambiar producción” antes de registrar controles.'}
           </div>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <div className="tabs-container" style={{ marginBottom: 0 }}>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'bebida' ? 'active' : ''}`}
-              onClick={() => selectTab('bebida')}
-            >
-              <Beer size={18} />
-              Bebida Terminada
-            </button>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'jarabe' ? 'active' : ''}`}
-              onClick={() => selectTab('jarabe')}
-            >
-              <Droplet size={18} />
-              Control de Jarabe
-            </button>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'torque' ? 'active' : ''}`}
-              onClick={() => selectTab('torque')}
-            >
-              <Gauge size={18} />
-              Control de Torque
-            </button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.25rem' }}>
+
 
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button
@@ -427,9 +391,9 @@ function getColorBySabor(sabor) {
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={async (e) => { await handlePausaSubmit(e); setShowPausaModal(false); }} style={{ marginTop: '1rem' }}>
+            <FormLayout title="Registrar pausa" compact onSubmit={async (e) => { await handlePausaSubmit(e); setShowPausaModal(false); }} style={{ marginTop: '1rem' }}>
               <div className="form-grid">
-                <div className="field-container col-span-2">
+                <FormField className="field-container col-span-2">
                   <label>Motivo de la Pausa <span className="required-star">*</span></label>
                   <input
                     type="text"
@@ -438,8 +402,8 @@ function getColorBySabor(sabor) {
                     value={pausaForm.motivo}
                     onChange={(e) => setPausaForm({ ...pausaForm, motivo: e.target.value })}
                   />
-                </div>
-                <div className="field-container col-span-2">
+                </FormField>
+                <FormField className="field-container col-span-2">
                   <label>Responsable <span className="required-star">*</span></label>
                   <select
                     required
@@ -451,8 +415,8 @@ function getColorBySabor(sabor) {
                       <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
                     ))}
                   </select>
-                </div>
-                <div className="field-container col-span-2">
+                </FormField>
+                <FormField className="field-container col-span-2">
                   <label>Observaciones</label>
                   <textarea
                     rows="3"
@@ -460,7 +424,7 @@ function getColorBySabor(sabor) {
                     value={pausaForm.observacion}
                     onChange={(e) => setPausaForm({ ...pausaForm, observacion: e.target.value })}
                   />
-                </div>
+                </FormField>
               </div>
               <div className="form-actions" style={{ marginTop: '1rem' }}>
                 <button
@@ -474,7 +438,7 @@ function getColorBySabor(sabor) {
                   <Save size={16} /> Registrar Pausa
                 </button>
               </div>
-            </form>
+            </FormLayout>
           </div>
         </div>
       )}

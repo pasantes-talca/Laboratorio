@@ -1,17 +1,15 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
+import AnalisisCloroForm from '../componentes/AnalisisCloroForm';
 import React, { useState, useEffect } from 'react';
-import { Droplet, Save, RotateCcw, Clock, Calendar, Beaker, User, Activity, Droplets, Filter } from 'lucide-react';
+import { Save, RotateCcw, Clock, Calendar, Beaker, User } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { getResponsables } from '../../../services/api';
-import { submitControlFisicoQuimico, submitAnalisisCloro, submitOsmosisInversa, submitFiltroArena } from '../api/aguaApi';
+import { submitControlFisicoQuimico, submitOsmosisInversa, submitFiltroArena } from '../api/aguaApi';
 
-export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) {
+export default function AguaPage({ initialTab = 'fisicoQuimico' }) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState(initialTab);
   useEffect(() => setActiveTab(initialTab), [initialTab]);
-  const selectTab = (tab) => {
-    setActiveTab(tab);
-    onTabChange?.(tab);
-  };
   const [responsables, setResponsables] = useState([]);
   const [saving, setSaving] = useState(null);
 
@@ -65,46 +63,6 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
       await submitControlFisicoQuimico(payload);
       showToast('Control Físico Químico guardado con éxito', 'success');
       setFisicoQuimicoForm(initialFisicoQuimicoState);
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  // ----------------------------------------------------
-  // TAB 3: ANÁLISIS DE CLORO
-  // ----------------------------------------------------
-  const initialAnalisisCloroState = {
-    hora: '',
-    tanque_agua_osmosis: '',
-    filtro_carbon_a: 'Cumple',
-    filtro_carbon_b: 'Cumple',
-    filtro_carbon_c: 'Cumple',
-    contralavado_tanque_a: '',
-    contralavado_tanque_b: '',
-    cloro_riser_linea: 'Linea 1',
-    cloro_riser_resultado: '',
-    acondicionamiento_rinser: '',
-    responsable: '',
-  };
-  const [analisisCloroForm, setAnalisisCloroForm] = useState(initialAnalisisCloroState);
-
-  const handleAnalisisCloroSubmit = async (e) => {
-    e.preventDefault();
-    if (saving) return;
-    setSaving('analisisCloro');
-    try {
-      const payload = {
-        ...analisisCloroForm,
-        tanque_agua_osmosis: parseFloat(analisisCloroForm.tanque_agua_osmosis) || 0,
-        cloro_riser_resultado: parseFloat(analisisCloroForm.cloro_riser_resultado) || 0,
-        acondicionamiento_rinser: analisisCloroForm.acondicionamiento_rinser === ''
-          ? null : Number(analisisCloroForm.acondicionamiento_rinser),
-      };
-      await submitAnalisisCloro(payload);
-      showToast('Análisis de Cloro guardado con éxito', 'success');
-      setAnalisisCloroForm(initialAnalisisCloroState);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -185,49 +143,11 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
   return (
     <div className="content-grid" style={{ gridTemplateColumns: '1fr' }}>
       <main className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
-          <div className="tabs-container" style={{ marginBottom: 0, borderBottom: 'none' }}>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'fisicoQuimico' ? 'active' : ''}`}
-              onClick={() => selectTab('fisicoQuimico')}
-            >
-              <Droplet size={18} />
-              Control Físico Químico
-            </button>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'analisisCloro' ? 'active' : ''}`}
-              onClick={() => selectTab('analisisCloro')}
-            >
-              <Activity size={18} />
-              Análisis de Cloro
-            </button>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'osmosisInversa' ? 'active' : ''}`}
-              onClick={() => selectTab('osmosisInversa')}
-            >
-              <Droplets size={18} />
-              Osmosis Inversa
-            </button>
-            <button
-              type="button"
-              className={`tab-button ${activeTab === 'filtroArena' ? 'active' : ''}`}
-              onClick={() => selectTab('filtroArena')}
-            >
-              <Filter size={18} />
-              Filtro de Arena
-            </button>
-          </div>
-        </div>
-        <hr style={{ borderColor: 'var(--border-glass)', marginBottom: '1.5rem' }} />
-
         {/* TAB 1: CONTROL FÍSICO QUÍMICO */}
         {activeTab === 'fisicoQuimico' && (
-          <form onSubmit={handleFisicoQuimicoSubmit}>
-            <div className="form-grid">
-              <div className="field-container col-span-2">
+          <FormLayout title="Control físico químico" domain="CONTROL DE AGUA" description="Registre los resultados del análisis de agua." onSubmit={handleFisicoQuimicoSubmit}>
+            <FormSection number="01" title="Datos del control" description="Identifique el tipo de agua y el momento del control.">
+              <FormField className="field-container col-span-2">
                 <label>Tipo de Agua <span className="required-star">*</span></label>
                 <select
                   required
@@ -238,10 +158,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   <option value="Agua Permeada">Agua Permeada</option>
                   <option value="Agua Tratada">Agua Tratada</option>
                 </select>
-              </div>
+              </FormField>
 
-              <div className="field-container">
-                <label>Fecha (Opcional)</label>
+              <FormField className="field-container">
+                <label>Fecha</label>
                 <div className="input-wrapper">
                   <Calendar className="input-icon" size={18} />
                   <input
@@ -250,10 +170,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                     onChange={(e) => setFisicoQuimicoForm({ ...fisicoQuimicoForm, fecha: e.target.value })}
                   />
                 </div>
-              </div>
-              
-              <div className="field-container">
-                <label>Hora (Opcional)</label>
+              </FormField>
+
+              <FormField className="field-container">
+                <label>Hora</label>
                 <div className="input-wrapper">
                   <Clock className="input-icon" size={18} />
                   <input
@@ -262,10 +182,11 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                     onChange={(e) => setFisicoQuimicoForm({ ...fisicoQuimicoForm, hora: e.target.value })}
                   />
                 </div>
-              </div>
+              </FormField>
 
-              {['k', 'dureza', 'cloruros', 'sulfatos', 'alcalinidad', 'cloro_libre', 'ph'].map((field) => (
-                <div key={field} className="field-container">
+</FormSection>
+<FormSection number="02" title="Mediciones" description="Complete los resultados obtenidos en el análisis.">              {['k', 'dureza', 'cloruros', 'sulfatos', 'alcalinidad', 'cloro_libre', 'ph'].map((field) => (
+                <FormField key={field} className="field-container">
                   <label>{field.replace('_', ' ').toUpperCase()} <span className="required-star">*</span></label>
                   <div className="input-wrapper">
                     <Beaker className="input-icon" size={18} />
@@ -278,10 +199,11 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                       onChange={(e) => setFisicoQuimicoForm({ ...fisicoQuimicoForm, [field]: e.target.value })}
                     />
                   </div>
-                </div>
+                </FormField>
               ))}
 
-              <div className="field-container col-span-2">
+              </FormSection>
+<FormSection number="03" title="Responsable" description="Seleccione quién realizó el control."><FormField className="field-container col-span-2">
                 <label>Responsable <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <User className="input-icon" size={18} />
@@ -296,8 +218,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
+              </FormField>
+            </FormSection>
+
 
             <div className="form-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setFisicoQuimicoForm(initialFisicoQuimicoState)}>
@@ -307,173 +230,17 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                 <Save size={16} /> {saving === 'fisicoQuimico' ? 'Guardando…' : 'Registrar Control'}
               </button>
             </div>
-          </form>
+          </FormLayout>
         )}
 
         {/* TAB 3: ANÁLISIS DE CLORO */}
-        {activeTab === 'analisisCloro' && (
-          <form onSubmit={handleAnalisisCloroSubmit}>
-            <div className="form-grid">
-              <div className="field-container">
-                <label>Hora <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Clock className="input-icon" size={18} />
-                  <input
-                    type="time"
-                    required
-                    value={analisisCloroForm.hora}
-                    onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, hora: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Tanque Agua Osmosis <span className="required-star">*</span></label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ej: 10.5"
-                  value={analisisCloroForm.tanque_agua_osmosis}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, tanque_agua_osmosis: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label>Filtro Carbón A <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={analisisCloroForm.filtro_carbon_a}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, filtro_carbon_a: e.target.value })}
-                >
-                  <option value="Cumple">Cumple</option>
-                  <option value="No Cumple">No Cumple</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Filtro Carbón B <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={analisisCloroForm.filtro_carbon_b}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, filtro_carbon_b: e.target.value })}
-                >
-                  <option value="Cumple">Cumple</option>
-                  <option value="No Cumple">No Cumple</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Filtro Carbón C <span className="required-star">*</span></label>
-                <select
-                  required
-                  value={analisisCloroForm.filtro_carbon_c}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, filtro_carbon_c: e.target.value })}
-                >
-                  <option value="Cumple">Cumple</option>
-                  <option value="No Cumple">No Cumple</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label>Contralavado Tanque A <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Calendar className="input-icon" size={18} />
-                  <input
-                    type="date"
-                    required
-                    value={analisisCloroForm.contralavado_tanque_a}
-                    onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, contralavado_tanque_a: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label>Contralavado Tanque B <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <Calendar className="input-icon" size={18} />
-                  <input
-                    type="date"
-                    required
-                    value={analisisCloroForm.contralavado_tanque_b}
-                    onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, contralavado_tanque_b: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field-container">
-                <label htmlFor="cloro-rinser-linea">Cloro Rinser Línea <span className="required-star">*</span></label>
-                <select
-                  id="cloro-rinser-linea"
-                  required
-                  value={analisisCloroForm.cloro_riser_linea}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, cloro_riser_linea: e.target.value })}
-                >
-                  <option value="Linea 1">Línea 1</option>
-                  <option value="Linea 2">Línea 2</option>
-                </select>
-              </div>
-
-              <div className="field-container">
-                <label htmlFor="cloro-rinser-resultado">Cloro Rinser Resultado <span className="required-star">*</span></label>
-                <input
-                  id="cloro-rinser-resultado"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  placeholder="Ej: 1.2"
-                  value={analisisCloroForm.cloro_riser_resultado}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, cloro_riser_resultado: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container">
-                <label htmlFor="acondicionamiento-rinser">Acondicionamiento rinser (ppm)</label>
-                <input
-                  id="acondicionamiento-rinser"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={analisisCloroForm.acondicionamiento_rinser}
-                  onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, acondicionamiento_rinser: e.target.value })}
-                />
-              </div>
-
-              <div className="field-container col-span-2">
-                <label>Responsable <span className="required-star">*</span></label>
-                <div className="input-wrapper">
-                  <User className="input-icon" size={18} />
-                  <select
-                    required
-                    value={analisisCloroForm.responsable}
-                    onChange={(e) => setAnalisisCloroForm({ ...analisisCloroForm, responsable: e.target.value })}
-                  >
-                    <option value="" disabled>Seleccione responsable...</option>
-                    {responsables.map((r) => (
-                      <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setAnalisisCloroForm(initialAnalisisCloroState)}>
-                <RotateCcw size={16} /> Limpiar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={saving === 'analisisCloro'}>
-                <Save size={16} /> {saving === 'analisisCloro' ? 'Guardando…' : 'Registrar Análisis'}
-              </button>
-            </div>
-          </form>
-        )}
+        {activeTab === 'analisisCloro' && <AnalisisCloroForm responsables={responsables} />}
 
         {/* TAB 4: OSMOSIS INVERSA */}
         {activeTab === 'osmosisInversa' && (
-          <form onSubmit={handleOsmosisInversaSubmit}>
-            <div className="form-grid">
-              <div className="field-container">
+          <FormLayout title="Ósmosis inversa" domain="CONTROL DE AGUA" description="Registre las mediciones del sistema de ósmosis." onSubmit={handleOsmosisInversaSubmit}>
+            <FormSection number="01" title="Horario del control" description="Seleccione el horario de la medición.">
+              <FormField className="field-container">
                 <label>Hora <span className="required-star">*</span></label>
                 <select
                   required
@@ -486,9 +253,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   <option value="19:00">19:00</option>
                   <option value="00:00">00:00</option>
                 </select>
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              </FormSection>
+<FormSection number="02" title="Mediciones de agua" description="Registre los valores K y H."><FormField className="field-container">
                 <label>K <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -498,9 +266,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.k}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, k: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              <FormField className="field-container">
                 <label>H <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -510,9 +278,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.h}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, h: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              </FormSection>
+<FormSection number="03" title="Caudales" description="Complete los caudales del proceso."><FormField className="field-container">
                 <label>Q Perm <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -522,9 +291,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.q_perm}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, q_perm: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              <FormField className="field-container">
                 <label>Q Mezcla <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -534,9 +303,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.q_mezcla}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, q_mezcla: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              <FormField className="field-container">
                 <label>Q Rechazo <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -546,9 +315,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.q_rechazo}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, q_rechazo: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              </FormSection>
+<FormSection number="04" title="Presión" description="Seleccione el punto de control y registre el resultado."><FormField className="field-container">
                 <label>P <span className="required-star">*</span></label>
                 <select
                   required
@@ -561,9 +331,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   <option value="P4">P4</option>
                   <option value="P5">P5</option>
                 </select>
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              <FormField className="field-container">
                 <label>P ({osmosisInversaForm.p_select}) Valor <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -573,8 +343,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={osmosisInversaForm.p_valor}
                   onChange={(e) => setOsmosisInversaForm({ ...osmosisInversaForm, p_valor: e.target.value })}
                 />
-              </div>
-            </div>
+              </FormField>
+            </FormSection>
+
 
             <div className="form-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setOsmosisInversaForm(initialOsmosisInversaState)}>
@@ -584,14 +355,14 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                 <Save size={16} /> {saving === 'osmosisInversa' ? 'Guardando…' : 'Registrar Osmosis'}
               </button>
             </div>
-          </form>
+          </FormLayout>
         )}
 
         {/* TAB 5: FILTRO DE ARENA */}
         {activeTab === 'filtroArena' && (
-          <form onSubmit={handleFiltroArenaSubmit}>
-            <div className="form-grid">
-              <div className="field-container">
+          <FormLayout title="Filtro de arena" domain="CONTROL DE AGUA" description="Registre las presiones y el contralavado del filtro." onSubmit={handleFiltroArenaSubmit}>
+            <FormSection number="01" title="Horario del control" description="Indique cuándo se realizó el control.">
+              <FormField className="field-container">
                 <label>Hora <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <Clock className="input-icon" size={18} />
@@ -602,9 +373,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                     onChange={(e) => setFiltroArenaForm({ ...filtroArenaForm, hora: e.target.value })}
                   />
                 </div>
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              </FormSection>
+<FormSection number="02" title="Presiones" description="Registre las mediciones de entrada y salida."><FormField className="field-container">
                 <label>Presión Interno <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -614,9 +386,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={filtroArenaForm.presion_interno}
                   onChange={(e) => setFiltroArenaForm({ ...filtroArenaForm, presion_interno: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              <FormField className="field-container">
                 <label>Presión Externo <span className="required-star">*</span></label>
                 <input
                   type="number"
@@ -626,9 +398,10 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                   value={filtroArenaForm.presion_externo}
                   onChange={(e) => setFiltroArenaForm({ ...filtroArenaForm, presion_externo: e.target.value })}
                 />
-              </div>
+              </FormField>
 
-              <div className="field-container">
+              </FormSection>
+<FormSection number="03" title="Contralavado" description="Indique la fecha del contralavado."><FormField className="field-container">
                 <label>Fecha Contralavado <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <Calendar className="input-icon" size={18} />
@@ -639,8 +412,9 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                     onChange={(e) => setFiltroArenaForm({ ...filtroArenaForm, fecha_contralavado: e.target.value })}
                   />
                 </div>
-              </div>
-            </div>
+              </FormField>
+            </FormSection>
+
 
             <div className="form-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setFiltroArenaForm(initialFiltroArenaState)}>
@@ -650,7 +424,7 @@ export default function AguaPage({ initialTab = 'fisicoQuimico', onTabChange }) 
                 <Save size={16} /> {saving === 'filtroArena' ? 'Guardando…' : 'Registrar Filtro'}
               </button>
             </div>
-          </form>
+          </FormLayout>
         )}
       </main>
     </div>

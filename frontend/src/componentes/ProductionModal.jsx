@@ -1,3 +1,4 @@
+import FormLayout, { FormField } from './FormLayout';
 import React, { useEffect, useState } from 'react';
 import { Settings2, X } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
@@ -67,43 +68,43 @@ export default function ProductionModal() {
           <button type="button" className="btn-close-modal" aria-label="Cerrar" onClick={closeModal}><X size={20} /></button>
         </div>
         <p className="sidebar-hint">Configurando {editingLine === 'linea2' ? 'Línea 2' : 'Línea 1'}. Los cambios se aplican al guardar.</p>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="field-container">
+        <FormLayout title="Cambiar producción" compact onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <FormField className="field-container">
             <label htmlFor="production-turno">Turno <span className="required-star">*</span></label>
             <select id="production-turno" required value={formData.turno} onChange={(event) => setFormData({ ...formData, turno: event.target.value })}>
               <option value="Mañana">Mañana</option>
               <option value="Tarde">Tarde</option>
               <option value="Noche">Noche</option>
             </select>
-          </div>
-          <div className="field-container">
+          </FormField>
+          <FormField className="field-container">
             <label htmlFor="production-sabor">Sabor / Marca <span className="required-star">*</span></label>
             <select id="production-sabor" required value={formData.sabor} onChange={(event) => handleSaborChange(event.target.value)}>
               <option value="" disabled>Seleccione sabor...</option>
               {marcas.map((marca) => <option key={marca.id} value={marca.nombre}>{marca.nombre}</option>)}
             </select>
-          </div>
+          </FormField>
           <div className="form-grid-2">
-            <div className="field-container">
+            <FormField className="field-container">
               <label htmlFor="production-concentrado">Concentrado <span className="required-star">*</span></label>
               <select id="production-concentrado" required disabled={!formData.sabor} value={formData.tipoConcentrado} onChange={(event) => setFormData({ ...formData, tipoConcentrado: event.target.value })}>
                 <option value="" disabled>Seleccione...</option>
                 {availableConcentrados.map((concentrado) => <option key={concentrado} value={concentrado}>{concentrado}</option>)}
               </select>
-            </div>
-            <div className="field-container">
+            </FormField>
+            <FormField className="field-container">
               <label htmlFor="production-tamano">Tamaño <span className="required-star">*</span></label>
               <select id="production-tamano" required disabled={!formData.sabor} value={formData.tamano} onChange={(event) => setFormData({ ...formData, tamano: event.target.value })}>
                 <option value="" disabled>Seleccione...</option>
                 {availableTamanos.map((tamano) => <option key={tamano} value={tamano}>{tamano}</option>)}
               </select>
-            </div>
+            </FormField>
           </div>
           <div className="form-actions" style={{ marginTop: '0.5rem' }}>
             <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancelar</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambio'}</button>
           </div>
-        </form>
+        </FormLayout>
       </div>
     </div>
   );

@@ -80,12 +80,13 @@ it('las tarjetas de Inicio abren su formulario concreto', async () => {
   expect(await screen.findByRole('button', { name: 'Registrar Control de Jarabe' })).toBeInTheDocument();
 });
 
-it('al cambiar de pestaña actualiza el formulario marcado en el sidebar', async () => {
+it('cambia de formulario desde el sidebar sin duplicar las pestañas', async () => {
   window.history.replaceState(null, '', '/calidad/bebida');
   render(<App />);
   const nav = screen.getByRole('navigation', { name: 'Secciones del laboratorio' });
-  const qualityForm = await screen.findByRole('main');
-  fireEvent.click(within(qualityForm).getByRole('button', { name: 'Control de Torque' }));
+  await screen.findByRole('main');
+  expect(document.querySelector('.tabs-container')).not.toBeInTheDocument();
+  fireEvent.click(within(nav).getByRole('button', { name: 'Control de Torque' }));
   expect(window.location.pathname).toBe('/calidad/torque');
   expect(within(nav).getByRole('button', { name: 'Control de Torque' })).toHaveAttribute('aria-current', 'page');
 });

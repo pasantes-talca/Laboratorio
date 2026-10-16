@@ -46,12 +46,6 @@ export default function SidebarInfo({ customHint }) {
             <strong className="sidebar-data-val">{value || '—'}</strong>
           </div>
         ))}
-        {production.version > 0 && (
-          <div className="sidebar-data-item">
-            <span className="sidebar-data-label">Actualizada por:</span>
-            <strong className="sidebar-data-val">{production.actualizadaPor || '—'}</strong>
-          </div>
-        )}
       </div>
 
       <div className="sidebar-production-actions">
@@ -60,6 +54,7 @@ export default function SidebarInfo({ customHint }) {
           className="btn btn-secondary"
           onClick={() => refreshProduction().catch(() => {})}
           aria-label="Actualizar producción"
+          title="Volver a consultar la producción activa de esta línea"
           disabled={productionLoading}
         >
           <RefreshCw size={16} aria-hidden="true" />

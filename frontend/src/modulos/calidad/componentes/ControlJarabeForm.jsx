@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Save, RotateCcw, Clock } from 'lucide-react';
 
@@ -10,9 +11,10 @@ export default function ControlJarabeForm({
   handleJarabeSubmit,
 }) {
   return (
-    <form onSubmit={handleJarabeSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-        <div className="field-container">
+    <FormLayout title="Control de jarabe" domain="CONTROL DE CALIDAD" description="Registre el control del jarabe utilizado en la producción." onSubmit={handleJarabeSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Datos del control" description="Identifique la hora y el tanque analizado.">
+
+        <FormField className="field-container">
           <label>Hora</label>
           <div className="input-wrapper">
             <Clock className="input-icon" size={18} />
@@ -22,9 +24,9 @@ export default function ControlJarabeForm({
               onChange={(e) => setJarabeForm({ ...jarabeForm, hora: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Número de Tanque <span className="required-star">*</span></label>
           <select
             required
@@ -36,9 +38,12 @@ export default function ControlJarabeForm({
               <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
             ))}
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Mediciones de jarabe" description="Registre el patrón de Brix y la acidez titulable.">
+<FormField className="field-container">
           <label>°Bx Patr. <span className="required-star">*</span></label>
           <input
             type="number"
@@ -48,9 +53,9 @@ export default function ControlJarabeForm({
             value={jarabeForm.bx_patron}
             onChange={(e) => setJarabeForm({ ...jarabeForm, bx_patron: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>T.A. <span className="required-star">*</span></label>
           <input
             type="number"
@@ -60,9 +65,12 @@ export default function ControlJarabeForm({
             value={jarabeForm.ta}
             onChange={(e) => setJarabeForm({ ...jarabeForm, ta: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="03" title="Responsable" description="Seleccione quién realizó el análisis.">
+<FormField className="field-container col-span-2">
           <label>Respons. <span className="required-star">*</span></label>
           <select
             required
@@ -74,9 +82,10 @@ export default function ControlJarabeForm({
               <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
             ))}
           </select>
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -95,6 +104,6 @@ export default function ControlJarabeForm({
           <Save size={16} /> Registrar Control de Jarabe
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Droplet, Gauge, Save, RotateCcw, Clock, User, FlaskRound as Flask } from 'lucide-react';
 
@@ -11,9 +12,10 @@ export default function BebidaForm({
   rememberLoteTapa,
 }) {
   return (
-    <form onSubmit={handleBebidaSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-        <div className="field-container">
+    <FormLayout title="Bebida terminada" domain="CONTROL DE CALIDAD" description="Registre la inspección y las mediciones del producto terminado." onSubmit={handleBebidaSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Datos del control" description="Indique el momento en que se realizó el control.">
+
+        <FormField className="field-container">
           <label>Hora</label>
           <div className="input-wrapper">
             <Clock className="input-icon" size={18} />
@@ -23,9 +25,12 @@ export default function BebidaForm({
               onChange={(e) => setBebidaForm({ ...bebidaForm, hora: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Inspección del producto" description="Verifique el aspecto, el llenado y el contenido.">
+<FormField className="field-container">
           <label>Características Organolépticas <span className="required-star">*</span></label>
           <select
             required
@@ -35,9 +40,9 @@ export default function BebidaForm({
             <option value="OK">OK</option>
             <option value="NOK">NOK</option>
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Nivel de Llenado <span className="required-star">*</span></label>
           <select
             required
@@ -47,9 +52,9 @@ export default function BebidaForm({
             <option value="OK">OK</option>
             <option value="NOK">NOK</option>
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Contenido (ml / L) <span className="required-star">*</span></label>
           <div className="input-wrapper">
             <Flask className="input-icon" size={18} />
@@ -62,9 +67,12 @@ export default function BebidaForm({
               onChange={(e) => setBebidaForm({ ...bebidaForm, contenido: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="03" title="Mediciones" description="Cargue los resultados obtenidos en el análisis.">
+<FormField className="field-container">
           <label>Presión (PSI / bar) <span className="required-star">*</span></label>
           <div className="input-wrapper">
             <Gauge className="input-icon" size={18} />
@@ -77,9 +85,9 @@ export default function BebidaForm({
               onChange={(e) => setBebidaForm({ ...bebidaForm, presion: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Temperat. (°C) <span className="required-star">*</span></label>
           <input
             type="number"
@@ -89,9 +97,9 @@ export default function BebidaForm({
             value={bebidaForm.temperatura}
             onChange={(e) => setBebidaForm({ ...bebidaForm, temperatura: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Vol. Gas (GV) <span className="required-star">*</span></label>
           <input
             type="number"
@@ -101,9 +109,9 @@ export default function BebidaForm({
             value={bebidaForm.vol_gas}
             onChange={(e) => setBebidaForm({ ...bebidaForm, vol_gas: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>°Brix <span className="required-star">*</span></label>
           <div className="input-wrapper">
             <Droplet className="input-icon" size={18} />
@@ -116,9 +124,12 @@ export default function BebidaForm({
               onChange={(e) => setBebidaForm({ ...bebidaForm, brix: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="04" title="Identificación y trazabilidad" description="Controle la impresión y registre el lote de tapa.">
+<FormField className="field-container">
           <label>Control Video Jet <span className="required-star">*</span></label>
           <select
             required
@@ -128,9 +139,9 @@ export default function BebidaForm({
             <option value="OK">OK</option>
             <option value="NOK">NOK</option>
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label htmlFor="bebida-lote-tapa">Lote de tapa <span className="required-star">*</span></label>
           <input
             id="bebida-lote-tapa"
@@ -144,9 +155,12 @@ export default function BebidaForm({
               setBebidaForm({ ...bebidaForm, lote_tapa: e.target.value });
             }}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="05" title="Responsable" description="Seleccione quién realizó el control.">
+<FormField className="field-container col-span-2">
           <label>Respons. <span className="required-star">*</span></label>
           <div className="input-wrapper">
             <User className="input-icon" size={18} />
@@ -161,9 +175,10 @@ export default function BebidaForm({
               ))}
             </select>
           </div>
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -188,6 +203,6 @@ export default function BebidaForm({
           <Save size={16} /> Registrar Control de Bebida
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { Gauge, Save, RotateCcw, Clock, Plus, Trash2 } from 'lucide-react';
 
@@ -14,9 +15,10 @@ export default function TorqueForm({
   handleTorqueSubmit,
 }) {
   return (
-    <form onSubmit={handleTorqueSubmit} style={{ marginTop: '1.25rem' }}>
-      <div className="form-grid">
-        <div className="field-container">
+    <FormLayout title="Control de torque" domain="CONTROL DE CALIDAD" description="Registre la medición de torque de cada cabezal." onSubmit={handleTorqueSubmit} style={{ marginTop: '1.25rem' }}>
+      <FormSection number="01" title="Datos del control" description="Identifique la tapa y el responsable del control.">
+
+        <FormField className="field-container">
           <label>Hora</label>
           <div className="input-wrapper">
             <Clock className="input-icon" size={18} />
@@ -26,9 +28,9 @@ export default function TorqueForm({
               onChange={(e) => setTorqueForm({ ...torqueForm, hora: e.target.value })}
             />
           </div>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Marca de Tapa</label>
           <select
             value={torqueForm.marca_tapa}
@@ -38,9 +40,9 @@ export default function TorqueForm({
             <option value="PRIVA">PRIVA</option>
             <option value="SIDES">SIDES</option>
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Color de Tapa</label>
           <input
             type="text"
@@ -49,9 +51,9 @@ export default function TorqueForm({
             readOnly
             style={{ opacity: 0.85, cursor: 'default' }}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Respons. <span className="required-star">*</span></label>
           <select
             required
@@ -63,18 +65,20 @@ export default function TorqueForm({
               <option key={r.id} value={r.nombre_completo}>{r.nombre_completo}</option>
             ))}
           </select>
-        </div>
-      </div>
-    
+        </FormField>
+
+</FormSection>
+
       {/* Dynamic cabezal list */}
-      <div style={{ marginTop: '1rem' }}>
+      <FormSection number="02" title="Mediciones por cabezal" description="Agregue los cabezales medidos y registre el torque de cada uno." grid={false}>
         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
           Cabezales ({production.linea === 'linea2' ? '1 a 14' : '1 a 12'}) <span className="required-star">*</span>
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {torqueForm.cabezales.map((cab, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div key={idx} className="lab-torque-row" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <select
+                aria-label={`Cabezal de la medición ${idx + 1}`}
                 value={cab.numero}
                 onChange={(e) => updateCabezal(idx, 'numero', parseInt(e.target.value, 10))}
                 style={{ minWidth: '160px', width: 'auto', flexShrink: 0, paddingLeft: '1rem' }}
@@ -86,6 +90,7 @@ export default function TorqueForm({
               <div className="input-wrapper" style={{ flex: 1 }}>
                 <Gauge className="input-icon" size={18} />
                 <input
+                  aria-label={`Torque del cabezal ${cab.numero} (Lbs.In)`}
                   type="number"
                   step="0.1"
                   required
@@ -94,9 +99,11 @@ export default function TorqueForm({
                   onChange={(e) => updateCabezal(idx, 'valor', e.target.value)}
                 />
               </div>
+              <span className="lab-row-unit">Lbs.In</span>
               {torqueForm.cabezales.length > 1 && (
                 <button
                   type="button"
+                  aria-label={`Quitar medición ${idx + 1}`}
                   onClick={() => removeCabezal(idx)}
                   style={{
                     background: 'var(--color-error-bg, #FFF5F5)',
@@ -136,8 +143,8 @@ export default function TorqueForm({
         >
           <Plus size={15} /> Agregar Cabezal
         </button>
-      </div>
-    
+      </FormSection>
+
       <div className="form-actions">
         <button
           type="button"
@@ -150,6 +157,6 @@ export default function TorqueForm({
           <Save size={16} /> Registrar Torque
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

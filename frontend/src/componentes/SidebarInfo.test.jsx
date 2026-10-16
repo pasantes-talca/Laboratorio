@@ -22,11 +22,23 @@ beforeEach(() => {
 });
 
 describe('Producción Activa', () => {
+  it('actualiza los datos desde el servidor sin guardar cambios', async () => {
+    render(<ProductionProvider><ToastProvider><SidebarInfo /></ToastProvider></ProductionProvider>);
+    await screen.findByText('Cola');
+    getActiveProduction.mockResolvedValue({
+      linea: 1, turno: 'Tarde', sabor: 'Lima', concentrado: 'IFF', tamano: '500ml', version: 2,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar producción' }));
+    await screen.findByText('Lima');
+    expect(saveActiveProduction).not.toHaveBeenCalled();
+    expect(screen.queryByText('Actualizada por:')).not.toBeInTheDocument();
+  });
   it('muestra cada línea sin edición directa', async () => {
     render(<ProductionProvider><ToastProvider><SidebarInfo /></ToastProvider></ProductionProvider>);
     await waitFor(() => expect(screen.getByText('Cola')).toBeInTheDocument());
     expect(screen.getAllByRole('combobox')).toHaveLength(1);
     expect(screen.queryByText('Lote de tapa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Actualizada por:')).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('combobox', { name: 'Línea de trabajo' }), { target: { value: 'linea2' } });
     await waitFor(() => expect(screen.getByText('Soda')).toBeInTheDocument());
     expect(screen.queryByText('Lote de tapa')).not.toBeInTheDocument();

@@ -1,3 +1,4 @@
+import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { FileSpreadsheet, Save, RotateCcw, Upload, User } from 'lucide-react';
 import MultiInputList from '../../../componentes/MultiInputList';
@@ -14,7 +15,7 @@ export default function ParteJarabeForm({
   handleParteSubmit,
 }) {
   return (
-    <form onSubmit={handleParteSubmit} style={{ marginTop: '1.25rem' }}>
+    <FormLayout title="Parte de jarabe" domain="SALA DE JARABE" description="Registre la carga y las cantidades utilizadas en la formulación." onSubmit={handleParteSubmit} style={{ marginTop: '1.25rem' }}>
       <div
         style={{
           display: 'flex',
@@ -50,9 +51,10 @@ export default function ParteJarabeForm({
           />
         </label>
       </div>
-    
-      <div className="form-grid">
-        <div className="field-container">
+
+      <FormSection number="01" title="Identificación de la carga" description="Complete los datos de trazabilidad del parte.">
+
+        <FormField className="field-container">
           <label>Fecha <span className="required-star">*</span></label>
           <input
             type="date"
@@ -60,9 +62,9 @@ export default function ParteJarabeForm({
             value={parteForm.fecha}
             onChange={(e) => setParteForm({ ...parteForm, fecha: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Turno <span className="required-star">*</span></label>
           <select
             value={parteForm.turno}
@@ -72,9 +74,9 @@ export default function ParteJarabeForm({
             <option value="Tarde">Tarde</option>
             <option value="Noche">Noche</option>
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>Tanque <span className="required-star">*</span></label>
           <select
             required
@@ -86,9 +88,9 @@ export default function ParteJarabeForm({
               <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
             ))}
           </select>
-        </div>
-    
-        <div className="field-container">
+        </FormField>
+
+        <FormField className="field-container">
           <label>N° Carga Trilay <span className="required-star">*</span></label>
           <input
             type="text"
@@ -97,9 +99,9 @@ export default function ParteJarabeForm({
             value={parteForm.numero_carga_trilay}
             onChange={(e) => setParteForm({ ...parteForm, numero_carga_trilay: e.target.value })}
           />
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+        <FormField className="field-container col-span-2">
           <label>Sabor / Marca</label>
           <select
             value={parteForm.sabor}
@@ -110,9 +112,12 @@ export default function ParteJarabeForm({
               <option key={s.id} value={s.nombre}>{s.nombre}</option>
             ))}
           </select>
-        </div>
-    
-        <div className="field-container col-span-2">
+        </FormField>
+
+
+</FormSection>
+<FormSection number="02" title="Responsables" description="Seleccione las personas a cargo de la preparación.">
+<FormField className="field-container col-span-2">
           <label>Responsables (Sala de Jarabe) <span className="required-star">*</span></label>
           <MultiInputList
             type="select"
@@ -124,15 +129,13 @@ export default function ParteJarabeForm({
             icon={User}
             required
           />
-        </div>
-      </div>
-    
-      <div style={{ marginTop: '1.75rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem' }}>
-        <h4 style={{ fontSize: '1rem', color: 'var(--color-azul-marino)', marginBottom: '1rem', fontWeight: 600 }}>
-          Dosificación de Materias Primas e Insumos (kg)
-        </h4>
-        <div className="form-grid">
-          <div className="field-container">
+        </FormField>
+
+</FormSection>
+
+      <div>
+        <FormSection number="03" title="Formulación" description="Registre las cantidades utilizadas en cada ingrediente.">
+          <FormField className="field-container">
             <label>Azúcar (kg)</label>
             <input
               type="number"
@@ -141,9 +144,9 @@ export default function ParteJarabeForm({
               value={parteForm.azucar}
               onChange={(e) => setParteForm({ ...parteForm, azucar: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Sucralosa (kg)</label>
             <input
               type="number"
@@ -152,9 +155,9 @@ export default function ParteJarabeForm({
               value={parteForm.sucralosa}
               onChange={(e) => setParteForm({ ...parteForm, sucralosa: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Reforzado Cítrico (kg)</label>
             <input
               type="number"
@@ -163,9 +166,9 @@ export default function ParteJarabeForm({
               value={parteForm.reforzado_citrico}
               onChange={(e) => setParteForm({ ...parteForm, reforzado_citrico: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Acesulfame K (kg)</label>
             <input
               type="number"
@@ -174,9 +177,9 @@ export default function ParteJarabeForm({
               value={parteForm.acesulfame_k}
               onChange={(e) => setParteForm({ ...parteForm, acesulfame_k: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Benzoato de Sodio (kg)</label>
             <input
               type="number"
@@ -185,9 +188,9 @@ export default function ParteJarabeForm({
               value={parteForm.benzoato_sodio}
               onChange={(e) => setParteForm({ ...parteForm, benzoato_sodio: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Sorbato de Potasio (kg)</label>
             <input
               type="number"
@@ -196,9 +199,9 @@ export default function ParteJarabeForm({
               value={parteForm.sorbato_potasio}
               onChange={(e) => setParteForm({ ...parteForm, sorbato_potasio: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Citrato de Sodio (kg)</label>
             <input
               type="number"
@@ -207,9 +210,9 @@ export default function ParteJarabeForm({
               value={parteForm.citrato_sodio}
               onChange={(e) => setParteForm({ ...parteForm, citrato_sodio: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Ácido Cítrico (kg)</label>
             <input
               type="number"
@@ -218,9 +221,9 @@ export default function ParteJarabeForm({
               value={parteForm.acido_citrico}
               onChange={(e) => setParteForm({ ...parteForm, acido_citrico: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Ácido Fosfórico (kg)</label>
             <input
               type="number"
@@ -229,9 +232,9 @@ export default function ParteJarabeForm({
               value={parteForm.acido_fosforico}
               onChange={(e) => setParteForm({ ...parteForm, acido_fosforico: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Ácido Ascórbico (kg)</label>
             <input
               type="number"
@@ -240,9 +243,9 @@ export default function ParteJarabeForm({
               value={parteForm.acido_ascorbico}
               onChange={(e) => setParteForm({ ...parteForm, acido_ascorbico: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Cafeína (kg)</label>
             <input
               type="number"
@@ -251,9 +254,9 @@ export default function ParteJarabeForm({
               value={parteForm.cafeina}
               onChange={(e) => setParteForm({ ...parteForm, cafeina: e.target.value })}
             />
-          </div>
-    
-          <div className="field-container">
+          </FormField>
+
+          <FormField className="field-container">
             <label>Colorante Caramelo (kg)</label>
             <input
               type="number"
@@ -262,10 +265,10 @@ export default function ParteJarabeForm({
               value={parteForm.colorante_caramelo}
               onChange={(e) => setParteForm({ ...parteForm, colorante_caramelo: e.target.value })}
             />
-          </div>
-        </div>
+          </FormField>
+        </FormSection>
       </div>
-    
+
       <div className="form-actions">
         <button
           type="button"
@@ -297,6 +300,6 @@ export default function ParteJarabeForm({
           <Save size={16} /> Registrar Parte de Jarabe
         </button>
       </div>
-    </form>
+    </FormLayout>
   );
 }

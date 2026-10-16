@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 /**
  * ControlChart - Gráfico de control de calidad según diseño oficial.
- * 
+ *
  * Props:
  * - type: 'time' | 'cab'
  * - title: string
