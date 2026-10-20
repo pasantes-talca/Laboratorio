@@ -257,7 +257,7 @@ export default function AguaPage({ initialTab = 'fisicoQuimico' }) {
 
               </FormSection>
 <FormSection number="02" title="Mediciones de agua" description="Registre los valores K y H."><FormField className="field-container">
-                <label>K <span className="required-star">*</span></label>
+                <label>Conductividad <span className="required-star">*</span></label>
                 <input
                   type="number"
                   step="0.01"

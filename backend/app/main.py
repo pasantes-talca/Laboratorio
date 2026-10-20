@@ -18,6 +18,7 @@ from backend.app.api.routers import (
     saneado_router,
     spa_router,
 )
+from backend.app.api.routers.administracion import router as admin_router
 from backend.app.api.routers.auth import router as auth_router
 from backend.app.core.auth import validate_auth_config
 from backend.app.core.config import ALLOWED_ORIGINS, FRONTEND_ASSETS, STATIC_DIR
@@ -93,6 +94,7 @@ app.include_router(agua_router)
 app.include_router(saneado_router)
 app.include_router(reportes_router)
 app.include_router(production_router)
+app.include_router(admin_router)
 app.include_router(spa_router)
 
 

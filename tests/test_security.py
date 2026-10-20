@@ -35,6 +35,15 @@ def make_client():
     def delete_resource():
         return {"ok": True}
 
+    @app.put("/api/calidad/produccion/1")
+    def select_production():
+        return {"ok": True}
+
+    @app.get("/api/admin/catalogo")
+    @app.patch("/api/admin/registros/1")
+    def admin_resource():
+        return {"ok": True}
+
     return TestClient(app)
 
 
@@ -44,12 +53,17 @@ def login(client, username="ana"):
     return response
 
 
-def test_reads_and_writes_require_authenticated_identity():
+def test_forms_are_public_and_administration_requires_identity():
     client = make_client()
     for method in (client.get, client.post):
         response = method("/api/resource", headers={"X-API-Key": "secret", "X-Role": "administrador"})
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert response.json()["actor"] is None
         assert response.headers["X-Request-ID"]
+    assert client.put("/api/calidad/produccion/1").status_code == 200
+    assert client.get("/api/admin/catalogo").status_code == 401
+    assert client.patch("/api/admin/registros/1", json={}).status_code == 401
+    assert client.delete("/api/resource/1").status_code == 401
 
 
 def test_operator_cannot_promote_itself_through_headers():
@@ -68,7 +82,8 @@ def test_supervisor_can_delete_and_logout_removes_browser_access():
     assert client.delete("/api/resource/1").status_code == 200
     assert client.get("/api/auth/session").json()["user"]["username"] == "jefe"
     assert client.post("/api/auth/logout").status_code == 200
-    assert client.get("/api/resource").status_code == 401
+    assert client.get("/api/resource").status_code == 200
+    assert client.get("/api/admin/catalogo").status_code == 401
 
 
 def test_invalid_password_and_attempt_limit():

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CheckSquare, Home, Layers, LineChart, Droplet, Waves, X } from 'lucide-react';
 import logoImg from '../assets/logo-color-fondo.png';
 import { FORM_NAV } from '../navigation';
+import { ShieldCheck } from 'lucide-react';
 
 const NAV_ITEMS = [
   { page: 'portal', label: 'Inicio', icon: Home },
@@ -10,6 +11,7 @@ const NAV_ITEMS = [
   { page: 'agua', label: 'Agua', icon: Droplet },
   { page: 'saneado', label: 'Área de Saneado', icon: Waves },
   { page: 'dashboard', label: 'Dashboard', icon: LineChart },
+  { page: 'administracion', label: 'Administración', icon: ShieldCheck },
 ];
 
 export default function SidebarNav({ activePage, activeForm, onNavigate, isOpen, onClose }) {

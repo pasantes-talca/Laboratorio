@@ -4,6 +4,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ProductionProvider, useProduction } from './context/ProductionContext';
 import SidebarNav from './componentes/SidebarNav';
 import ProductionModal from './componentes/ProductionModal';
+import { AdminAccess } from './componentes/AuthGate';
 import { FORM_NAV, defaultFormFor } from './navigation';
 import './styles/index.css';
 
@@ -13,8 +14,10 @@ const DashboardPage = lazy(() => import('./modulos/dashboard/pages/DashboardPage
 const AguaPage = lazy(() => import('./modulos/agua/pages/AguaPage'));
 const AreaSaneadoPage = lazy(() => import('./modulos/saneado/pages/AreaSaneadoPage'));
 const PortalPage = lazy(() => import('./modulos/portal/pages/PortalPage'));
+const AdminPage = lazy(() => import('./modulos/administracion/AdminPage'));
 
 const ROUTE_MAP = {
+  '/administracion': 'administracion',
   '/': 'portal',
   '/calidad': 'calidad',
   '/jarabe': 'jarabe',
@@ -30,6 +33,7 @@ const ROUTE_MAP = {
 };
 
 const PAGE_TO_PATH = {
+  administracion: '/administracion',
   portal: '/portal',
   calidad: '/calidad',
   jarabe: '/jarabe',
@@ -39,6 +43,7 @@ const PAGE_TO_PATH = {
 };
 
 const PAGE_TITLES = {
+  administracion: 'Administración - Laboratorio Talca',
   portal: 'Inicio - Laboratorio Talca',
   calidad: 'Control de Calidad - Laboratorio Talca',
   jarabe: 'Sala de Jarabe - Laboratorio Talca',
@@ -127,6 +132,7 @@ function AppContent() {
             {activePage === 'agua' && <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />}
             {activePage === 'saneado' && <AreaSaneadoPage />}
             {activePage === 'dashboard' && <DashboardPage />}
+            {activePage === 'administracion' && <AdminAccess><AdminPage /></AdminAccess>}
           </Suspense>
 
           <ProductionModal />

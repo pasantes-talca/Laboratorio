@@ -1,3 +1,4 @@
+from fastapi import Request
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
@@ -23,6 +24,9 @@ from backend.app.models import (
     SaneoTanque,
     metadata,
 )
+from backend.app.services import (
+    audit as _audit,  # noqa: F401 -- register transaction listeners
+)
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -38,8 +42,9 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 
-def get_db():
+def get_db(request: Request):
     db = SessionLocal()
+    db.info["actor"] = getattr(request.state, "actor", None)
     try:
         yield db
     except Exception:

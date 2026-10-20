@@ -24,7 +24,7 @@ describe('SidebarNav', () => {
     renderSidebar();
     const nav = screen.getByRole('navigation', { name: 'Secciones del laboratorio' });
     expect(screen.getByRole('complementary', { name: 'Menú lateral' })).toBeInTheDocument();
-    expect(nav.querySelectorAll('.sidebar-link')).toHaveLength(6);
+    expect(nav.querySelectorAll('.sidebar-link')).toHaveLength(7);
     expect(screen.getByRole('group', { name: 'Formularios de Control de Calidad' })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Formularios de Sala de Jarabe' })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Formularios de Agua' })).toBeInTheDocument();

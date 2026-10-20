@@ -6,6 +6,7 @@ from backend.app.core.config import FRONTEND_DIST
 router = APIRouter(tags=["SPA Navigation"])
 
 SPA_ROUTES = [
+    "/administracion",
     "/",
     "/calidad",
     "/jarabe",
@@ -20,6 +21,7 @@ SPA_ROUTES = [
 
 
 @router.get("/")
+@router.get("/administracion")
 @router.get("/calidad")
 @router.get("/jarabe")
 @router.get("/agua")
