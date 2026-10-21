@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ShieldCheck, Search, X, History, Pencil, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Search, X, History, Pencil, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSession } from '../../context/AuthContext';
 import { fetchJson } from '../../services/httpClient';
 import { createExamples, previewCatalogue } from './preview';
@@ -86,6 +86,7 @@ export default function AdminPage({ preview = false }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [record, setRecord] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [revision, setRevision] = useState(0);
   const [catalogAttempt, setCatalogAttempt] = useState(0);
   const [examples, setExamples] = useState(() => preview ? createExamples() : {});
@@ -128,7 +129,20 @@ export default function AdminPage({ preview = false }) {
     } else await fetchJson(`/admin/${formId}/registros/${record.id}`, { method: 'PATCH', body: JSON.stringify(body) });
     setRecord(null); setRevision(old => old + 1); setNotice(preview ? 'Cambio de prueba guardado. Podés abrir el registro para ver su historial.' : 'Registro actualizado. La modificación quedó en el historial.');
   }
-  function choose(id) { requestVersion.current += 1; setFormId(id); setOffset(0); setFilters(emptyFilters); setApplied(emptyFilters); setNotice(''); setResult({ items: [], total: 0 }); }
+  async function remove(row) {
+    if (deleting !== null || !window.confirm(`¿Querés eliminar el registro #${row.id} de ${form.label}${preview ? ' (de ejemplo)' : ''}?`)) return;
+    requestVersion.current += 1;
+    setDeleting(row.id); setError(''); setNotice('');
+    try {
+      if (preview) setExamples(old => ({ ...old, [formId]: old[formId].filter(item => item.id !== row.id) }));
+      else await fetchJson(`/admin/${formId}/registros/${row.id}`, { method: 'DELETE', body: JSON.stringify({ expected_version: row.version }) });
+      if (result.items.length === 1 && offset > 0) setOffset(old => Math.max(0, old - 25));
+      setRevision(old => old + 1);
+      setNotice(preview ? 'Registro de ejemplo eliminado.' : 'Registro eliminado. La operación quedó registrada.');
+    } catch (err) { setError(err.message); }
+    finally { setDeleting(null); }
+  }
+  function choose(id) { if (deleting !== null) return; requestVersion.current += 1; setFormId(id); setOffset(0); setFilters(emptyFilters); setApplied(emptyFilters); setNotice(''); setResult({ items: [], total: 0 }); }
   if (!allowed) return <main className="admin-page"><section className="admin-card"><ShieldCheck /><h2>Administración de registros</h2><p>Ingresá con una cuenta de administrador para consultar y corregir los registros.</p><a className="admin-button primary" href="/administracion?demo=1">Ver pantalla de ejemplo</a></section></main>;
   return <main className="admin-page">
     {preview && <aside className="admin-demo"><strong>Vista de ejemplo</strong><span>Estos datos son ficticios. Los cambios son de prueba y se reinician al recargar la página.</span></aside>}
@@ -142,7 +156,12 @@ export default function AdminPage({ preview = false }) {
     </section>
     {error && <div className="admin-error" role="alert">{error} <button type="button" className="admin-button" onClick={() => { if (!catalog.length) setCatalogAttempt(old => old + 1); else setRevision(old => old + 1); }}>Reintentar</button></div>}{notice && <p className="admin-success" role="status">{notice}</p>}
     <section className="admin-card admin-results"><div className="admin-results-heading"><div><span className="admin-eyebrow">REGISTROS INGRESADOS</span><h2>{form?.label || 'Cargando formularios…'}</h2></div><span className="admin-count">{result.total} registros</span></div>
-      <div className="admin-table-wrap" aria-busy={busy}><table><thead><tr><th>ID</th>{form?.columns.map(key => <th key={key}>{form.fields.find(field => field.key === key)?.label}</th>)}<th>Ingresado por</th><th>Acciones</th></tr></thead><tbody>{!busy && result.items.map(row => <tr key={row.id}><td className="admin-record-id">#{row.id}</td>{form.columns.map(key => <td key={key}>{display(row.values[key])}</td>)}<td><span className="admin-author">{row.created_by || 'Sin registro de autor'}</span></td><td><button type="button" className="admin-button" onClick={() => open(row)}><Pencil size={15} />Ver / editar</button></td></tr>)}</tbody></table>{busy ? <p role="status" className="admin-empty">Cargando registros…</p> : !result.items.length && <p className="admin-empty">No hay registros que coincidan con la búsqueda.</p>}</div>
+      <div className="admin-table-wrap" aria-busy={busy}><table><thead><tr><th>ID</th>{form?.columns.map(key => <th key={key}>{form.fields.find(field => field.key === key)?.label}</th>)}<th>Ingresado por</th><th>Acciones</th></tr></thead><tbody>{!busy && result.items.map(row => <tr key={row.id}><td className="admin-record-id">#{row.id}</td>{form.columns.map(key => <td key={key}>{display(row.values[key])}</td>)}<td><span className="admin-author">{row.created_by || 'Sin registro de autor'}</span></td><td>
+        <div className="admin-row-actions">
+          <button type="button" className="admin-button" disabled={deleting !== null} onClick={() => open(row)}><Pencil size={15} />Ver / editar</button>
+          <button type="button" className="admin-button danger" disabled={deleting !== null} aria-label={`Eliminar registro #${row.id}`} onClick={() => remove(row)}><Trash2 size={15} />{deleting === row.id ? 'Eliminando…' : 'Eliminar'}</button>
+        </div>
+      </td></tr>)}</tbody></table>{busy ? <p role="status" className="admin-empty">Cargando registros…</p> : !result.items.length && <p className="admin-empty">No hay registros que coincidan con la búsqueda.</p>}</div>
       <footer className="admin-pagination"><span>{result.total ? `${offset + 1}–${Math.min(offset + 25, result.total)} de ${result.total}` : '0 registros'}</span><div><button type="button" className="admin-button" disabled={!offset || busy} onClick={() => setOffset(old => Math.max(0, old - 25))}><ArrowLeft size={16} />Anterior</button><button type="button" className="admin-button" disabled={offset + 25 >= result.total || busy} onClick={() => setOffset(old => old + 25)}>Siguiente<ArrowRight size={16} /></button></div></footer>
     </section><p className="admin-footnote">Los registros anteriores a la identificación de usuarios pueden no tener un autor registrado.</p>
     {record && form && <Editor key={`${formId}-${record.id}`} form={form} record={record} onClose={() => setRecord(null)} onSave={save} preview={preview} />}

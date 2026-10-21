@@ -6,8 +6,13 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.core.time import local_now
 from backend.app.models.ops import ControlPausa, ControlTorque
+from backend.app.models.production import ControlProduccion
 from backend.app.schemas.ops import ControlPausaCreate, ControlTorqueCreate
-from backend.app.services.production import attach_control_production, linea_numero, require_production
+from backend.app.services.production import (
+    attach_control_production,
+    linea_numero,
+    require_production,
+)
 
 router = APIRouter(prefix="/api", tags=["Operaciones"])
 
@@ -63,7 +68,10 @@ def get_controles_torque(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
-    query = db.query(ControlTorque)
+    query = db.query(ControlTorque, ControlProduccion.concentrado).outerjoin(
+        ControlProduccion,
+        (ControlProduccion.tipo_control == "torque") & (ControlProduccion.control_id == ControlTorque.id),
+    )
     if linea is not None:
         query = query.filter(ControlTorque.linea == linea)
     controles = query.order_by(ControlTorque.id.desc()).offset(offset).limit(limit).all()
@@ -76,12 +84,13 @@ def get_controles_torque(
             "linea": c.linea,
             "numero_cabezal": c.numero_cabezal,
             "sabor": c.sabor,
+            "concentrado": concentrado,
             "color": c.color,
             "marca_tapa": c.marca_tapa,
             "valor": float(c.valor) if c.valor is not None else None,
             "responsable": c.responsable,
         }
-        for c in controles
+        for c, concentrado in controles
     ]
 
 

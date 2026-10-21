@@ -5,6 +5,7 @@ import { PRODUCT_STANDARDS } from '../../../data/productStandards';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { getControlesBebida, getControlesJarabe, getControlesTorque, loadAllPages } from '../api/dashboardApi';
 import ControlChart from '../componentes/ControlChart';
+import { ALL_FLAVORS } from '../hooks/allFlavorMetrics';
 
 export default function DashboardPage() {
   const { production } = useProduction();
@@ -22,7 +23,7 @@ export default function DashboardPage() {
   const [selectedLinea, setSelectedLinea] = useState(production.linea || 'linea1'); // 'linea1' | 'linea2'
   const [selectedMes, setSelectedMes] = useState(new Date().toLocaleDateString('sv-SE').slice(0, 7)); // 'todos' | 'YYYY-MM'
   const [selectedFecha, setSelectedFecha] = useState('todas'); // 'todas' | 'YYYY-MM-DD'
-  const [selectedSabor, setSelectedSabor] = useState('COLA Red. XQ - KG');
+  const [selectedSabor, setSelectedSabor] = useState(ALL_FLAVORS);
 
   // Cargar datos de la API
   const loadDashboardData = useCallback(async () => {
@@ -62,9 +63,13 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  const { availableMonths, availableDates, availableProducts, formatMonthName, formatDateName, currentStandard, isSodaOrSifon, torqueLimits, brixChartData, taChartData, carbonatacionChartData, torqueChartData, latestBrix, latestTa, latestCarb, avgTorque } = useDashboardMetrics({
+  const { availableMonths, availableDates, availableProducts, formatMonthName, formatDateName, currentStandard, isSodaOrSifon, torqueLimits, brixChartData, taChartData, carbonatacionChartData, torqueChartData, latestBrix, latestTa, latestCarb, avgTorque, allProducts, latestBrixPoint, latestTaPoint, latestCarbPoint } = useDashboardMetrics({
     bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha, selectedSabor, setSelectedMes, setSelectedSabor,
   });
+  const pointLimits = point => point?.limiteMin != null ? { min: point.limiteMin, max: point.limiteMax, objetivo: point.objetivo } : null;
+  const brixLimits = allProducts ? pointLimits(latestBrixPoint) : currentStandard?.brix;
+  const taLimits = allProducts ? pointLimits(latestTaPoint) : currentStandard?.ta;
+  const gasLimits = allProducts ? pointLimits(latestCarbPoint) : currentStandard?.carbonatacion;
 
   return (
     <div className="dashboard-page" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -147,11 +152,12 @@ export default function DashboardPage() {
 
           {/* 1. Filtro de Línea */}
           <div className="filter-group">
-            <label>
+            <label htmlFor="dashboard-linea">
               <Gauge size={14} color="var(--color-azul-clinico)" />
               1. Línea de Producción
             </label>
             <select
+              id="dashboard-linea"
               value={selectedLinea}
               onChange={(e) => setSelectedLinea(e.target.value)}
               className="dashboard-select"
@@ -163,11 +169,12 @@ export default function DashboardPage() {
 
           {/* 2. Filtro de Mes */}
           <div className="filter-group">
-            <label>
+            <label htmlFor="dashboard-mes">
               <Calendar size={14} color="#38bdf8" />
               2. Mes
             </label>
             <select
+              id="dashboard-mes"
               value={selectedMes}
               onChange={(e) => {
                 setSelectedMes(e.target.value);
@@ -186,11 +193,12 @@ export default function DashboardPage() {
 
           {/* 3. Filtro de Fecha específica */}
           <div className="filter-group">
-            <label>
+            <label htmlFor="dashboard-fecha">
               <Calendar size={14} color="#a855f7" />
               3. Fecha
             </label>
             <select
+              id="dashboard-fecha"
               value={selectedFecha}
               onChange={(e) => setSelectedFecha(e.target.value)}
               className="dashboard-select"
@@ -206,15 +214,17 @@ export default function DashboardPage() {
 
           {/* 4. Filtro de Producto / Sabor (Filtrado según lo elaborado en la fecha) */}
           <div className="filter-group">
-            <label>
+            <label htmlFor="dashboard-sabor">
               <Sparkles size={14} color="var(--color-alerta, #D69E2E)" />
               4. Producto / Sabor {selectedFecha !== 'todas' && <span style={{ color: 'var(--color-azul-clinico, #0077B6)', fontSize: '0.72rem' }}>(del día)</span>}
             </label>
             <select
+              id="dashboard-sabor"
               value={selectedSabor}
               onChange={(e) => setSelectedSabor(e.target.value)}
               className="dashboard-select"
             >
+              <option value={ALL_FLAVORS}>Todos los sabores</option>
               {availableProducts.map((p) => (
                 <option key={p.id} value={p.sabor}>
                   {p.sabor} {p.grupo ? `(${p.grupo})` : ''}
@@ -227,6 +237,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Banner Informativo especial si es Soda o Sifón */}
+      {allProducts && <div className="soda-sifon-notice card"><Info size={22} color="var(--color-azul-clinico)" /><div>
+        <strong>Todos los sabores:</strong> cada color identifica un producto y cada medición se evalúa según su especificación.
+        Los indicadores de Brix, TA y carbonatación muestran la última medición disponible con su sabor. Torque muestra el promedio de las últimas lecturas por cabezal y sabor.
+        Brix y TA no incluyen soda ni sifón.
+      </div></div>}
       {isSodaOrSifon && (
         <div className="soda-sifon-notice card">
           <Info size={22} color="var(--color-azul-clinico)" />
@@ -264,8 +279,9 @@ export default function DashboardPage() {
               'Sin jarabe formulado'
             ) : (
               <>
-                <span>Obj: <strong>{currentStandard?.brix?.objetivo ?? '--'}</strong></span>
-                <span>Rango: {currentStandard?.brix ? `${currentStandard.brix.min} - ${currentStandard.brix.max}` : '--'}</span>
+                {allProducts && <span>Último: {latestBrixPoint?.series?.label || '--'}</span>}
+                <span>Obj: <strong>{brixLimits?.objetivo ?? '--'}</strong></span>
+                <span>Rango: {brixLimits ? `${brixLimits.min} - ${brixLimits.max}` : '--'}</span>
               </>
             )}
           </div>
@@ -294,8 +310,9 @@ export default function DashboardPage() {
               'Sin acidez formulada'
             ) : (
               <>
-                <span>Obj: <strong>{currentStandard?.ta?.objetivo ?? '--'}</strong></span>
-                <span>Rango: {currentStandard?.ta ? `${currentStandard.ta.min} - ${currentStandard.ta.max}` : '--'}</span>
+                {allProducts && <span>Último: {latestTaPoint?.series?.label || '--'}</span>}
+                <span>Obj: <strong>{taLimits?.objetivo ?? '--'}</strong></span>
+                <span>Rango: {taLimits ? `${taLimits.min} - ${taLimits.max}` : '--'}</span>
               </>
             )}
           </div>
@@ -314,8 +331,9 @@ export default function DashboardPage() {
             <span className="kpi-unit">Vol</span>
           </div>
           <div className="kpi-target-info">
-            <span>Obj: <strong>{currentStandard?.carbonatacion?.objetivo ?? '--'}</strong></span>
-            <span>Rango: {currentStandard?.carbonatacion ? `${currentStandard.carbonatacion.min} - ${currentStandard.carbonatacion.max}` : '--'}</span>
+            {allProducts && <span>Último: {latestCarbPoint?.series?.label || '--'}</span>}
+            <span>Obj: <strong>{gasLimits?.objetivo ?? '--'}</strong></span>
+            <span>Rango: {gasLimits ? `${gasLimits.min} - ${gasLimits.max}` : '--'}</span>
           </div>
         </div>
 
@@ -334,8 +352,10 @@ export default function DashboardPage() {
             <span className="kpi-unit">Lbs.In</span>
           </div>
           <div className="kpi-target-info">
+            {allProducts ? <><span>Promedio · todos los sabores</span><span>Límites según cada producto</span></> : <>
             <span>Obj: <strong>{torqueLimits?.objetivo ?? '--'}</strong></span>
             <span>Rango: {torqueLimits ? `${torqueLimits.min} - ${torqueLimits.max}` : '--'}</span>
+            </>}
           </div>
         </div>
       </div>
@@ -348,6 +368,7 @@ export default function DashboardPage() {
             type="time"
             title="°Brix 20° Bebida"
             data={brixChartData}
+            byProduct={allProducts}
             staticLimits={currentStandard?.brix}
             yAxisLabel="VALOR | LIMITE_MIN | LIMITE_MAX | OBJETIVO"
             xAxisLabel="FECHA_HORA"
@@ -364,6 +385,7 @@ export default function DashboardPage() {
             type="time"
             title="Acidez Titulable - TA Gasto NaOH (Control de Jarabe)"
             data={taChartData}
+            byProduct={allProducts}
             staticLimits={currentStandard?.ta}
             yAxisLabel="VALOR | LIMITE_MIN | LIMITE_MAX | OBJETIVO"
             xAxisLabel="FECHA_HORA"
@@ -379,6 +401,7 @@ export default function DashboardPage() {
             type="time"
             title="Carbonatación Vol. CO2 (Control de Bebida Terminada)"
             data={carbonatacionChartData}
+            byProduct={allProducts}
             staticLimits={currentStandard?.carbonatacion}
             yAxisLabel="VALOR | LIMITE_MIN | LIMITE_MAX | OBJETIVO"
             xAxisLabel="FECHA_HORA"
@@ -392,6 +415,7 @@ export default function DashboardPage() {
             type="cab"
             title={`Control de Torque por Cabezal (${selectedLinea === 'linea1' ? 'Línea 1 · Long finish' : 'Línea 2 · Short finish'})`}
             data={torqueChartData}
+            byProduct={allProducts}
             staticLimits={torqueLimits}
             yAxisLabel="OBJETIVO | VALOR | LIMITE_MIN | LIMITE_MAX"
             xAxisLabel="CAB"

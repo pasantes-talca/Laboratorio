@@ -7,16 +7,21 @@ export default function JarabeSimpleForm({
   responsables,
   volcadoAuto,
   setVolcadoAuto,
-  today,
+  tanquesCatalog,
   simpleForm,
   setSimpleForm,
   handleSimpleSubmit,
 }) {
   return (
-    <FormLayout title="Jarabe simple" domain="SALA DE JARABE" description="Registre las materias primas y la preparación del jarabe simple." id="simple-form" onSubmit={handleSimpleSubmit} style={{ marginTop: '1.25rem' }}>
+    <FormLayout title="Jarabe simple" domain="SALA DE JARABE" description="La fecha y la hora se registran automáticamente al guardar la preparación." id="simple-form" onSubmit={handleSimpleSubmit} style={{ marginTop: '1.25rem' }}>
       <FormSection number="01" title="Carga y materias primas" description="Identifique el volcado y el azúcar utilizada.">
-
-
+        <FormField className="field-container">
+          <label>Tanque asignado <span className="required-star">*</span></label>
+          <select required value={simpleForm.tanque} onChange={(e) => setSimpleForm({ ...simpleForm, tanque: e.target.value })}>
+            <option value="" disabled>Seleccione tanque...</option>
+            {tanquesCatalog.map(t => <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>)}
+          </select>
+        </FormField>
         <FormField className="field-container">
           <label>
             N° Volcado <span className="required-star">*</span>
@@ -160,8 +165,6 @@ export default function JarabeSimpleForm({
           type="button"
           className="btn btn-secondary"
           onClick={() => { setSimpleForm({
-            fecha: today,
-            hora: '',
             tanque: '',
             volcado_numero: '',
             cantidad_bolsas: '',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import AdminPage from './AdminPage';
 import { AuthContext } from '../../context/AuthContext';
 import { fetchJson } from '../../services/httpClient';
@@ -8,6 +8,34 @@ import { previewCatalogue, createExamples } from './preview';
 
 vi.mock('../../services/httpClient', () => ({ fetchJson: vi.fn() }));
 beforeEach(() => vi.resetAllMocks());
+afterEach(() => vi.restoreAllMocks());
+
+it('confirms deletion and updates preview rows without network calls', async () => {
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<AdminPage preview />);
+  const remove = await screen.findByRole('button', { name: 'Eliminar registro #103' });
+  fireEvent.click(remove);
+  expect(screen.getAllByRole('button', { name: /Ver \/ editar/ })).toHaveLength(3);
+  confirm.mockReturnValue(true);
+  fireEvent.click(remove);
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Eliminar registro #103' })).not.toBeInTheDocument());
+  expect(screen.getAllByRole('button', { name: /Ver \/ editar/ })).toHaveLength(2);
+  expect(fetchJson).not.toHaveBeenCalled();
+});
+
+it('retains the row when deletion fails and sends its version', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  const row = createExamples()['agua-cloro'][0];
+  fetchJson.mockImplementation(endpoint => Promise.resolve(endpoint === '/admin/catalogo' ? previewCatalogue : { items: [row], total: 1 }));
+  render(<AuthContext.Provider value={{ user: { username: 'admin', role: 'administrador' } }}><AdminPage /></AuthContext.Provider>);
+  const remove = await screen.findByRole('button', { name: 'Eliminar registro #103' });
+  fetchJson.mockRejectedValueOnce(Object.assign(new Error('El registro fue modificado'), { status: 409 }));
+  fireEvent.click(remove);
+  expect(await screen.findByRole('alert')).toHaveTextContent('El registro fue modificado');
+  expect(fetchJson).toHaveBeenLastCalledWith('/admin/agua-cloro/registros/103', { method: 'DELETE', body: JSON.stringify({ expected_version: 1 }) });
+  expect(remove).toBeInTheDocument();
+  await waitFor(() => expect(remove).toBeEnabled());
+});
 
 it('requires administrator identity before requesting real data', () => {
   render(<AdminPage />);

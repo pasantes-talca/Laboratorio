@@ -19,7 +19,7 @@ class ControlJarabeCreate(BaseModel):
 
 
 class JarabeSimpleCreate(BaseModel):
-    fecha: str
+    fecha: Optional[str] = None
     hora: Optional[str] = None
     tanque: str
     volcado_numero: int = Field(ge=1)

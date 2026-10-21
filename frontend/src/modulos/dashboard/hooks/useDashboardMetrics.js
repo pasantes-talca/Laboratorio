@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { PRODUCT_STANDARDS, findProductStandard } from '../../../data/productStandards';
+import { ALL_FLAVORS, allFlavorMetrics } from './allFlavorMetrics';
 
 export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha, selectedSabor, setSelectedMes, setSelectedSabor }) {
   // Extraer lista única de Meses disponibles a partir de los datos
@@ -112,7 +113,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
 
   // Si el sabor actual no está entre los productos disponibles del día, autoseleccionar el primero
   useEffect(() => {
-    if (availableProducts.length > 0) {
+    if (selectedSabor !== ALL_FLAVORS && availableProducts.length > 0) {
       const isCurrentAvailable = availableProducts.some(
         (p) => p.sabor.toLowerCase() === (selectedSabor || '').toLowerCase()
       );
@@ -124,7 +125,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
 
   // Obtener estándar del producto seleccionado
   const currentStandard = useMemo(() => {
-    return findProductStandard(selectedSabor);
+    return selectedSabor === ALL_FLAVORS ? null : findProductStandard(selectedSabor);
   }, [selectedSabor]);
 
   const isSodaOrSifon = useMemo(() => {
@@ -354,11 +355,18 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   }, [torqueData, torqueLimits, selectedLinea, matchesDateFilter, matchesSabor]);
 
   // Resumen de estado para KPI cards
-  const latestBrix = brixChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0]?.valor;
-  const latestTa = taChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0]?.valor;
-  const latestCarb = carbonatacionChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0]?.valor;
-  const torqueValues = torqueChartData.map(d => d.valor).filter(v => v !== null);
+  const allProducts = selectedSabor === ALL_FLAVORS;
+  const combined = useMemo(() => allProducts ? allFlavorMetrics({ bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha }) : null,
+    [allProducts, bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha]);
+  const charts = combined || { brixChartData, taChartData, carbonatacionChartData, torqueChartData };
+  const latestBrixPoint = charts.brixChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0];
+  const latestTaPoint = charts.taChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0];
+  const latestCarbPoint = charts.carbonatacionChartData.filter(d => Number.isFinite(d.valor)).slice(-1)[0];
+  const latestBrix = latestBrixPoint?.valor;
+  const latestTa = latestTaPoint?.valor;
+  const latestCarb = latestCarbPoint?.valor;
+  const torqueValues = charts.torqueChartData.map(d => d.valor).filter(Number.isFinite);
   const avgTorque = torqueValues.length ? (torqueValues.reduce((a, b) => a + b, 0) / torqueValues.length).toFixed(1) : null;
 
-  return { availableMonths, availableDates, availableProducts, formatMonthName, formatDateName, currentStandard, isSodaOrSifon, torqueLimits, brixChartData, taChartData, carbonatacionChartData, torqueChartData, latestBrix, latestTa, latestCarb, avgTorque };
+  return { availableMonths, availableDates, availableProducts, formatMonthName, formatDateName, currentStandard, isSodaOrSifon, torqueLimits, ...charts, allProducts, latestBrixPoint, latestTaPoint, latestCarbPoint, latestBrix, latestTa, latestCarb, avgTorque };
 }

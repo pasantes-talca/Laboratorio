@@ -242,6 +242,53 @@ def test_rollback_does_not_keep_author():
     engine.dispose()
 
 
+@pytest.mark.parametrize("form_id", list(FORMS))
+def test_admin_delete_removes_record_and_keeps_snapshot(admin, form_id):
+    client, engine = admin
+    record_id = insert(engine, form_id)
+    url = f"/api/admin/{form_id}/registros/{record_id}"
+    original = client.get(url).json()
+    stale = client.request("DELETE", url, json={"expected_version": 999})
+    assert stale.status_code == 409
+    assert client.get(url).status_code == 200
+    response = client.request(
+        "DELETE", url, json={"expected_version": original["version"]}
+    )
+    assert response.status_code == 200, response.text
+    assert client.get(url).status_code == 404
+    assert client.get(f"/api/admin/{form_id}/registros").json()["total"] == 0
+    assert (
+        client.request(
+            "DELETE", url, json={"expected_version": original["version"]}
+        ).status_code
+        == 404
+    )
+    with Session(engine) as db:
+        event = db.query(CambioRegistro).one()
+        assert event.usuario == "admin"
+        assert event.anteriores == original["values"]
+        assert event.nuevos == {"eliminado": True}
+
+
+@pytest.mark.parametrize("username,status", [(None, 401), ("ana", 403), ("jefe", 403)])
+def test_delete_requires_administrator(admin, username, status):
+    client, engine = admin
+    record_id = insert(engine, "agua-cloro")
+    client.cookies.clear()
+    if username:
+        client.cookies.set(auth.COOKIE_NAME, auth.issue_session(username))
+    response = client.request(
+        "DELETE",
+        f"/api/admin/agua-cloro/registros/{record_id}",
+        json={"expected_version": 1},
+        headers={"X-Role": "administrador"},
+    )
+    assert response.status_code == status
+    with Session(engine) as db:
+        assert db.get(FORMS["agua-cloro"][2], record_id) is not None
+        assert db.query(CambioRegistro).count() == 0
+
+
 def test_bottle_lot_remains_consistent_with_production_snapshot(admin):
     client, engine = admin
     record_id = insert(engine, "calidad-bebida")
@@ -272,6 +319,11 @@ def test_bottle_lot_remains_consistent_with_production_snapshot(admin):
     with Session(engine) as db:
         assert db.query(ControlProduccion).one().lote_tapa == "LOTE-CORREGIDO"
         assert db.query(ControlProduccion).one().linea == 1
+    assert (
+        client.request("DELETE", url, json={"expected_version": 2}).status_code == 200
+    )
+    with Session(engine) as db:
+        assert db.query(ControlProduccion).count() == 0
 
 
 def test_normal_form_creation_records_signed_in_user_not_responsible(

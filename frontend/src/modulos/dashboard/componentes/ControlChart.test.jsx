@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ControlChart from './ControlChart';
 
 const sampleData = [
@@ -10,6 +10,20 @@ const sampleData = [
 ];
 
 describe('ControlChart (smoke)', () => {
+  it('separates flavor paths and evaluates equal values against their own limits', () => {
+    render(<ControlChart byProduct unit="Vol" data={[
+      { label: '08:00', valor: 4.3, limiteMin: 4, limiteMax: 4.7, series: { key: 'cola', label: 'Cola', color: '#0077B6' } },
+      { label: '09:00', valor: 4.3, limiteMin: 3, limiteMax: 3.5, series: { key: 'naranja', label: 'Naranja', color: '#CA650B' } },
+    ]} />);
+    const groups = document.querySelectorAll('[data-product-series]');
+    expect(groups).toHaveLength(2);
+    for (const group of groups) expect(group.querySelector('path[stroke-width="2.4"]').getAttribute('d')).not.toContain('L');
+    expect(document.querySelector('[data-product="cola"]')).toHaveAttribute('data-out-of-spec', 'false');
+    expect(document.querySelector('[data-product="naranja"]')).toHaveAttribute('data-out-of-spec', 'true');
+    fireEvent.focus(document.querySelector('[data-product="naranja"]'));
+    expect(document.querySelector('.chart-tooltip-popup')).toHaveTextContent('Naranja');
+    expect(document.querySelector('.chart-tooltip-popup')).toHaveTextContent('3 - 3.5');
+  });
   it('shows an explicit empty state when there are only specification limits', () => {
     render(<ControlChart data={[]} staticLimits={{ min: 4, max: 5, objetivo: 4.5 }} />);
     expect(screen.getByText('Sin mediciones')).toBeInTheDocument();

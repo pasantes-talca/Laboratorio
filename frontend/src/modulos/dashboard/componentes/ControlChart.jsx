@@ -30,6 +30,7 @@ export default function ControlChart({
   notApplicable = false,
   notApplicableMessage = 'No aplica para este producto',
   valorSecundarioLabel = 'PATRON',
+  byProduct = false,
 }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   if (notApplicable) {
@@ -63,7 +64,7 @@ export default function ControlChart({
     top: 50,
     right: 35,
     bottom: type === 'cab' ? 45 : 65,
-    left: 70,
+    left: data.some(p => Math.abs(p.valor || 0) >= 1e6 || Math.abs(p.valorSecundario || 0) >= 1e6) ? 100 : 70,
   };
 
   const chartWidth = width - padding.left - padding.right;
@@ -84,6 +85,7 @@ export default function ControlChart({
       limiteMax: maxLim !== null ? Number(maxLim) : null,
       objetivo: obj !== null ? Number(obj) : null,
       meta: d.meta || {},
+      series: d.series,
     };
   });
 
@@ -132,7 +134,14 @@ export default function ControlChart({
     return padding.top + chartHeight - ratio * chartHeight;
   };
 
+  const series = [...new Map(points.filter(p => p.series && (p.valor !== null || p.valorSecundario !== null)).map(p => [p.series.key, p.series])).values()];
+  const totalHeads = Math.max(1, ...points.map(p => Number(p.label) || 0));
   const scaleX = (index) => {
+    if (byProduct && type === 'cab') {
+      const slot = chartWidth / totalHeads;
+      const seriesIndex = Math.max(0, series.findIndex(s => s.key === points[index].series?.key));
+      return padding.left + slot * (Number(points[index].label) - 0.5) + (seriesIndex - (series.length - 1) / 2) * Math.min(6, slot / (series.length + 1));
+    }
     if (points.length <= 1) return padding.left + chartWidth / 2;
     const step = chartWidth / (points.length - 1);
     return padding.left + index * step;
@@ -150,25 +159,28 @@ export default function ControlChart({
   }));
 
   // Generar Paths para SVG
-  const generatePath = (yKey) => {
-    const valid = computedPoints.filter((p) => p[yKey] !== null);
+  const generatePath = (yKey, source = computedPoints) => {
+    const valid = source.filter((p) => p[yKey] !== null);
     if (valid.length === 0) return '';
     return valid.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p[yKey]}`).join(' ');
   };
 
-  const pathValor = computedPoints
+  const pathValor = !byProduct && computedPoints
     .filter((p) => p.yVal !== null)
     .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.yVal}`)
     .join(' ');
 
-  const pathValorSecundario = computedPoints
+  const pathValorSecundario = !byProduct && computedPoints
     .filter((p) => p.ySec !== null)
     .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.ySec}`)
     .join(' ');
 
-  const pathLimiteMin = generatePath('yMin');
-  const pathLimiteMax = generatePath('yMax');
-  const pathObjetivo = generatePath('yObj');
+  const pathLimiteMin = !byProduct && generatePath('yMin');
+  const pathLimiteMax = !byProduct && generatePath('yMax');
+  const pathObjetivo = !byProduct && generatePath('yObj');
+  const axisPoints = byProduct && type === 'cab'
+    ? [...new Map(computedPoints.map(p => [p.label, { ...p, x: padding.left + chartWidth / totalHeads * (Number(p.label) - 0.5) }])).values()]
+    : computedPoints.filter((_, index) => !byProduct || index % Math.max(1, Math.ceil(computedPoints.length / 10)) === 0 || index === computedPoints.length - 1);
 
   const hasData = points.some((p) => p.valor !== null || p.valorSecundario !== null);
   const hasSecondaryData = points.some((p) => p.valorSecundario !== null);
@@ -180,7 +192,7 @@ export default function ControlChart({
           <h4 className="control-chart-title">{title}</h4>
           {hasData && (
             <div className="control-chart-points-count">
-              {type === 'cab' ? `${points.filter(p => p.valor !== null).length} cabezales medidos` : `${points.filter(p => p.valor !== null).length} mediciones`}
+              {type === 'cab' && !byProduct ? `${points.filter(p => p.valor !== null).length} cabezales medidos` : `${points.filter(p => p.valor !== null || p.valorSecundario !== null).length} mediciones`}
             </div>
           )}
         </div>
@@ -188,6 +200,8 @@ export default function ControlChart({
 
       {/* Leyenda superior oficial */}
       <div className="control-chart-legend">
+        {byProduct && series.map(s => <div key={s.key} className="legend-item"><span style={{ background: s.color, width: 10, height: 10, borderRadius: '50%', flexShrink: 0 }} /><span className="legend-text">{s.label}</span></div>)}
+        {!byProduct && (
         <div className="legend-item">
           <span className="legend-symbol symbol-valor">
             <span className="dot" />
@@ -195,12 +209,13 @@ export default function ControlChart({
           </span>
           <span className="legend-text">VALOR</span>
         </div>
+        )}
 
         {hasSecondaryData && (
           <div className="legend-item">
             <span className="legend-symbol" style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0077B6' }} />
-              <span style={{ width: '16px', height: '2px', backgroundColor: '#0077B6', marginLeft: '-12px' }} />
+              <span style={{ width: '8px', height: '8px', backgroundColor: byProduct ? '#64748b' : '#0077B6' }} />
+              <span style={{ width: '16px', borderTop: byProduct ? '2px dashed #64748b' : '2px solid #0077B6', marginLeft: '-12px' }} />
             </span>
             <span className="legend-text">{valorSecundarioLabel}</span>
           </div>
@@ -263,14 +278,14 @@ export default function ControlChart({
                   fontWeight="600"
                   fontFamily="'Inter', sans-serif"
                 >
-                  {tickVal.toFixed(Number.isInteger(tickVal) ? 0 : 2)}
+                  {Math.abs(tickVal) >= 1e6 ? tickVal.toExponential(1) : tickVal.toFixed(Number.isInteger(tickVal) ? 0 : 2)}
                 </text>
               </g>
             );
           })}
 
           {/* Rejilla Vertical punteada (Grid X) */}
-          {computedPoints.map((p, i) => (
+          {axisPoints.map((p, i) => (
             <g key={`xtick-${i}`}>
               <line
                 x1={p.x}
@@ -307,6 +322,15 @@ export default function ControlChart({
           ))}
 
           {/* Líneas de Límites y Objetivo */}
+          {byProduct && series.map(s => {
+            const group = computedPoints.filter(p => p.series?.key === s.key);
+            return <g key={s.key} data-product-series={s.key}>
+              {['yMin', 'yMax', 'yObj', 'yVal', 'ySec'].map(key => <path key={key} d={generatePath(key, group)} fill="none"
+                stroke={key === 'yMin' || key === 'yMax' ? '#E53E3E' : key === 'yObj' ? '#2F855A' : s.color}
+                strokeWidth={key === 'yVal' || key === 'ySec' ? 2.4 : 1.2}
+                strokeDasharray={key === 'yVal' ? undefined : key === 'ySec' ? '3 3' : '6 4'} />)}
+            </g>;
+          })}
           {pathLimiteMin && (
             <path
               d={pathLimiteMin}
@@ -370,6 +394,12 @@ export default function ControlChart({
             return (
               <g
                 key={`node-${i}`}
+                data-product={p.series?.key}
+                data-out-of-spec={isOutOfSpec}
+                tabIndex={byProduct ? 0 : undefined}
+                aria-label={byProduct ? `${p.series?.label}: ${p.valor} ${unit}${isOutOfSpec ? ', fuera de especificación' : ''}` : undefined}
+                onFocus={() => setHoveredPoint(p)}
+                onBlur={() => setHoveredPoint(null)}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={() => setHoveredPoint(p)}
                 onMouseLeave={() => setHoveredPoint(null)}
@@ -396,7 +426,7 @@ export default function ControlChart({
                   cx={p.x}
                   cy={p.yVal}
                   r={isHovered ? 6 : 4}
-                  fill="#0077B6"
+                  fill={byProduct ? p.series?.color : '#0077B6'}
                   stroke="#ffffff"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
@@ -425,7 +455,7 @@ export default function ControlChart({
                   cx={p.x}
                   cy={p.ySec}
                   r={isHovered ? 6 : 4}
-                  fill="#E31B23"
+                  fill={byProduct ? p.series?.color : '#E31B23'}
                   stroke="#ffffff"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
@@ -484,12 +514,15 @@ export default function ControlChart({
             className="chart-tooltip-popup"
             style={{
               left: `${(hoveredPoint.x / width) * 100}%`,
-              top: `${(hoveredPoint.yVal / height) * 100}%`,
+              top: `${((hoveredPoint.yVal ?? hoveredPoint.ySec) / height) * 100}%`,
             }}
           >
             <div className="tooltip-title">
               {type === 'cab' ? `Cabezal #${hoveredPoint.label}` : hoveredPoint.fullTime}
             </div>
+            {byProduct && <div className="tooltip-row" style={{ color: hoveredPoint.series?.color }}><strong>{hoveredPoint.series?.label}</strong></div>}
+            {byProduct && type === 'cab' && <div className="tooltip-row">{hoveredPoint.fullTime}</div>}
+            {byProduct && hoveredPoint.limiteMin === null && <div className="tooltip-row">Sin especificación identificada</div>}
             {hoveredPoint.valor !== null && (
               <div className="tooltip-row highlight">
                 <span>Valor Medido:</span>

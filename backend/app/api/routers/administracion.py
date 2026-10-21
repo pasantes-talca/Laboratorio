@@ -177,6 +177,53 @@ class EditRecord(BaseModel):
     valores: dict[str, Any]
 
 
+class DeleteRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_version: int = Field(ge=0)
+
+
+@router.delete("/{formulario}/registros/{registro_id}")
+def delete_record(
+    formulario: str,
+    registro_id: int,
+    body: DeleteRecord,
+    db: DbSession,
+    user: AdminUser,
+):
+    model = model_for(formulario)
+    record = db.query(model).filter(model.id == registro_id).with_for_update().first()
+    if record is None:
+        raise HTTPException(404, "Registro no encontrado")
+    author = db.get(AutorRegistro, (formulario, registro_id))
+    if body.expected_version != (author.version if author else 0):
+        raise HTTPException(
+            409, "El registro fue modificado. Actualizá la lista antes de eliminarlo."
+        )
+    db.add(
+        CambioRegistro(
+            formulario=formulario,
+            registro_id=registro_id,
+            usuario=user["username"],
+            fecha=local_now(),
+            motivo="Eliminación de registro confirmada por el administrador",
+            anteriores=serialize(record),
+            nuevos={"eliminado": True},
+        )
+    )
+    control_type = {
+        "calidad-bebida": "bebida",
+        "calidad-jarabe": "jarabe",
+        "calidad-torque": "torque",
+    }.get(formulario)
+    if control_type:
+        db.query(ControlProduccion).filter_by(
+            tipo_control=control_type, control_id=registro_id
+        ).delete(synchronize_session=False)
+    db.delete(record)
+    db.commit()
+    return {"id": registro_id, "message": "Registro eliminado"}
+
+
 @router.patch("/{formulario}/registros/{registro_id}")
 def edit(
     formulario: str,

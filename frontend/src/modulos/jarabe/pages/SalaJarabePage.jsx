@@ -4,7 +4,7 @@ import JarabeTerminadoForm from '../componentes/JarabeTerminadoForm';
 import SaneoTanquesForm from '../componentes/SaneoTanquesForm';
 import ParteJarabeForm from '../componentes/ParteJarabeForm';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Calendar, PackageCheck } from 'lucide-react';
+import { PackageCheck } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { getResponsablesJarabe, getSabores, getTanques } from '../../../services/api';
 import { getJarabeSimples, submitJarabeSimple, submitJarabeTerminado, submitSaneoTanque, submitParteJarabe, parseJarabeExcel } from '../api/jarabeApi';
@@ -51,8 +51,6 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
   // FORM 1: JARABE SIMPLE
   // ----------------------------------------------------
   const [simpleForm, setSimpleForm] = useState({
-    fecha: today,
-    hora: '',
     tanque: '',
     volcado_numero: '',
     cantidad_bolsas: '',
@@ -80,8 +78,9 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
   }, []);
 
   useEffect(() => {
-    computeVolcado(simpleForm.tanque, simpleForm.fecha);
-  }, [simpleForm.tanque, simpleForm.fecha, computeVolcado]);
+    const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
+    computeVolcado(simpleForm.tanque, date);
+  }, [simpleForm.tanque, computeVolcado]);
 
   const handleSimpleSubmit = async (e) => {
     e.preventDefault();
@@ -92,8 +91,6 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
         return;
       }
       const payload = {
-        fecha: simpleForm.fecha,
-        hora: simpleForm.hora || null,
         tanque: simpleForm.tanque,
         volcado_numero: parseInt(simpleForm.volcado_numero || volcadoAuto, 10) || 1,
         cantidad_bolsas: parseInt(simpleForm.cantidad_bolsas, 10) || 0,
@@ -373,7 +370,7 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
 
 
   return (
-    <div className="content-grid">
+    <div className="content-grid" style={activeTab === 'simple' ? { gridTemplateColumns: 'minmax(0, 1fr)' } : undefined}>
       <main className="card">
         {/* Tabs Header */}
 
@@ -384,7 +381,7 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
             responsables={responsables}
             volcadoAuto={volcadoAuto}
             setVolcadoAuto={setVolcadoAuto}
-            today={today}
+            tanquesCatalog={tanquesCatalog}
             simpleForm={simpleForm}
             setSimpleForm={setSimpleForm}
             handleSimpleSubmit={handleSimpleSubmit}
@@ -432,64 +429,16 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
       </main>
 
       {/* Sidebar: Producción Activa (Jarabe) */}
-      {(activeTab === 'simple' || activeTab === 'terminado') && (
+      {activeTab === 'terminado' && (
         <aside className="sidebar-card lab-context">
           <div className="sidebar-header" style={{ justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <PackageCheck size={20} color="var(--color-azul-clinico)" />
-              <span>{activeTab === 'simple' ? 'Jarabe Simple Activo' : 'Jarabe Terminado Activo'}</span>
+              <span>Jarabe Terminado Activo</span>
             </div>
           </div>
 
           <div className="sidebar-data-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-            {activeTab === 'simple' ? (
-              <>
-                <FormField className="field-container" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fecha <span className="required-star">*</span></label>
-                  <div className="input-wrapper">
-                    <Calendar className="input-icon" size={16} />
-                    <input
-                      type="date"
-                      required
-                      form="simple-form"
-                      value={simpleForm.fecha}
-                      onChange={(e) => setSimpleForm({ ...simpleForm, fecha: e.target.value })}
-                      style={{ padding: '0.4rem 0.6rem 0.4rem 2.2rem', fontSize: '0.9rem', width: '100%' }}
-                    />
-                  </div>
-                </FormField>
-
-                <FormField className="field-container" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Hora</label>
-                  <div className="input-wrapper">
-                    <Clock className="input-icon" size={16} />
-                    <input
-                      type="time"
-                      form="simple-form"
-                      value={simpleForm.hora}
-                      onChange={(e) => setSimpleForm({ ...simpleForm, hora: e.target.value })}
-                      style={{ padding: '0.4rem 0.6rem 0.4rem 2.2rem', fontSize: '0.9rem', width: '100%' }}
-                    />
-                  </div>
-                </FormField>
-
-                <FormField className="field-container" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tanque Asignado <span className="required-star">*</span></label>
-                  <select
-                    required
-                    form="simple-form"
-                    value={simpleForm.tanque}
-                    onChange={(e) => setSimpleForm({ ...simpleForm, tanque: e.target.value })}
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem', width: '100%' }}
-                  >
-                    <option value="" disabled>Seleccione tanque...</option>
-                    {tanquesCatalog.map((t) => (
-                      <option key={t.id} value={t.numero}>{t.numero === 'N/A' ? 'N/A' : `Tanque ${t.numero}`}</option>
-                    ))}
-                  </select>
-                </FormField>
-              </>
-            ) : (
               <>
                 <FormField className="field-container" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fecha <span className="required-star">*</span></label>
@@ -559,7 +508,6 @@ export default function SalaJarabePage({ initialTab = 'simple' }) {
                   </select>
                 </FormField>
               </>
-            )}
           </div>
         </aside>
       )}

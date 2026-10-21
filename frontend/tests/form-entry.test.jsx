@@ -202,18 +202,22 @@ describe('ingreso de datos en formularios', () => {
     renderPage(<SalaJarabePage />);
     const form = document.getElementById('simple-form');
     await waitFor(() => expect(screen.getByText('Tanque 1')).toBeInTheDocument());
-    fireEvent.change(document.querySelector('select[form="simple-form"]'), { target: { value: '1' } });
+    expect(screen.queryByText('Jarabe Simple Activo')).not.toBeInTheDocument();
+    expect(form.querySelector('input[type="date"]')).not.toBeInTheDocument();
+    fireEvent.change(within(form).getByLabelText(/Tanque asignado/), { target: { value: '1' } });
     await waitFor(() => expect(within(form).getByText(/sugerido: 3/)).toBeInTheDocument());
     expect(form.querySelector('input[type="number"]').value).toBe('3');
     fireEvent.change(within(form).getByPlaceholderText('Ej: 80'), { target: { value: '80' } });
     fireEvent.change(within(form).getByPlaceholderText('Ej: Ledesma, Tabacal...'), { target: { value: 'Ledesma' } });
-    fireEvent.change(within(form).getByRole('combobox'), { target: { value: 'Operador Uno' } });
+    fireEvent.change(within(form).getByRole('combobox', { name: /Responsables/ }), { target: { value: 'Operador Uno' } });
     expect(checkFormValidity(form)).toBe(true);
     fireEvent.submit(form);
     await waitFor(() => expect(submitJarabeSimple).toHaveBeenCalledWith(expect.objectContaining({
       tanque: '1', volcado_numero: 3, cantidad_bolsas: 80,
       azucar_marca: 'Ledesma', responsables: ['Operador Uno'],
     })));
+    expect(submitJarabeSimple.mock.calls[0][0]).not.toHaveProperty('fecha');
+    expect(submitJarabeSimple.mock.calls[0][0]).not.toHaveProperty('hora');
   });
 
   it('exige los valores del control físico químico y envía los números ingresados', async () => {

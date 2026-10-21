@@ -138,17 +138,7 @@ def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
 @router.post("/jarabe-simple", status_code=status.HTTP_201_CREATED)
 def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)):
     """Registra una preparación de jarabe simple."""
-    try:
-        fecha_obj = date_type.fromisoformat(data.fecha)
-    except ValueError:
-        fecha_obj = datetime.now().date()
-
-    hora_obj = None
-    if data.hora and data.hora.strip():
-        try:
-            hora_obj = datetime.strptime(data.hora, "%H:%M").time()
-        except ValueError:
-            pass
+    now = local_now()
 
     def parse_time(t):
         if t and t.strip():
@@ -159,8 +149,8 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
         return None
 
     registro = JarabeSimple(
-        fecha=fecha_obj,
-        hora=hora_obj,
+        fecha=now.date(),
+        hora=now.time().replace(tzinfo=None, microsecond=0),
         tanque=data.tanque.strip(),
         volcado_numero=data.volcado_numero,
         cantidad_bolsas=data.cantidad_bolsas,

@@ -110,3 +110,16 @@ def test_syrup_history_includes_line_and_filters_by_snapshot():
     assert len(line_two) == 1
     assert line_two[0]["linea"] == 2
     assert client.get("/api/calidad/jarabe?limit=1&offset=1").json()[0]["linea"] == 1
+
+
+def test_torque_history_retains_concentrate_for_dashboard_product_series():
+    client, _ = make_client()
+    assert client.put('/api/calidad/produccion/1', json=production('Cola')).status_code == 200
+    response = client.post('/api/calidad/torque', json={
+        'linea': 'linea1', 'production_version': 1, 'numero_cabezal': 1,
+        'valor': 17, 'sabor': 'Cola', 'responsable': 'Operador',
+    })
+    assert response.status_code == 201
+    history = client.get('/api/calidad/torque').json()
+    assert history[0]['concentrado'] == 'XQ'
+    assert client.get('/api/calidad/torque?linea=2').json() == []
