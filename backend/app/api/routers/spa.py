@@ -48,7 +48,7 @@ FORM_ROUTES = {
     "sala-jarabe": {"simple", "terminado", "saneo-tanques", "parte"},
     "preparacion-jarabe": {"simple", "terminado", "saneo-tanques", "parte"},
     "produccion-jarabe": {"simple", "terminado", "saneo-tanques", "parte"},
-    "agua": {"fisico-quimico", "analisis-cloro", "osmosis-inversa", "filtro-arena"},
+    "agua": {"fisico-quimico", "analisis-cloro", "osmosis-inversa", "filtro-arena", "dashboard"},
     "saneado": {"control"},
     "area-saneado": {"control"},
     "sala-saneado": {"control"},

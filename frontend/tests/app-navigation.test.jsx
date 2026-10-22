@@ -4,6 +4,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import App from '../src/App';
 
 vi.mock('../src/services/api', () => ({
+  fetchJson: vi.fn().mockResolvedValue({
+    opciones: {}, conteos: {}, metricas: [], series: [], historial: { registros: [], total: 0 },
+  }),
   getResponsables: vi.fn().mockResolvedValue([]),
   getMarcas: vi.fn().mockResolvedValue([]),
   getTanques: vi.fn().mockResolvedValue([]),
@@ -22,6 +25,17 @@ vi.mock('../src/services/api', () => ({
 beforeEach(() => {
   window.history.replaceState(null, '', '/portal');
   localStorage.clear();
+});
+
+it('abre el dashboard de agua desde su URL y permite volver al formulario', async () => {
+  window.history.replaceState(null, '', '/agua/dashboard');
+  render(<App />);
+  expect(await screen.findByRole('heading', { name: 'Dashboard de Agua' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Dashboard de Agua' })).toHaveAttribute('aria-current', 'page');
+  expect(document.title).toBe('Dashboard de Agua - Laboratorio Talca');
+  fireEvent.click(screen.getByRole('button', { name: /Registrar control/ }));
+  expect(window.location.pathname).toBe('/agua/fisico-quimico');
+  expect(screen.getByRole('button', { name: 'Control Físico Químico' })).toHaveAttribute('aria-current', 'page');
 });
 
 it('navega desde el menú lateral y actualiza la URL y el módulo activo', async () => {

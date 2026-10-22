@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
+from backend.app.services.agua_dashboard import dashboard as agua_dashboard
 from backend.app.models.agua import (
     AnalisisCloro,
     ControlFisicoQuimico,
@@ -20,6 +21,19 @@ from backend.app.schemas.agua import (
 )
 
 router = APIRouter(prefix="/api/agua", tags=["Agua"])
+
+
+@router.get('/dashboard')
+def get_agua_dashboard(
+    db: Session = Depends(get_db),
+    tipo: str = Query('fisico-quimico', pattern=r'^(fisico-quimico|analisis-cloro|osmosis-inversa|filtro-arena)$'),
+    mes: str | None = Query(None, pattern=r'^\d{4}-(0[1-9]|1[0-2])$'),
+    fecha: date | None = None,
+    grupo: str = Query('', max_length=100),
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    return agua_dashboard(db, tipo, mes, fecha, grupo, limit, offset)
 
 @router.post("/fisico-quimico", status_code=status.HTTP_201_CREATED)
 def create_control_fisico_quimico(data: ControlFisicoQuimicoCreate, db: Session = Depends(get_db)):

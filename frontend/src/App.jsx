@@ -10,6 +10,7 @@ import './styles/index.css';
 
 const CalidadPage = lazy(() => import('./modulos/calidad/pages/CalidadPage'));
 const SalaJarabePage = lazy(() => import('./modulos/jarabe/pages/SalaJarabePage'));
+const AguaDashboardPage = lazy(() => import('./modulos/agua/pages/AguaDashboardPage'));
 const DashboardPage = lazy(() => import('./modulos/dashboard/pages/DashboardPage'));
 const AguaPage = lazy(() => import('./modulos/agua/pages/AguaPage'));
 const AreaSaneadoPage = lazy(() => import('./modulos/saneado/pages/AreaSaneadoPage'));
@@ -85,9 +86,9 @@ function AppContent() {
       window.history.replaceState(null, '', targetPath);
     }
     if (PAGE_TITLES[activePage]) {
-      document.title = PAGE_TITLES[activePage];
+      document.title = activePage === 'agua' && activeForm === 'dashboard' ? 'Dashboard de Agua - Laboratorio Talca' : PAGE_TITLES[activePage];
     }
-  }, [activePage]);
+  }, [activePage, activeForm]);
 
   const handleNavigate = (page, form) => {
     const selectedForm = FORM_NAV[page]?.find((item) => item.id === form);
@@ -129,7 +130,7 @@ function AppContent() {
             {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
             {activePage === 'calidad' && <CalidadPage key={`${selectedLine}-${production.version}`} initialTab={activeForm} onTabChange={(form) => handleNavigate('calidad', form)} />}
             {activePage === 'jarabe' && <SalaJarabePage initialTab={activeForm} onTabChange={(form) => handleNavigate('jarabe', form)} />}
-            {activePage === 'agua' && <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />}
+            {activePage === 'agua' && (activeForm === 'dashboard' ? <AguaDashboardPage onNavigate={handleNavigate} /> : <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />)}
             {activePage === 'saneado' && <AreaSaneadoPage />}
             {activePage === 'dashboard' && <DashboardPage />}
             {activePage === 'administracion' && <AdminAccess><AdminPage /></AdminAccess>}

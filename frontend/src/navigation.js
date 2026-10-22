@@ -15,6 +15,7 @@ export const FORM_NAV = {
     { id: 'analisisCloro', slug: 'analisis-cloro', label: 'Análisis de Cloro' },
     { id: 'osmosisInversa', slug: 'osmosis-inversa', label: 'Ósmosis Inversa' },
     { id: 'filtroArena', slug: 'filtro-arena', label: 'Filtro de Arena' },
+    { id: 'dashboard', slug: 'dashboard', label: 'Dashboard de Agua' },
   ],
   saneado: [
     { id: 'control', slug: 'control', label: 'Control de Saneado' },
