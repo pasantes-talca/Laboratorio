@@ -102,16 +102,21 @@ export default function ParteJarabeForm({
         </FormField>
 
         <FormField className="field-container col-span-2">
-          <label>Sabor / Marca</label>
+          <label htmlFor="parte-jarabe-sabor">Sabor</label>
           <select
+            id="parte-jarabe-sabor"
             value={parteForm.sabor}
             onChange={(e) => setParteForm({ ...parteForm, sabor: e.target.value })}
           >
-            <option value="">Seleccione sabor (opcional)...</option>
+            <option value="">Seleccione sabor...</option>
+            {parteForm.sabor && !sabores.some((s) => s.nombre === parteForm.sabor) && (
+              <option value={parteForm.sabor}>{parteForm.sabor}</option>
+            )}
             {sabores.map((s) => (
               <option key={s.id} value={s.nombre}>{s.nombre}</option>
             ))}
           </select>
+          <small className="field-hint">Se completa con el sabor del reporte importado. También puede seleccionarlo manualmente.</small>
         </FormField>
 
 

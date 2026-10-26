@@ -24,9 +24,24 @@ from backend.app.schemas.jarabe import (
     SaneoTanqueCreate,
 )
 from backend.app.services.excel_parser import extraer_datos_reporte
+from backend.app.services.jarabe_dashboard import dashboard as jarabe_dashboard
 from backend.app.services.production import attach_control_production, require_production
 
 router = APIRouter(prefix="/api", tags=["Sala de Jarabe"])
+
+
+@router.get('/jarabe/dashboard')
+def get_jarabe_dashboard(
+    db: Session = Depends(get_db),
+    mes: str | None = Query(None, pattern=r'^\d{4}-(0[1-9]|1[0-2])$'),
+    fecha: date_type | None = None,
+    tanque: str = Query('', max_length=20),
+    sabor: str = Query('', max_length=100),
+    tipo: str = Query('', pattern=r'^(simple|terminado|saneo|parte)?$'),
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    return jarabe_dashboard(db, mes, fecha, tanque, sabor, tipo, limit, offset)
 
 
 @router.post("/parse-jarabe-excel")

@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import SidebarNav from './SidebarNav';
 
 function renderSidebar(props = {}) {
@@ -20,6 +20,16 @@ function renderSidebar(props = {}) {
 }
 
 describe('SidebarNav', () => {
+  it('agrupa los tres dashboards en Dashboard y los quita de los formularios', () => {
+    const { onNavigate } = renderSidebar({ activePage: 'dashboard', activeForm: 'jarabe' });
+    const dashboards = within(screen.getByRole('group', { name: 'Dashboards' }));
+    expect(dashboards.getAllByRole('button')).toHaveLength(3);
+    expect(dashboards.getByRole('button', { name: 'Dashboard de Jarabe' })).toHaveAttribute('aria-current', 'page');
+    expect(within(screen.getByRole('group', { name: 'Formularios de Sala de Jarabe' })).queryByRole('button', { name: /Dashboard/ })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('group', { name: 'Formularios de Agua' })).queryByRole('button', { name: /Dashboard/ })).not.toBeInTheDocument();
+    fireEvent.click(dashboards.getByRole('button', { name: 'Dashboard de Agua' }));
+    expect(onNavigate).toHaveBeenCalledWith('dashboard', 'agua');
+  });
   it('muestra los formularios bajo sus módulos y marca el formulario actual', () => {
     renderSidebar();
     const nav = screen.getByRole('navigation', { name: 'Secciones del laboratorio' });

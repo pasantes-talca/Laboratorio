@@ -6,6 +6,8 @@ import App from '../src/App';
 vi.mock('../src/services/api', () => ({
   fetchJson: vi.fn().mockResolvedValue({
     opciones: {}, conteos: {}, metricas: [], series: [], historial: { registros: [], total: 0 },
+    resumen: { simple: 0, terminado: 0, saneo: 0, parte: 0, total: 0, bolsas: null, litros: null, sin_litros: 0 },
+    por_dia: [], por_sabor: [], tanques: [],
   }),
   getResponsables: vi.fn().mockResolvedValue([]),
   getMarcas: vi.fn().mockResolvedValue([]),
@@ -27,8 +29,42 @@ beforeEach(() => {
   localStorage.clear();
 });
 
+it('permite cambiar entre los tres dashboards dentro del mismo módulo', async () => {
+  window.history.replaceState(null, '', '/dashboard');
+  render(<App />);
+  const dashboards = within(screen.getByRole('group', { name: 'Dashboards' }));
+  expect(dashboards.getByRole('button', { name: 'Dashboard de Calidad' })).toHaveAttribute('aria-current', 'page');
+  fireEvent.click(dashboards.getByRole('button', { name: 'Dashboard de Jarabe' }));
+  expect(await screen.findByRole('heading', { name: 'Dashboard de Jarabe' }, { timeout: 5000 })).toBeInTheDocument();
+  expect(window.location.pathname).toBe('/dashboard/jarabe');
+  fireEvent.click(dashboards.getByRole('button', { name: 'Dashboard de Agua' }));
+  expect(await screen.findByRole('heading', { name: 'Dashboard de Agua' })).toBeInTheDocument();
+  expect(window.location.pathname).toBe('/dashboard/agua');
+  fireEvent.click(dashboards.getByRole('button', { name: 'Dashboard de Calidad' }));
+  expect(window.location.pathname).toBe('/dashboard/calidad');
+  expect(dashboards.getByRole('button', { name: 'Dashboard de Calidad' })).toHaveAttribute('aria-current', 'page');
+});
+
+it.each(['jarabe', 'agua'])('redirige el acceso antiguo de %s al módulo Dashboard', async module => {
+  window.history.replaceState(null, '', `/${module}/dashboard`);
+  render(<App />);
+  await waitFor(() => expect(window.location.pathname).toBe(`/dashboard/${module}`));
+  expect(screen.getByRole('button', { name: module === 'agua' ? 'Dashboard de Agua' : 'Dashboard de Jarabe' })).toHaveAttribute('aria-current', 'page');
+});
+
+it('abre el dashboard de jarabe desde su URL y conserva el dashboard de agua', async () => {
+  window.history.replaceState(null, '', '/dashboard/jarabe');
+  render(<App />);
+  expect(await screen.findByRole('heading', { name: 'Dashboard de Jarabe' }, { timeout: 5000 })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Dashboard de Jarabe' })).toHaveAttribute('aria-current', 'page');
+  expect(document.title).toBe('Dashboard de Jarabe - Laboratorio Talca');
+  expect(screen.getByRole('button', { name: 'Dashboard de Agua' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /Registrar jarabe simple/ }));
+  expect(window.location.pathname).toBe('/jarabe/simple');
+});
+
 it('abre el dashboard de agua desde su URL y permite volver al formulario', async () => {
-  window.history.replaceState(null, '', '/agua/dashboard');
+  window.history.replaceState(null, '', '/dashboard/agua');
   render(<App />);
   expect(await screen.findByRole('heading', { name: 'Dashboard de Agua' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Dashboard de Agua' })).toHaveAttribute('aria-current', 'page');

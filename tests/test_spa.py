@@ -25,3 +25,12 @@ def test_unknown_urls_remain_404(path):
     app = FastAPI()
     app.include_router(router)
     assert TestClient(app).get(path).status_code == 404
+
+
+@pytest.mark.parametrize('module,target', [('jarabe', 'jarabe'), ('sala-jarabe', 'jarabe'), ('agua', 'agua')])
+def test_old_dashboard_urls_redirect_to_dashboard_module(module, target):
+    app = FastAPI()
+    app.include_router(router)
+    response = TestClient(app).get(f'/{module}/dashboard', follow_redirects=False)
+    assert response.status_code == 307
+    assert response.headers['location'] == f'/dashboard/{target}'

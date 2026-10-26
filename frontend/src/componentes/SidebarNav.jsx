@@ -58,7 +58,7 @@ export default function SidebarNav({ activePage, activeForm, onNavigate, isOpen,
                 <span>{label}</span>
               </button>
               {FORM_NAV[page] && (
-                <div className="sidebar-subnav" role="group" aria-label={`Formularios de ${label}`}>
+                <div className="sidebar-subnav" role="group" aria-label={page === 'dashboard' ? 'Dashboards' : `Formularios de ${label}`}>
                   {FORM_NAV[page].map((form) => (
                     <button
                       key={form.id}

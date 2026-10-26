@@ -10,6 +10,7 @@ import './styles/index.css';
 
 const CalidadPage = lazy(() => import('./modulos/calidad/pages/CalidadPage'));
 const SalaJarabePage = lazy(() => import('./modulos/jarabe/pages/SalaJarabePage'));
+const JarabeDashboardPage = lazy(() => import('./modulos/jarabe/pages/JarabeDashboardPage'));
 const AguaDashboardPage = lazy(() => import('./modulos/agua/pages/AguaDashboardPage'));
 const DashboardPage = lazy(() => import('./modulos/dashboard/pages/DashboardPage'));
 const AguaPage = lazy(() => import('./modulos/agua/pages/AguaPage'));
@@ -58,6 +59,7 @@ function getRouteFromPath() {
   const pathname = window.location.pathname.replace(/\/$/, '') || '/';
   const parts = pathname.split('/').filter(Boolean);
   const page = ROUTE_MAP[parts.length ? `/${parts[0]}` : '/'] || 'calidad';
+  if (['agua', 'jarabe'].includes(page) && parts[1] === 'dashboard') return { page: 'dashboard', form: page };
   const form = FORM_NAV[page]?.find((item) => item.slug === parts[1])?.id || defaultFormFor(page);
   return { page, form };
 }
@@ -82,11 +84,14 @@ function AppContent() {
     const [base, slug] = currentPath.split('/').filter(Boolean);
     const knownPage = ROUTE_MAP[base ? `/${base}` : '/'];
     const isKnownPath = !slug ? Boolean(knownPage) : Boolean(FORM_NAV[knownPage]?.some((item) => item.slug === slug));
-    if (targetPath && (currentPath === '/' || !isKnownPath)) {
-      window.history.replaceState(null, '', targetPath);
+    if (targetPath && (currentPath === '/' || !isKnownPath || knownPage !== activePage)) {
+      const destination = activePage === 'dashboard' ? `/dashboard/${activeForm}` : targetPath;
+      window.history.replaceState(null, '', destination);
     }
     if (PAGE_TITLES[activePage]) {
-      document.title = activePage === 'agua' && activeForm === 'dashboard' ? 'Dashboard de Agua - Laboratorio Talca' : PAGE_TITLES[activePage];
+      document.title = activePage === 'dashboard'
+        ? `${FORM_NAV.dashboard.find(item => item.id === activeForm)?.label || 'Dashboard'} - Laboratorio Talca`
+        : PAGE_TITLES[activePage];
     }
   }, [activePage, activeForm]);
 
@@ -130,9 +135,11 @@ function AppContent() {
             {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
             {activePage === 'calidad' && <CalidadPage key={`${selectedLine}-${production.version}`} initialTab={activeForm} onTabChange={(form) => handleNavigate('calidad', form)} />}
             {activePage === 'jarabe' && <SalaJarabePage initialTab={activeForm} onTabChange={(form) => handleNavigate('jarabe', form)} />}
-            {activePage === 'agua' && (activeForm === 'dashboard' ? <AguaDashboardPage onNavigate={handleNavigate} /> : <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />)}
+            {activePage === 'agua' && <AguaPage initialTab={activeForm} onTabChange={(form) => handleNavigate('agua', form)} />}
             {activePage === 'saneado' && <AreaSaneadoPage />}
-            {activePage === 'dashboard' && <DashboardPage />}
+            {activePage === 'dashboard' && activeForm === 'calidad' && <DashboardPage />}
+            {activePage === 'dashboard' && activeForm === 'jarabe' && <JarabeDashboardPage onNavigate={handleNavigate} />}
+            {activePage === 'dashboard' && activeForm === 'agua' && <AguaDashboardPage onNavigate={handleNavigate} />}
             {activePage === 'administracion' && <AdminAccess><AdminPage /></AdminAccess>}
           </Suspense>
 
