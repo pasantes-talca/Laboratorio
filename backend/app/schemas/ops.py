@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ControlTorqueCreate(BaseModel):
@@ -15,7 +15,16 @@ class ControlTorqueCreate(BaseModel):
     marca: Optional[str] = None
     color: Optional[str] = None
     marca_tapa: Optional[str] = None
+    lote_tapa: str = Field(max_length=50)
     responsable: str = Field(min_length=2, max_length=100)
+
+    @field_validator("lote_tapa")
+    @classmethod
+    def required_lote_tapa(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("el campo no puede estar vacío")
+        return value
 
 
 class ControlPausaCreate(BaseModel):

@@ -1,5 +1,6 @@
 import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
+import { getColorOptionsForSabor } from '../../../utils/productRules';
 import { Gauge, Save, RotateCcw, Clock, Plus, Trash2 } from 'lucide-react';
 
 export default function TorqueForm({
@@ -13,6 +14,7 @@ export default function TorqueForm({
   removeCabezal,
   updateCabezal,
   handleTorqueSubmit,
+  rememberLoteTapa,
 }) {
   return (
     <FormLayout title="Control de torque" domain="CONTROL DE CALIDAD" description="Registre la medición de torque de cada cabezal." onSubmit={handleTorqueSubmit} style={{ marginTop: '1.25rem' }}>
@@ -43,14 +45,32 @@ export default function TorqueForm({
         </FormField>
 
         <FormField className="field-container">
-          <label>Color de Tapa</label>
+          <label htmlFor="torque-lote-tapa">Lote de tapa <span className="required-star">*</span></label>
           <input
+            id="torque-lote-tapa"
             type="text"
-            placeholder="Automático según sabor"
-            value={torqueForm.color || '—'}
-            readOnly
-            style={{ opacity: 0.85, cursor: 'default' }}
+            required
+            maxLength={50}
+            placeholder="Ej: LOTE-T-2026"
+            value={torqueForm.lote_tapa}
+            onChange={(e) => {
+              rememberLoteTapa(production.linea, e.target.value);
+              setTorqueForm({ ...torqueForm, lote_tapa: e.target.value });
+            }}
           />
+        </FormField>
+
+        <FormField className="field-container">
+          <label htmlFor="torque-color-tapa">Color de Tapa</label>
+          <select
+            id="torque-color-tapa"
+            value={torqueForm.color}
+            onChange={(e) => setTorqueForm({ ...torqueForm, color: e.target.value })}
+          >
+            {getColorOptionsForSabor(production.sabor).map((color) => (
+              <option key={color} value={color}>{color}</option>
+            ))}
+          </select>
         </FormField>
 
         <FormField className="field-container col-span-2">

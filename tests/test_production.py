@@ -63,7 +63,7 @@ def test_controls_use_server_snapshot_and_reject_stale_production():
     client.put("/api/calidad/produccion/1", json=production("Cola"))
     beverage = {
         "linea": "linea1", "production_version": 1, "turno": "Noche",
-        "marca": "Soda", "tipo_concentrado": "TALCA", "tamano": "500ml", "lote_tapa": "LT-BEBIDA-1",
+        "marca": "Soda", "tipo_concentrado": "TALCA", "tamano": "500ml",
         "carac_organolep": "OK", "nivel_llenado": "OK", "contenido": 500, "presion": 3,
         "temperatura": 4, "vol_gas": 3, "brix": 10, "control_videojet": "OK", "responsable": "Operador",
     }
@@ -72,9 +72,9 @@ def test_controls_use_server_snapshot_and_reject_stale_production():
     with Session(engine) as db:
         control = db.get(ControlBebida, response.json()["id"])
         snapshot = db.query(ControlProduccion).filter_by(tipo_control="bebida", control_id=control.id).one()
-        assert (control.marca, control.turno, control.lote_tapa) == ("Cola", "Mañana", "LT-BEBIDA-1")
+        assert (control.marca, control.turno, control.lote_tapa) == ("Cola", "Mañana", None)
         assert (snapshot.linea, snapshot.produccion_version) == (1, 1)
-        assert snapshot.lote_tapa == "LT-BEBIDA-1"
+        assert snapshot.lote_tapa == ""
 
     client.put("/api/calidad/produccion/1", json=production("Soda", 1))
     assert client.post("/api/calidad/bebidas", json=beverage).status_code == 409
@@ -117,9 +117,60 @@ def test_torque_history_retains_concentrate_for_dashboard_product_series():
     assert client.put('/api/calidad/produccion/1', json=production('Cola')).status_code == 200
     response = client.post('/api/calidad/torque', json={
         'linea': 'linea1', 'production_version': 1, 'numero_cabezal': 1,
-        'valor': 17, 'sabor': 'Cola', 'responsable': 'Operador',
+        'valor': 17, 'sabor': 'Cola', 'responsable': 'Operador', 'lote_tapa': 'LT-1',
     })
     assert response.status_code == 201
     history = client.get('/api/calidad/torque').json()
     assert history[0]['concentrado'] == 'XQ'
     assert client.get('/api/calidad/torque?linea=2').json() == []
+
+
+def test_manzana_accepts_saporiti_concentrate():
+    client, _ = make_client()
+    body = {
+        "expected_version": 0, "turno": "Mañana", "sabor": "Manzana",
+        "concentrado": "Saporiti", "tamano": "500ml",
+    }
+    assert client.put("/api/calidad/produccion/1", json=body).status_code == 200
+    body_cola = {**body, "sabor": "Cola", "expected_version": 1}
+    assert client.put("/api/calidad/produccion/1", json=body_cola).status_code == 422
+
+
+def torque_payload(**overrides):
+    body = {
+        "linea": "linea1", "production_version": 1, "numero_cabezal": 1, "valor": 15.5,
+        "sabor": "Cola", "color": "Blanco", "marca_tapa": "PRIVA", "responsable": "Operador", "lote_tapa": "LT-TORQUE-1",
+    }
+    body.update(overrides)
+    return body
+
+
+def test_torque_requires_lote_tapa_and_lists_it():
+    client, engine = make_client()
+    client.put("/api/calidad/produccion/1", json=production("Cola"))
+    for missing in ({"lote_tapa": None}, {"lote_tapa": "   "}, {"lote_tapa": ""}):
+        assert client.post("/api/calidad/torque", json=torque_payload(**missing)).status_code == 422
+    body = torque_payload()
+    del body["lote_tapa"]
+    assert client.post("/api/calidad/torque", json=body).status_code == 422
+    response = client.post("/api/calidad/torque", json=torque_payload(lote_tapa="  LT-TORQUE-1  "))
+    assert response.status_code == 201, response.text
+    row = client.get("/api/calidad/torque").json()[0]
+    assert row["lote_tapa"] == "LT-TORQUE-1"
+    assert row["color"] == "Blanco"
+    assert len(client.get("/api/calidad/torque").json()) == 1
+
+
+def test_bebida_does_not_require_lote_tapa():
+    client, _ = make_client()
+    client.put("/api/calidad/produccion/1", json=production("Cola"))
+    beverage = {
+        "linea": "linea1", "production_version": 1, "turno": "Noche",
+        "marca": "Cola", "tipo_concentrado": "XQ", "tamano": "500ml",
+        "carac_organolep": "N/A", "nivel_llenado": "OK", "contenido": 500, "presion": 3,
+        "temperatura": 4, "vol_gas": 3, "brix": 10, "control_videojet": "OK", "responsable": "Operador",
+    }
+    response = client.post("/api/calidad/bebidas", json=beverage)
+    assert response.status_code == 201, response.text
+    legacy = client.post("/api/controles", json=beverage)
+    assert legacy.status_code == 201, legacy.text

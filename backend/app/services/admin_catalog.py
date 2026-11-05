@@ -180,7 +180,7 @@ OPTIONS = {
     "filtro_carbon_a": ["Cumple", "No Cumple"],
     "filtro_carbon_b": ["Cumple", "No Cumple"],
     "filtro_carbon_c": ["Cumple", "No Cumple"],
-    "carac_organolep": ["OK", "NOK"],
+    "carac_organolep": ["OK", "NOK", "N/A"],
     "nivel_llenado": ["OK", "NOK"],
     "control_video_jet": ["OK", "NOK"],
     "cloro_riser_linea": ["Linea 1", "Linea 2"],
@@ -373,6 +373,9 @@ def validate_update(form_id, record, changes):
             value = json.dumps(value, ensure_ascii=False)
         if key in {"hora_inicio", "hora_fin", "azucar_tipo"} and value is None:
             value = ""
+        if form_id == "calidad-torque" and key == "lote_tapa" and value is None:
+            # Rows recorded before the cap lot moved here have none; do not block other edits.
+            value = "Sin dato"
         payload[key] = value
     try:
         schema.model_validate(payload)

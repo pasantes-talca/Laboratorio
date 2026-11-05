@@ -9,7 +9,6 @@ export default function BebidaForm({
   bebidaForm,
   setBebidaForm,
   handleBebidaSubmit,
-  rememberLoteTapa,
 }) {
   return (
     <FormLayout title="Bebida terminada" domain="CONTROL DE CALIDAD" description="Registre la inspección y las mediciones del producto terminado." onSubmit={handleBebidaSubmit} style={{ marginTop: '1.25rem' }}>
@@ -39,6 +38,7 @@ export default function BebidaForm({
           >
             <option value="OK">OK</option>
             <option value="NOK">NOK</option>
+            <option value="N/A">N/A</option>
           </select>
         </FormField>
 
@@ -128,7 +128,7 @@ export default function BebidaForm({
 
 
 </FormSection>
-<FormSection number="04" title="Identificación y trazabilidad" description="Controle la impresión y registre el lote de tapa.">
+<FormSection number="04" title="Identificación y trazabilidad" description="Controle la impresión del producto.">
 <FormField className="field-container">
           <label>Control Video Jet <span className="required-star">*</span></label>
           <select
@@ -139,22 +139,6 @@ export default function BebidaForm({
             <option value="OK">OK</option>
             <option value="NOK">NOK</option>
           </select>
-        </FormField>
-
-        <FormField className="field-container">
-          <label htmlFor="bebida-lote-tapa">Lote de tapa <span className="required-star">*</span></label>
-          <input
-            id="bebida-lote-tapa"
-            type="text"
-            required
-            maxLength={50}
-            placeholder="Ej: LOTE-T-2026"
-            value={bebidaForm.lote_tapa}
-            onChange={(e) => {
-              rememberLoteTapa(production.linea, e.target.value);
-              setBebidaForm({ ...bebidaForm, lote_tapa: e.target.value });
-            }}
-          />
         </FormField>
 
 
@@ -192,7 +176,6 @@ export default function BebidaForm({
             temperatura: '',
             vol_gas: '',
             brix: '',
-            lote_tapa: bebidaForm.lote_tapa,
             control_videojet: 'OK',
             responsable: '',
           })}

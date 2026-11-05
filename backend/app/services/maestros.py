@@ -6,12 +6,12 @@ SABOR_O_MARCA = {
     "Cola": {
         "tamaños": "3L, 2.25L, 500ml",
         "tipo_de_concentrado": "KG, XQ, IFF",
-        "color_tapa": "azul",
+        "color_tapa": "Azul",
     },
     "Lima": {
         "tamaños": "3L, 2.25L, 500ml",
         "tipo_de_concentrado": "TP, IFF, BA",
-        "color_tapa": "verde",
+        "color_tapa": "Verde",
     },
     "Pomelo": {
         "tamaños": "3L, 2.25L, 500ml",
@@ -21,12 +21,12 @@ SABOR_O_MARCA = {
     "Naranja": {
         "tamaños": "3L, 2.25L, 500ml",
         "tipo_de_concentrado": "TP, IFF, BA",
-        "color_tapa": "naranja",
+        "color_tapa": "Naranja",
     },
     "Manzana": {
         "tamaños": "3L, 2.25L, 500ml",
-        "tipo_de_concentrado": "TP, IFF, BA, XQ, KG",
-        "color_tapa": "azul",
+        "tipo_de_concentrado": "TP, IFF, BA, XQ, KG, Saporiti",
+        "color_tapa": "Azul",
     },
     "Soda": {
         "tamaños": "2,25L, 500ml",
@@ -75,7 +75,7 @@ DEFAULT_MAESTROS = {
     "responsables_agua": RESPONSABLES_POR_MODULO["Control de Agua"],
     "responsables_jarabe": RESPONSABLES_POR_MODULO["Preparacion de Jarabe"],
     "marcas": list(SABOR_O_MARCA.keys()),
-    "tipos_concentrado": ["KG", "XQ", "IFF", "TP", "BA", "N/A"],
+    "tipos_concentrado": ["KG", "XQ", "IFF", "TP", "BA", "Saporiti", "N/A"],
     "tamanos": ["3L", "2.25L", "2L", "500ml"],
     "tanques": ["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "N/A"],
 }

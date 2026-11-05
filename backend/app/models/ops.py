@@ -14,6 +14,7 @@ class ControlTorque(Base):
     sabor = Column(String(50), nullable=True)
     color = Column(String(50), nullable=True)
     marca_tapa = Column(String(20), nullable=True)
+    lote_tapa = Column(String(50), nullable=True)
     valor = Column(Float, nullable=False)
     responsable = Column(String(100), nullable=False)
 

@@ -21,7 +21,7 @@ def test_baseline_creates_missing_tables_and_preserves_existing_records():
         assert connection.execute(text("SELECT value FROM existing_data")).scalar_one() == "preserved"
         assert "autor_registro" in tables
         assert "cambio_registro" in tables
-        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0004_numero_saneo"
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0005_torque_lote_tapa"
 
 
 def test_rinser_upgrade_preserves_legacy_chlorine_results():
@@ -49,3 +49,22 @@ def test_cleaning_upgrade_preserves_legacy_rows():
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert connection.execute(text("SELECT producto, numero_saneo FROM saneo_tanques")).one() == ("Existente", None)
+
+
+def test_torque_cap_lot_upgrade_keeps_legacy_rows_and_is_reversible():
+    # Built without alembic.ini so the test does not depend on a local config file.
+    config = Config()
+    config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "migrations"))
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        connection.execute(text("CREATE TABLE control_torque (id INTEGER PRIMARY KEY, valor FLOAT)"))
+        connection.execute(text("INSERT INTO control_torque VALUES (1, 15.5)"))
+        config.attributes["connection"] = connection
+        command.stamp(config, "0004_numero_saneo")
+        command.upgrade(config, "head")
+        command.upgrade(config, "head")
+        assert connection.execute(text("SELECT valor, lote_tapa FROM control_torque")).one() == (15.5, None)
+        command.downgrade(config, "0004_numero_saneo")
+        columns = [column["name"] for column in inspect(connection).get_columns("control_torque")]
+        assert "lote_tapa" not in columns
+        assert connection.execute(text("SELECT valor FROM control_torque")).scalar_one() == 15.5

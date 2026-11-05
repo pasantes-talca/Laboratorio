@@ -38,7 +38,7 @@ def create_control(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
         marca=data.marca,
         tipo_concentrado=data.tipo_concentrado,
         tamano=data.tamano,
-        lote_tapa=data.lote_tapa,
+        lote_tapa=data.lote_tapa or "",
     )
 
     db.add(db_registro)
@@ -102,7 +102,7 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
     )
     db.add(registro)
     db.flush()
-    attach_control_production(db, "bebida", registro.id, production, data.lote_tapa)
+    attach_control_production(db, "bebida", registro.id, production, data.lote_tapa or "")
     db.commit()
     db.refresh(registro)
     return {

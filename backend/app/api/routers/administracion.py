@@ -261,7 +261,7 @@ def edit(
             .first()
         )
         if linked:
-            linked.lote_tapa = record.lote_tapa
+            linked.lote_tapa = record.lote_tapa or ""
     if not author:
         author = AutorRegistro(
             formulario=formulario, registro_id=registro_id, version=1

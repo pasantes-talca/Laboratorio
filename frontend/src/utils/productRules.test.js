@@ -11,7 +11,7 @@ describe('productRules', () => {
     expect(getConcentradosForSabor('Pomelo')).toEqual(['IFF', 'TP', 'BA']);
     expect(getConcentradosForSabor('Lima')).toEqual(['IFF', 'TP', 'BA']);
     expect(getConcentradosForSabor('Naranja')).toEqual(['IFF', 'TP', 'BA']);
-    expect(getConcentradosForSabor('Manzana')).toEqual(['IFF', 'TP', 'BA', 'XQ', 'KG']);
+    expect(getConcentradosForSabor('Manzana')).toEqual(['IFF', 'TP', 'BA', 'XQ', 'KG', 'Saporiti']);
     expect(getConcentradosForSabor('Soda')).toEqual(['TALCA']);
     expect(getConcentradosForSabor('Sifon')).toEqual(['TALCA']);
     expect(getConcentradosForSabor('Sifón')).toEqual(['TALCA']);

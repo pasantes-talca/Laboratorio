@@ -319,8 +319,12 @@ def test_bottle_lot_remains_consistent_with_production_snapshot(admin):
     with Session(engine) as db:
         assert db.query(ControlProduccion).one().lote_tapa == "LOTE-CORREGIDO"
         assert db.query(ControlProduccion).one().linea == 1
+    body.update(valores={"lote_tapa": ""}, expected_version=2)
+    assert client.patch(url, json=body).status_code == 200
+    with Session(engine) as db:
+        assert db.query(ControlProduccion).one().lote_tapa == ""
     assert (
-        client.request("DELETE", url, json={"expected_version": 2}).status_code == 200
+        client.request("DELETE", url, json={"expected_version": 3}).status_code == 200
     )
     with Session(engine) as db:
         assert db.query(ControlProduccion).count() == 0
@@ -379,3 +383,35 @@ def test_normal_form_creation_records_signed_in_user_not_responsible(
     row = client.get("/api/admin/agua-cloro/registros").json()["items"][0]
     assert row["created_by"] is None
     assert row["values"]["responsable"] == "Carga abierta"
+
+
+def test_organoleptic_characteristics_accept_not_applicable(admin):
+    client, engine = admin
+    record_id = insert(engine, "calidad-bebida")
+    url = f"/api/admin/calidad-bebida/registros/{record_id}"
+    listing = client.get("/api/admin/calidad-bebida/registros").json()
+    body = {
+        "valores": {"carac_organolep": "N/A"},
+        "expected_version": listing["items"][0]["version"],
+        "motivo": "Producto sin evaluación organoléptica",
+    }
+    assert client.patch(url, json=body).status_code == 200
+    body.update(valores={"carac_organolep": "Quizás"}, expected_version=2)
+    assert client.patch(url, json=body).status_code == 422
+    assert "N/A" in OPTIONS["carac_organolep"]
+
+
+def test_legacy_torque_without_cap_lot_remains_editable_but_blank_lot_is_rejected(admin):
+    client, engine = admin
+    record_id = insert(engine, "calidad-torque")
+    with Session(engine) as db:
+        db.get(FORMS["calidad-torque"][2], record_id).lote_tapa = None
+        db.commit()
+    url = f"/api/admin/calidad-torque/registros/{record_id}"
+    version = client.get("/api/admin/calidad-torque/registros").json()["items"][0]["version"]
+    body = {"valores": {"valor": 16}, "expected_version": version, "motivo": "Corrección"}
+    assert client.patch(url, json=body).status_code == 200
+    body.update(valores={"lote_tapa": "   "}, expected_version=version + 1)
+    assert client.patch(url, json=body).status_code == 422
+    body.update(valores={"lote_tapa": "LT-9"})
+    assert client.patch(url, json=body).status_code == 200

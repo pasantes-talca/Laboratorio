@@ -104,7 +104,8 @@ export const PREVIEW_CATALOG = [
         "max_length": 50,
         "options": [
           "OK",
-          "NOK"
+          "NOK",
+          "N/A"
         ]
       },
       {
@@ -402,6 +403,15 @@ export const PREVIEW_CATALOG = [
         "required": false,
         "readonly": false,
         "max_length": 20,
+        "options": null
+      },
+      {
+        "key": "lote_tapa",
+        "label": "Lote de tapa",
+        "type": "text",
+        "required": false,
+        "readonly": false,
+        "max_length": 50,
         "options": null
       },
       {

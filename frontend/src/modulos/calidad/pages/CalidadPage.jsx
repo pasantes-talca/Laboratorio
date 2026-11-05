@@ -8,6 +8,7 @@ import { useProduction } from '../../../context/ProductionContext';
 import { useToast } from '../../../context/ToastContext';
 import SidebarInfo from '../../../componentes/SidebarInfo';
 import { getResponsables, getTanques } from '../../../services/api';
+import { getColorBySabor } from '../../../utils/productRules';
 import { submitControlBebida, submitControlJarabe, submitControlTorque, submitControlPausa } from '../api/calidadApi';
 
 const loteStorageKey = (linea) => `calidad_lote_tapa_${linea}`;
@@ -71,14 +72,9 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     temperatura: '',
     vol_gas: '',
     brix: '',
-    lote_tapa: readLoteTapa(production.linea),
     control_videojet: 'OK',
     responsable: '',
   });
-
-  useEffect(() => {
-    setBebidaForm((previous) => ({ ...previous, lote_tapa: readLoteTapa(production.linea) }));
-  }, [production.linea]);
 
   const handleBebidaSubmit = async (e) => {
     e.preventDefault();
@@ -96,7 +92,6 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
         marca: production.sabor || 'N/A',
         tipo_concentrado: production.tipoConcentrado || 'N/A',
         tamano: production.tamano || 'N/A',
-        lote_tapa: bebidaForm.lote_tapa.trim(),
         linea: production.linea,
         turno: production.turno,
         production_version: production.version,
@@ -157,32 +152,6 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     }
   };
 
-const SABOR_COLOR_MAP = {
-  cola: 'Azul',
-  pomelo: 'Amarillo',
-  lima: 'Verde',
-  naranja: 'Naranja',
-  manzana: 'Azul',
-  soda: 'Gris',
-  sifon: 'Rojo',
-};
-
-function getColorBySabor(sabor) {
-  if (!sabor) return '';
-  const norm = sabor
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
-  for (const [key, color] of Object.entries(SABOR_COLOR_MAP)) {
-    if (norm.includes(key)) {
-      return color;
-    }
-  }
-  return '';
-}
-
   // ----------------------------------------------------
   // FORM 3: CONTROL DE TORQUE (LISTA DINÁMICA DE CABEZALES)
   // ----------------------------------------------------
@@ -190,10 +159,15 @@ function getColorBySabor(sabor) {
   const [torqueForm, setTorqueForm] = useState({
     hora: '',
     marca_tapa: '',
+    lote_tapa: readLoteTapa(production.linea),
     responsable: '',
     color: getColorBySabor(production.sabor),
     cabezales: [{ numero: 1, valor: '' }],
   });
+
+  useEffect(() => {
+    setTorqueForm((prev) => ({ ...prev, lote_tapa: readLoteTapa(production.linea) }));
+  }, [production.linea]);
 
   useEffect(() => {
     const autoColor = getColorBySabor(production.sabor);
@@ -244,6 +218,7 @@ function getColorBySabor(sabor) {
           valor: parseFloat(cab.valor) || 0,
           color: torqueForm.color,
           marca_tapa: torqueForm.marca_tapa || null,
+          lote_tapa: torqueForm.lote_tapa.trim(),
           responsable: torqueForm.responsable,
           sabor: production.sabor || 'N/A',
           linea: production.linea,
@@ -335,7 +310,6 @@ function getColorBySabor(sabor) {
             bebidaForm={bebidaForm}
             setBebidaForm={setBebidaForm}
             handleBebidaSubmit={handleBebidaSubmit}
-            rememberLoteTapa={rememberLoteTapa}
           />
         )}
 
@@ -364,6 +338,7 @@ function getColorBySabor(sabor) {
             removeCabezal={removeCabezal}
             updateCabezal={updateCabezal}
             handleTorqueSubmit={handleTorqueSubmit}
+            rememberLoteTapa={rememberLoteTapa}
           />
         )}
 

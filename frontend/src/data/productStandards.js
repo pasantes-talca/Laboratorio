@@ -108,7 +108,7 @@ export const PRODUCT_STANDARDS = [
     marca: 'TALCA',
     sabor: 'NARANJA Red. BA',
     grupo: 'GIVAUDAN',
-    concentrado: 'GIVAUDAN',
+    concentrado: 'BA',
     brix: {
       objetivo: 8.10,
       min: 7.90,
@@ -136,7 +136,7 @@ export const PRODUCT_STANDARDS = [
     marca: 'TALCA',
     sabor: 'LIMA LIMÓN Red. TP',
     grupo: 'GIVAUDAN',
-    concentrado: 'GIVAUDAN',
+    concentrado: 'TP',
     brix: {
       objetivo: 10.06,
       min: 9.86,
@@ -164,7 +164,7 @@ export const PRODUCT_STANDARDS = [
     marca: 'TALCA',
     sabor: 'POMELO BA',
     grupo: 'GIVAUDAN',
-    concentrado: 'GIVAUDAN',
+    concentrado: 'BA',
     brix: {
       objetivo: 7.30,
       min: 7.10,

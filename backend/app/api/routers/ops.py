@@ -47,6 +47,7 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
         sabor=production.sabor,
         color=data.color,
         marca_tapa=data.marca_tapa,
+        lote_tapa=data.lote_tapa,
         valor=data.valor,
         responsable=data.responsable,
     )
@@ -87,6 +88,7 @@ def get_controles_torque(
             "concentrado": concentrado,
             "color": c.color,
             "marca_tapa": c.marca_tapa,
+            "lote_tapa": c.lote_tapa,
             "valor": float(c.valor) if c.valor is not None else None,
             "responsable": c.responsable,
         }

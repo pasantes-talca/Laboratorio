@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { PRODUCT_STANDARDS, findProductStandard } from '../../../data/productStandards';
 import { ALL_FLAVORS, allFlavorMetrics } from './allFlavorMetrics';
 
+const concentrateOf = (record) => String(record?.concentrado || record?.tipo_concentrado || '').trim();
+
 export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha, selectedSabor, setSelectedMes, setSelectedSabor }) {
   // Extraer lista única de Meses disponibles a partir de los datos
   const availableMonths = useMemo(() => {
@@ -69,7 +71,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   // Extraer lista de Productos disponibles para la Fecha, Mes y Línea seleccionados
   const availableProducts = useMemo(() => {
     const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
-    const rawNames = new Set();
+    const rawProducts = new Map();
 
     const checkItem = (d, checkLinea = true) => {
       if (!d) return;
@@ -81,7 +83,8 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
       }
       const name = d.marca || d.sabor;
       if (name && strValid(name)) {
-        rawNames.add(name.trim());
+        const concentrado = concentrateOf(d);
+        rawProducts.set(`${name.trim()}|${concentrado}`, { name: name.trim(), concentrado });
       }
     };
 
@@ -94,15 +97,15 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
     torqueData.forEach((d) => checkItem(d, true));
     jarabeData.forEach((d) => checkItem(d, true));
 
-    if (rawNames.size === 0) {
+    if (rawProducts.size === 0) {
       // Si no hay mediciones específicas en ese día, mostrar los estándares oficiales
       return PRODUCT_STANDARDS;
     }
 
     // Mapear los nombres crudos a los estándares oficiales correspondientes
     const matchedStandards = new Map();
-    rawNames.forEach((raw) => {
-      const std = findProductStandard(raw);
+    rawProducts.forEach(({ name, concentrado }) => {
+      const std = findProductStandard(name, concentrado);
       if (std) {
         matchedStandards.set(std.id, std);
       }
@@ -143,22 +146,32 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   }, [currentStandard, selectedLinea]);
 
   // Helper para comparar sabor / producto
-  const matchesSabor = useCallback((itemSaborOrMarca) => {
+  const matchesSabor = useCallback((itemSaborOrMarca, itemConcentrado = '') => {
     if (!itemSaborOrMarca || !selectedSabor) return true;
     const sItem = itemSaborOrMarca.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const sTarget = selectedSabor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    if (sTarget.includes('sifon')) return sItem.includes('sifon');
-    if (sTarget.includes('soda')) return sItem.includes('soda');
-    if (sTarget.includes('tonica')) return sItem.includes('tonica');
-    if (sTarget.includes('manzana')) return sItem.includes('manzana');
-    if (sTarget.includes('cola')) return sItem.includes('cola');
-    if (sTarget.includes('naranja')) return sItem.includes('naranja');
-    if (sTarget.includes('lima') || sTarget.includes('limon')) return sItem.includes('lima') || sItem.includes('limon');
-    if (sTarget.includes('pomelo')) return sItem.includes('pomelo');
+    const sameFlavor = (key) => sItem.includes(key);
+    let familyMatch = null;
+    if (sTarget.includes('sifon')) familyMatch = sameFlavor('sifon');
+    else if (sTarget.includes('soda')) familyMatch = sameFlavor('soda');
+    else if (sTarget.includes('tonica')) familyMatch = sameFlavor('tonica');
+    else if (sTarget.includes('manzana')) familyMatch = sameFlavor('manzana');
+    else if (sTarget.includes('cola')) familyMatch = sameFlavor('cola');
+    else if (sTarget.includes('naranja')) familyMatch = sameFlavor('naranja');
+    else if (sTarget.includes('lima') || sTarget.includes('limon')) familyMatch = sItem.includes('lima') || sItem.includes('limon');
+    else if (sTarget.includes('pomelo')) familyMatch = sameFlavor('pomelo');
+
+    if (familyMatch !== null) {
+      if (!familyMatch || !currentStandard) return familyMatch;
+      // Flavors with several standards (e.g. Lima IFF vs Lima TP) are told apart by concentrate.
+      // Legacy records that carry no concentrate keep matching by flavor only.
+      if (!String(itemConcentrado || '').trim()) return true;
+      return findProductStandard(itemSaborOrMarca, itemConcentrado)?.id === currentStandard.id;
+    }
 
     return sItem.includes(sTarget) || sTarget.includes(sItem);
-  }, [selectedSabor]);
+  }, [selectedSabor, currentStandard]);
 
   // Helper de filtrado por Mes y Fecha
   const matchesDateFilter = useCallback((itemDateStr) => {
@@ -203,7 +216,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
       if (item.grados_brix === null || item.grados_brix === undefined) return false;
       if (item.linea !== lineaNum) return false;
       if (!matchesDateFilter(item.fecha)) return false;
-      if (!matchesSabor(item.marca)) return false;
+      if (!matchesSabor(item.marca, concentrateOf(item))) return false;
       return true;
     });
 
@@ -211,7 +224,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
       if (item.linea !== lineaNum) return false;
       if (item.bx_patron === null || item.bx_patron === undefined) return false;
       if (!matchesDateFilter(item.fecha)) return false;
-      if (!matchesSabor(item.sabor)) return false;
+      if (!matchesSabor(item.sabor, concentrateOf(item))) return false;
       return true;
     });
 
@@ -275,7 +288,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
       if (item.linea !== lineaNum) return false;
       if (item.ta === null || item.ta === undefined) return false;
       if (!matchesDateFilter(item.fecha)) return false;
-      if (!matchesSabor(item.sabor)) return false;
+      if (!matchesSabor(item.sabor, concentrateOf(item))) return false;
       return true;
     });
 
@@ -304,7 +317,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
       if (item.vol_gas === null || item.vol_gas === undefined) return false;
       if (item.linea !== lineaNum) return false;
       if (!matchesDateFilter(item.fecha)) return false;
-      if (!matchesSabor(item.marca)) return false;
+      if (!matchesSabor(item.marca, concentrateOf(item))) return false;
       return true;
     });
 
@@ -333,7 +346,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
     const filtered = torqueData.filter((item) => {
       if (item.linea !== lineaNum) return false;
       if (!matchesDateFilter(item.fecha)) return false;
-      if (item.sabor && !matchesSabor(item.sabor)) return false;
+      if (item.sabor && !matchesSabor(item.sabor, concentrateOf(item))) return false;
       return true;
     });
 

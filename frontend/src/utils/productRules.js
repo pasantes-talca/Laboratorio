@@ -5,7 +5,7 @@ export const SABOR_CONCENTRADOS_MAP = {
   pomelo: ['IFF', 'TP', 'BA'],
   lima: ['IFF', 'TP', 'BA'],
   naranja: ['IFF', 'TP', 'BA'],
-  manzana: ['IFF', 'TP', 'BA', 'XQ', 'KG'],
+  manzana: ['IFF', 'TP', 'BA', 'XQ', 'KG', 'Saporiti'],
   soda: ['TALCA'],
   sifon: ['TALCA'],
 };
@@ -37,4 +37,27 @@ export function getConcentradosForSabor(sabor) {
 export function getTamanosForSabor(sabor) {
   const key = getNormalizedSaborKey(sabor);
   return SABOR_TAMANOS_MAP[key] || ['3L', '2,25L', '2L', '500ml'];
+}
+
+// Cap color assigned to each flavor. Operators may alternatively pick WHITE_CAP_COLOR.
+export const SABOR_COLOR_MAP = {
+  cola: 'Azul',
+  pomelo: 'Amarillo',
+  lima: 'Verde',
+  naranja: 'Naranja',
+  manzana: 'Azul',
+  soda: 'Gris',
+  sifon: 'Rojo',
+};
+
+export const WHITE_CAP_COLOR = 'Blanco';
+
+export function getColorBySabor(sabor) {
+  const key = getNormalizedSaborKey(sabor);
+  return SABOR_COLOR_MAP[key] || '';
+}
+
+export function getColorOptionsForSabor(sabor) {
+  const assigned = getColorBySabor(sabor);
+  return assigned ? [assigned, WHITE_CAP_COLOR] : [WHITE_CAP_COLOR];
 }

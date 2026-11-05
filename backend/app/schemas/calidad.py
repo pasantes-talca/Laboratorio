@@ -8,7 +8,7 @@ VALID_PRODUCT_OPTIONS = {
     "pomelo": ({"IFF", "TP", "BA"}, {"3L", "2,25L", "2.25L", "500ml"}),
     "lima": ({"IFF", "TP", "BA"}, {"3L", "2,25L", "2.25L", "500ml"}),
     "naranja": ({"IFF", "TP", "BA"}, {"3L", "2,25L", "2.25L", "500ml"}),
-    "manzana": ({"IFF", "TP", "BA", "XQ", "KG"}, {"3L", "2,25L", "2.25L", "500ml"}),
+    "manzana": ({"IFF", "TP", "BA", "XQ", "KG", "SAPORITI"}, {"3L", "2,25L", "2.25L", "500ml"}),
     "soda": ({"TALCA", "N/A"}, {"2,25L", "2.25L", "500ml"}),
     "sifon": ({"TALCA", "N/A"}, {"2L"}),
 }
@@ -36,16 +36,22 @@ class RegistroCalidadCreate(BaseModel):
     marca: str
     tipo_concentrado: str
     tamano: str
-    lote_tapa: str = Field(max_length=50)
+    # Legacy field: the cap lot is now recorded in Control de Torque.
+    lote_tapa: Optional[str] = Field(default=None, max_length=50)
     tanque: Optional[str] = None
 
-    @field_validator("responsable", "marca", "tamano", "lote_tapa")
+    @field_validator("responsable", "marca", "tamano")
     @classmethod
     def required_text(cls, value: str) -> str:
         value = value.strip()
         if not value:
             raise ValueError("el campo no puede estar vacío")
         return value
+
+    @field_validator("lote_tapa")
+    @classmethod
+    def optional_lote_tapa(cls, value: Optional[str]) -> Optional[str]:
+        return (value or "").strip() or None
 
     @model_validator(mode="after")
     def validate_product_combination(self):
@@ -78,7 +84,7 @@ class RegistroCalidadResponse(BaseModel):
     marca: str
     tipo_concentrado: str
     tamano: str
-    lote_tapa: str
+    lote_tapa: Optional[str] = None
 
 
 class ControlBebidaBottleVisual(BaseModel):

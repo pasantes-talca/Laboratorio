@@ -133,47 +133,23 @@ describe('ingreso de datos en formularios', () => {
     expect(screen.getByRole('button', { name: 'Registrar Control de Bebida' })).toBeDisabled();
   });
 
-  it('exige y registra el lote de tapa solo en Bebida Terminada', async () => {
+  it('registra Bebida Terminada sin pedir lote de tapa', async () => {
     renderPage(<CalidadPage />);
     const form = screen.getByRole('button', { name: 'Registrar Control de Bebida' }).closest('form');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Registrar Control de Bebida' })).toBeEnabled());
     await waitFor(() => expect(within(form).getByRole('option', { name: 'Operador Uno' })).toBeInTheDocument());
+    expect(within(form).queryByRole('textbox', { name: /Lote de tapa/ })).not.toBeInTheDocument();
     for (const placeholder of ['Ej: 2250', 'Ej: 3.2', 'Ej: 4.5', 'Ej: 3.8', 'Ej: 10.45']) {
       fireEvent.change(within(form).getByPlaceholderText(placeholder), { target: { value: '3' } });
     }
     fireEvent.change(form.querySelectorAll('select')[3], { target: { value: 'Operador Uno' } });
-    expect(checkFormValidity(form)).toBe(false);
-    fireEvent.change(within(form).getByRole('textbox', { name: /Lote de tapa/ }), { target: { value: 'LT-123' } });
     expect(checkFormValidity(form)).toBe(true);
     fireEvent.submit(form);
     await waitFor(() => expect(submitControlBebida).toHaveBeenCalledWith(expect.objectContaining({
-      lote_tapa: 'LT-123', linea: 'linea1', production_version: 1,
+      linea: 'linea1', production_version: 1,
     })));
+    expect(submitControlBebida.mock.calls[0][0]).not.toHaveProperty('lote_tapa');
     await waitFor(() => expect(within(form).getByPlaceholderText('Ej: 2250')).toHaveValue(null));
-    expect(within(form).getByRole('textbox', { name: /Lote de tapa/ })).toHaveValue('LT-123');
-    fireEvent.click(within(form).getByRole('button', { name: 'Limpiar' }));
-    expect(within(form).getByRole('textbox', { name: /Lote de tapa/ })).toHaveValue('LT-123');
-  });
-
-  it('recuerda el lote por línea al volver a abrir la página', async () => {
-    const first = renderPage(<CalidadPage />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Registrar Control de Bebida' })).toBeEnabled());
-    fireEvent.change(screen.getByRole('textbox', { name: /Lote de tapa/ }), { target: { value: 'TAPA-L1' } });
-    expect(localStorage.getItem('calidad_lote_tapa_linea1')).toBe('TAPA-L1');
-    first.unmount();
-
-    sessionStorage.setItem('calidad_selected_line', 'linea2');
-    const second = renderPage(<CalidadPage />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Registrar Control de Bebida' })).toBeEnabled());
-    expect(screen.getByRole('textbox', { name: /Lote de tapa/ })).toHaveValue('');
-    fireEvent.change(screen.getByRole('textbox', { name: /Lote de tapa/ }), { target: { value: 'TAPA-L2' } });
-    expect(localStorage.getItem('calidad_lote_tapa_linea2')).toBe('TAPA-L2');
-    second.unmount();
-
-    sessionStorage.setItem('calidad_selected_line', 'linea1');
-    renderPage(<CalidadPage />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Registrar Control de Bebida' })).toBeEnabled());
-    expect(screen.getByRole('textbox', { name: /Lote de tapa/ })).toHaveValue('TAPA-L1');
   });
 
   it('guarda el control de jarabe con números y datos de producción', async () => {

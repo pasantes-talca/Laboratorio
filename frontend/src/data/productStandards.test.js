@@ -94,6 +94,20 @@ describe('findProductStandard', () => {
     expect(findProductStandard('MANZANA').id).toBe('manzana');
   });
 
+  it('routes every Manzana concentrate, including Saporiti, to the Manzana standard', () => {
+    for (const concentrado of ['IFF', 'TP', 'BA', 'XQ', 'KG', 'Saporiti']) {
+      expect(findProductStandard('Manzana', concentrado).id).toBe('manzana');
+    }
+  });
+
+  it('uses real concentrate codes on the Givaudan standards', () => {
+    const codes = Object.fromEntries(
+      PRODUCT_STANDARDS.filter((p) => p.grupo === 'GIVAUDAN' && p.concentrado !== 'XQ' && p.concentrado !== 'KG')
+        .map((p) => [p.id, p.concentrado]),
+    );
+    expect(codes).toEqual({ 'naranja-givaudan': 'BA', 'lima-limon-givaudan': 'TP', 'pomelo-givaudan': 'BA' });
+  });
+
   describe('concentrado disambiguation (GIVAUDAN vs IFF)', () => {
     it('cola defaults to givaudan when no iff marker', () => {
       expect(findProductStandard('COLA').id).toBe('cola-xq');

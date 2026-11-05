@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useDashboardMetrics } from './useDashboardMetrics';
 import { findProductStandard } from '../../../data/productStandards';
 
@@ -55,6 +55,49 @@ it('does not invent Cola limits for unknown flavors in the combined view', () =>
   expect(result.carbonatacionChartData[0].limiteMin).toBeNull();
   expect(result.carbonatacionChartData[0].series.label).toBe('Producto nuevo');
   expect(result.brixChartData[0].limiteMax).toBeNull();
+});
+
+describe('single-flavor view distinguishes flavor and concentrate', () => {
+  const common = { linea: 1, fecha: '2026-10-21', hora: '08:00' };
+  const bebidaData = [
+    { ...common, marca: 'Lima', concentrado: 'IFF', grados_brix: 7.1, vol_gas: 3.1 },
+    { ...common, marca: 'Lima', concentrado: 'TP', grados_brix: 8.8, vol_gas: 3.9, hora: '09:00' },
+  ];
+  const torqueData = [
+    { ...common, sabor: 'Lima', concentrado: 'IFF', numero_cabezal: 1, valor: 16 },
+    { ...common, sabor: 'Lima', concentrado: 'TP', numero_cabezal: 1, valor: 19, hora: '09:00' },
+  ];
+  const jarabeData = [
+    { ...common, sabor: 'Lima', concentrado: 'IFF', ta: 21, bx_patron: 50 },
+    { ...common, sabor: 'Lima', concentrado: 'TP', ta: 30, bx_patron: 60, hora: '09:00' },
+  ];
+
+  it('lists Lima IFF and Lima TP as separate products', () => {
+    const result = metrics({ selectedSabor: 'todos', bebidaData, torqueData, jarabeData });
+    expect(result.availableProducts.map(p => p.id).sort()).toEqual(['lima-limon-givaudan', 'lima-limon-iff']);
+  });
+
+  it('lists only Lima IFF when only IFF records exist', () => {
+    const result = metrics({ selectedSabor: 'todos', bebidaData: [bebidaData[0]], torqueData: [], jarabeData: [] });
+    expect(result.availableProducts.map(p => p.id)).toEqual(['lima-limon-iff']);
+  });
+
+  it('shows the IFF label, IFF limits and only IFF records when Lima IFF is selected', () => {
+    const result = metrics({ selectedSabor: 'LIMA LIMÓN Red. IFF', bebidaData, torqueData, jarabeData });
+    const iff = findProductStandard('Lima', 'IFF');
+    expect(result.currentStandard.sabor).toBe('LIMA LIMÓN Red. IFF');
+    expect(result.brixChartData.filter(p => p.valor !== null).map(p => p.valor)).toEqual([7.1]);
+    expect(result.brixChartData[0].limiteMin).toBe(iff.brix.min);
+    expect(result.carbonatacionChartData.map(p => p.valor)).toEqual([3.1]);
+    expect(result.taChartData.map(p => p.valor)).toEqual([21]);
+    expect(result.torqueChartData.filter(p => p.valor !== null).map(p => p.valor)).toEqual([16]);
+  });
+
+  it('shows only TP records when Lima TP is selected', () => {
+    const result = metrics({ selectedSabor: 'LIMA LIMÓN Red. TP', bebidaData, torqueData, jarabeData });
+    expect(result.brixChartData.filter(p => p.valor !== null).map(p => p.valor)).toEqual([8.8]);
+    expect(result.torqueChartData.filter(p => p.valor !== null).map(p => p.valor)).toEqual([19]);
+  });
 });
 
 function metrics(overrides = {}) {
