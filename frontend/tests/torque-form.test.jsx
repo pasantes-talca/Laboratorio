@@ -50,7 +50,7 @@ describe('Control de torque - color de tapa', () => {
     ['Pomelo', ['Amarillo', 'Blanco']],
     ['Lima Limón', ['Verde', 'Blanco']],
     ['Naranja', ['Naranja', 'Blanco']],
-    ['Manzana', ['Azul', 'Blanco']],
+    ['Manzana', ['Verde', 'Blanco']],
     ['Soda', ['Gris', 'Blanco']],
     ['Sifón', ['Rojo', 'Blanco']],
   ])('offers the flavor color or Blanco for %s', async (sabor, expected) => {

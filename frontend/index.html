@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Apply the saved theme (light by default) before first paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem('lab-theme');
+          if (t !== 'light' && t !== 'dark') t = 'light';
+          document.documentElement.dataset.theme = t;
+          document.documentElement.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
     <title>Laboratorio de Calidad | Control de Procesos</title>
     <!-- Google Fonts: Poppins (headings) & Inter (body/UI) per DESIGN.md -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

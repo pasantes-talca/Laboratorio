@@ -167,7 +167,7 @@ export default function AreaSaneadoPage() {
                       display: 'flex',
                       gap: '1.5rem',
                       flexWrap: 'wrap',
-                      background: 'var(--color-gris-100, #F7FAFC)',
+                      background: 'var(--surface-alt)',
                       borderRadius: '8px',
                       border: '1px solid var(--border-glass)',
                       padding: '1rem',

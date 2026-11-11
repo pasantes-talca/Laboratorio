@@ -136,7 +136,7 @@ export default function DashboardPage() {
 
       <div aria-live="polite" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
         {error ? <div className="alert alert-error" role="alert">{error}</div> : <span />}
-        <small style={{ color: 'var(--color-gris-700)' }}>
+        <small style={{ color: 'var(--text-secondary)' }}>
           Última actualización completa: {lastUpdated ? lastUpdated.toLocaleString('es-AR') : 'Pendiente'}
         </small>
       </div>

@@ -21,7 +21,7 @@ export default function PortalPage({ onNavigate }) {
       desc: 'Gráficos de control estadístico para °Brix, TA, Gas CO2 y Torques según límites BPM.',
       icon: Gauge,
       color: 'var(--color-azul-clinico)',
-      bg: 'var(--color-azul-hielo)',
+      bg: 'var(--bg-section)',
     },
     {
       id: 'calidad-bebida',
@@ -41,7 +41,7 @@ export default function PortalPage({ onNavigate }) {
       desc: 'Verificación de °Brix patrón, acidez titulable y asignación de tanques.',
       icon: Droplet,
       color: 'var(--color-azul-institucional)',
-      bg: 'var(--color-azul-hielo)',
+      bg: 'var(--bg-section)',
     },
     {
       id: 'calidad-torque',
@@ -60,8 +60,8 @@ export default function PortalPage({ onNavigate }) {
       title: 'Preparación Jarabe Simple',
       desc: 'Pesada de bolsas de azúcar, marca, turbidez NTU y pasteurizado.',
       icon: Layers,
-      color: 'var(--color-azul-marino)',
-      bg: 'var(--color-azul-hielo)',
+      color: 'var(--text-dark)',
+      bg: 'var(--bg-section)',
     },
     {
       id: 'jarabe-terminado',
@@ -71,7 +71,7 @@ export default function PortalPage({ onNavigate }) {
       desc: 'Dosificación de concentrados, tiempos de filtrado y rendimientos.',
       icon: Sparkles,
       color: 'var(--color-azul-clinico)',
-      bg: 'var(--color-azul-hielo)',
+      bg: 'var(--bg-section)',
     },
     {
       id: 'jarabe-saneo',
@@ -81,7 +81,7 @@ export default function PortalPage({ onNavigate }) {
       desc: 'Registro higiénico con horarios de inicio/fin y agentes de limpieza.',
       icon: ShieldCheck,
       color: 'var(--color-azul-institucional)',
-      bg: 'var(--color-azul-hielo)',
+      bg: 'var(--bg-section)',
     },
     {
       id: 'jarabe-parte',
@@ -127,7 +127,7 @@ export default function PortalPage({ onNavigate }) {
 
       {/* Grid of Modules */}
       <div>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-azul-marino)', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '1.25rem' }}>
           Módulos del Sistema
         </h3>
 

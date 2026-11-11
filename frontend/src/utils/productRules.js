@@ -45,7 +45,7 @@ export const SABOR_COLOR_MAP = {
   pomelo: 'Amarillo',
   lima: 'Verde',
   naranja: 'Naranja',
-  manzana: 'Azul',
+  manzana: 'Verde',
   soda: 'Gris',
   sifon: 'Rojo',
 };

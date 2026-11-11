@@ -16,10 +16,15 @@ node_modules
 !DESIGN.md
 !frontend/README.md
 !migrations/README.md
+!ESTRUCTURA_PROYECTO.md
 .agents
 .venv/
 .pytest_cache/
 .ruff_cache/
 .tests/
 DESIGN.md
+ESTRUCTURA_PROYECTO.md
 previews/
+.claude/*
+.tmp/
+.atl/

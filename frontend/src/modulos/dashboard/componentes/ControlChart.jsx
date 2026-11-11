@@ -240,18 +240,22 @@ export default function ControlChart({
       {/* Lienzo SVG */}
       <div className="control-chart-svg-wrapper">
         <svg
+          role="group"
+          aria-label={title ? `Gráfico de control: ${title}` : 'Gráfico de control'}
           viewBox={`0 0 ${width} ${height}`}
           className="control-chart-svg"
           preserveAspectRatio="xMidYMid meet"
         >
+          <title>{title ? `Gráfico de control: ${title}` : 'Gráfico de control'}</title>
+          <desc>{`${data.length} mediciones${unit ? ` en ${unit}` : ''}. Los puntos fuera de especificación se marcan con un círculo punteado. Use la tabla de datos debajo del gráfico para leer todos los valores.`}</desc>
           {/* Fondo del área de datos */}
           <rect
             x={padding.left}
             y={padding.top}
             width={chartWidth}
             height={chartHeight}
-            fill="#ffffff"
-            stroke="#262626"
+            fill="var(--surface)"
+            stroke="var(--text-secondary)"
             strokeWidth="1.2"
           />
 
@@ -265,7 +269,7 @@ export default function ControlChart({
                   y1={yPos}
                   x2={padding.left + chartWidth}
                   y2={yPos}
-                  stroke="#e2e8f0"
+                  stroke="var(--border-color)"
                   strokeWidth="1"
                   strokeDasharray="3 3"
                 />
@@ -274,7 +278,7 @@ export default function ControlChart({
                   y={yPos + 4}
                   textAnchor="end"
                   fontSize="11"
-                  fill="#1A202C"
+                  fill="var(--text-strong)"
                   fontWeight="600"
                   fontFamily="'Inter', sans-serif"
                 >
@@ -292,7 +296,7 @@ export default function ControlChart({
                 y1={padding.top}
                 x2={p.x}
                 y2={padding.top + chartHeight}
-                stroke="#e2e8f0"
+                stroke="var(--border-color)"
                 strokeWidth="1"
                 strokeDasharray="3 3"
               />
@@ -302,7 +306,7 @@ export default function ControlChart({
                 y1={padding.top + chartHeight}
                 x2={p.x}
                 y2={padding.top + chartHeight + 5}
-                stroke="#0F2C45"
+                stroke="var(--text-dark)"
                 strokeWidth="1.2"
               />
               {/* Etiqueta X */}
@@ -312,7 +316,7 @@ export default function ControlChart({
                 textAnchor={type === 'cab' ? 'middle' : 'end'}
                 transform={type === 'cab' ? undefined : `rotate(-38, ${p.x}, ${padding.top + chartHeight + 16})`}
                 fontSize={type === 'cab' ? '11' : '10'}
-                fill="#1A202C"
+                fill="var(--text-strong)"
                 fontWeight="600"
                 fontFamily="'Inter', sans-serif"
               >
@@ -427,7 +431,7 @@ export default function ControlChart({
                   cy={p.yVal}
                   r={isHovered ? 6 : 4}
                   fill={byProduct ? p.series?.color : '#0077B6'}
-                  stroke="#ffffff"
+                  stroke="var(--surface)"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
                 />
@@ -456,7 +460,7 @@ export default function ControlChart({
                   cy={p.ySec}
                   r={isHovered ? 6 : 4}
                   fill={byProduct ? p.series?.color : '#E31B23'}
-                  stroke="#ffffff"
+                  stroke="var(--surface)"
                   strokeWidth="1.5"
                   style={{ transition: 'r 0.15s ease' }}
                 />
@@ -471,7 +475,7 @@ export default function ControlChart({
             transform="rotate(-90)"
             textAnchor="middle"
             fontSize="10.5"
-            fill="#1A202C"
+            fill="var(--text-strong)"
             fontWeight="700"
             letterSpacing="0.5px"
             fontFamily="'Inter', sans-serif"
@@ -485,7 +489,7 @@ export default function ControlChart({
             y={height - (type === 'cab' ? 10 : 8)}
             textAnchor="middle"
             fontSize="11"
-            fill="#1A202C"
+            fill="var(--text-strong)"
             fontWeight="700"
             letterSpacing="0.5px"
             fontFamily="'Inter', sans-serif"
@@ -507,6 +511,24 @@ export default function ControlChart({
             </text>
           )}
         </svg>
+
+        <details className="control-chart-data">
+          <summary>Ver tabla de datos</summary>
+          <table>
+            <caption className="sr-only">{title ? `Datos de ${title}` : 'Datos del gráfico de control'}</caption>
+            <thead><tr><th scope="col">{xAxisLabel}</th><th scope="col">Valor{unit ? ` (${unit})` : ''}</th><th scope="col">Mín</th><th scope="col">Máx</th></tr></thead>
+            <tbody>
+              {data.map((d, i) => (
+                <tr key={`row-${i}`}>
+                  <td>{d.label ?? i + 1}</td>
+                  <td>{d.valor ?? '—'}</td>
+                  <td>{d.limiteMin ?? staticLimits?.min ?? '—'}</td>
+                  <td>{d.limiteMax ?? staticLimits?.max ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
 
         {/* Tooltip flotante interactivo */}
         {hoveredPoint && (

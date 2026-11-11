@@ -49,7 +49,7 @@ export function FormField({ children, className = 'field-container', ...rest }) 
   return <div {...rest} className={`${className}${error ? ' lab-field-invalid' : ''}`}
     onBlur={check} onInvalid={check} onChange={(event) => { if (error) check(event); }}>
     {bind(children)}
-    {error && <p id={`${id}-error`} className="lab-field-error">{error}</p>}
+    {error && <p id={`${id}-error`} className="lab-field-error" role="alert">{error}</p>}
   </div>;
 }
 

@@ -80,14 +80,21 @@ it('navega desde el menú lateral y actualiza la URL y el módulo activo', async
   expect(nav).toBeInTheDocument();
   expect(document.querySelector('.header-nav')).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Agua' }));
-  await waitFor(() => expect(window.location.pathname).toBe('/agua'));
+  const agua = screen.getByRole('button', { name: 'Agua' });
+  expect(agua).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(agua);
+  expect(window.location.pathname).toBe('/portal');
+  expect(agua).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.click(within(nav).getByRole('button', { name: 'Control Físico Químico' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/agua/fisico-quimico'));
   expect(screen.getByRole('button', { name: 'Agua' })).toHaveClass('active');
   expect(within(nav).getByRole('button', { name: 'Control Físico Químico' })).toHaveAttribute('aria-current', 'page');
   expect(await screen.findByRole('heading', { name: 'Control de Agua' })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: 'Sala de Jarabe' }));
-  await waitFor(() => expect(window.location.pathname).toBe('/jarabe'));
+  expect(screen.getByRole('button', { name: 'Agua' })).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(within(nav).getByRole('button', { name: 'Jarabe Simple' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/jarabe/simple'));
   expect(screen.getByRole('button', { name: 'Sala de Jarabe' })).toHaveClass('active');
   expect(within(nav).getByRole('button', { name: 'Jarabe Simple' })).toHaveAttribute('aria-current', 'page');
 });
@@ -119,6 +126,7 @@ it('oculta el bloque de línea en Inicio y Exportar CSV en Dashboard', async () 
   expect(await screen.findByText('Sistema Integrado de Calidad y Procesos')).toBeInTheDocument();
   expect(screen.queryByText('Línea en operación:')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Dashboard' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Dashboard de Calidad' }));
   await screen.findByRole('heading', { name: 'Dashboard' });
   expect(screen.queryByRole('button', { name: 'Exportar CSV' })).not.toBeInTheDocument();
 });

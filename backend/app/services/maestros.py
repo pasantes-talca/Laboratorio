@@ -26,7 +26,7 @@ SABOR_O_MARCA = {
     "Manzana": {
         "tamaños": "3L, 2.25L, 500ml",
         "tipo_de_concentrado": "TP, IFF, BA, XQ, KG, Saporiti",
-        "color_tapa": "Azul",
+        "color_tapa": "Verde",
     },
     "Soda": {
         "tamaños": "2,25L, 500ml",
@@ -46,7 +46,7 @@ RESPONSABLES_POR_MODULO = {
         "Diaz Mauro",
         "Alonso Dario",
         "Amaya Carlos",
-        "Campillay Omar",
+        "Arra Julieta",
         "Barrionuevo Gonzalo",
     ],
     "Control de Agua": [
@@ -54,7 +54,7 @@ RESPONSABLES_POR_MODULO = {
         "Diaz Mauro",
         "Alonso Dario",
         "Amaya Carlos",
-        "Campillay Omar",
+        "Arra Julieta",
         "Barrionuevo Gonzalo",
     ],
     "Preparacion de Jarabe": [

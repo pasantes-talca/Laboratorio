@@ -22,16 +22,18 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="toast-container">
+      <div className="toast-container" aria-live="polite" aria-atomic="false">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast ${t.type}`}>
+          <div key={t.id} className={`toast ${t.type}`} role={t.type === 'error' ? 'alert' : 'status'}>
             {t.type === 'success' && <CheckCircle2 size={20} color="var(--color-exito)" />}
             {t.type === 'error' && <AlertCircle size={20} color="var(--color-error)" />}
             {t.type === 'info' && <Info size={20} color="var(--color-azul-clinico)" />}
             <span style={{ flex: 1 }}>{t.message}</span>
             <button
+              type="button"
+              aria-label="Cerrar notificación"
               onClick={() => removeToast(t.id)}
-              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex' }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', cursor: 'pointer', display: 'flex' }}
             >
               <X size={16} />
             </button>

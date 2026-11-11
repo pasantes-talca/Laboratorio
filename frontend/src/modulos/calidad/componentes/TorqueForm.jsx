@@ -147,7 +147,7 @@ export default function TorqueForm({
           onClick={addCabezal}
           style={{
             marginTop: '0.5rem',
-            background: 'var(--color-azul-hielo, #E8F4F8)',
+            background: 'var(--surface-hover)',
             border: '1px dashed var(--color-azul-clinico, #0077B6)',
             color: 'var(--color-azul-clinico, #0077B6)',
             borderRadius: 'var(--radius-md)',
