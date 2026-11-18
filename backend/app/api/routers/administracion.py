@@ -88,7 +88,7 @@ def list_records(
     q: str = Query("", max_length=100),
     usuario: str = Query("", max_length=100),
     responsable: str = Query("", max_length=100),
-    linea: int | None = Query(None, ge=1, le=2),
+    linea: int | None = Query(None, ge=1, le=3),
     limit: int = Query(25, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):

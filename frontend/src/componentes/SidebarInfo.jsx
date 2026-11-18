@@ -33,6 +33,7 @@ export default function SidebarInfo({ customHint }) {
           >
             <option value="linea1">Línea 1</option>
             <option value="linea2">Línea 2</option>
+            <option value="linea3">Línea 3</option>
           </select>
         </div>
         {productionLoading && <p role="status">Cargando producción…</p>}

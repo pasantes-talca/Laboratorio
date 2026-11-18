@@ -91,6 +91,7 @@ export default function AreaSaneadoPage() {
                 </option>
                 <option value="1">Línea 1</option>
                 <option value="2">Línea 2</option>
+                <option value="3">Línea 3</option>
               </select>
             </FormField>
 

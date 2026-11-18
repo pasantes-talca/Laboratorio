@@ -1305,7 +1305,8 @@ export const PREVIEW_CATALOG = [
         "max_length": 20,
         "options": [
           "Linea 1",
-          "Linea 2"
+          "Linea 2",
+          "Linea 3"
         ]
       },
       {

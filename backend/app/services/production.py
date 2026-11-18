@@ -9,6 +9,8 @@ def linea_numero(linea: str | None) -> int:
         return 1
     if linea == "linea2":
         return 2
+    if linea == "linea3":
+        return 3
     raise HTTPException(status_code=422, detail="Seleccione una línea válida")
 
 

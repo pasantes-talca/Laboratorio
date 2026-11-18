@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
+from backend.app.core.load_date import resolve_load_date
+from backend.app.core.time import local_now
 from backend.app.services.agua_dashboard import dashboard as agua_dashboard
 from backend.app.models.agua import (
     AnalisisCloro,
@@ -37,9 +39,9 @@ def get_agua_dashboard(
 
 @router.post("/fisico-quimico", status_code=status.HTTP_201_CREATED)
 def create_control_fisico_quimico(data: ControlFisicoQuimicoCreate, db: Session = Depends(get_db)):
-    ahora = datetime.utcnow()
-    fecha_val = data.fecha if data.fecha else ahora.date()
-    hora_val = data.hora if data.hora else ahora.time()
+    ahora = local_now()
+    fecha_val = resolve_load_date(data.fecha, data.hora, today=ahora.date())
+    hora_val = data.hora if data.hora else ahora.time().replace(tzinfo=None)
     
     nuevo_registro = ControlFisicoQuimico(
         tipo_agua=data.tipo_agua,

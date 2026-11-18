@@ -1,9 +1,11 @@
+from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class ControlJarabeCreate(BaseModel):
+    fecha: Optional[date] = None
     hora: Optional[str] = None
     turno: Optional[str] = None
     linea: Optional[str] = None
@@ -19,7 +21,7 @@ class ControlJarabeCreate(BaseModel):
 
 
 class JarabeSimpleCreate(BaseModel):
-    fecha: Optional[str] = None
+    fecha: Optional[date] = None
     hora: Optional[str] = None
     tanque: str
     volcado_numero: int = Field(ge=1)

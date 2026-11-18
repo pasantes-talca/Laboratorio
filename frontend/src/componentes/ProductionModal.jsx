@@ -5,6 +5,7 @@ import { useProduction } from '../context/ProductionContext';
 import { useToast } from '../context/ToastContext';
 import { getMarcas } from '../services/api';
 import { getConcentradosForSabor, getTamanosForSabor } from '../utils/productRules';
+import { getLineConfig } from '../utils/productionLines';
 
 export default function ProductionModal() {
   const { production, saveProduction, isModalOpen, closeModal } = useProduction();
@@ -50,7 +51,7 @@ export default function ProductionModal() {
     setSaving(true);
     try {
       await saveProduction(editingLine, formData, baseVersion);
-      showToast(`Producción de ${editingLine === 'linea2' ? 'Línea 2' : 'Línea 1'} actualizada`, 'success');
+      showToast(`Producción de ${getLineConfig(editingLine).label} actualizada`, 'success');
       closeModal();
     } catch (err) {
       showToast(err.message, 'error');
@@ -67,7 +68,7 @@ export default function ProductionModal() {
           <h3 id="production-dialog-title"><Settings2 size={20} color="#0077B6" /> Cambiar producción</h3>
           <button type="button" className="btn-close-modal" aria-label="Cerrar" onClick={closeModal}><X size={20} /></button>
         </div>
-        <p className="sidebar-hint">Configurando {editingLine === 'linea2' ? 'Línea 2' : 'Línea 1'}. Los cambios se aplican al guardar.</p>
+        <p className="sidebar-hint">Configurando {getLineConfig(editingLine).label}. Los cambios se aplican al guardar.</p>
         <FormLayout title="Cambiar producción" compact onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
           <FormField className="field-container">
             <label htmlFor="production-turno">Turno <span className="required-star">*</span></label>

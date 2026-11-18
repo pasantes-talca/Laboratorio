@@ -14,9 +14,8 @@ from backend.app.core.security import security_and_audit_middleware
 from backend.app.models import Base, JarabeSimple
 
 
-@pytest.mark.parametrize(
-    "provided_date", [{}, {"fecha": "2000-01-01", "hora": "01:00"}]
-)
+# Out-of-window dates (e.g. 2000-01-01) are rejected; see tests/test_load_date.py.
+@pytest.mark.parametrize("provided_date", [{}])
 def test_simple_uses_current_plant_time_when_saved_without_login(
     monkeypatch, provided_date
 ):

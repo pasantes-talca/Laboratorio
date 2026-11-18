@@ -62,3 +62,14 @@ describe('producción por línea', () => {
     expect(result.current.production.sabor).toBe('Pomelo');
   });
 });
+
+describe('línea 3', () => {
+  it('restaura linea3 desde sessionStorage y consulta la línea 3', async () => {
+    sessionStorage.setItem('calidad_selected_line', 'linea3');
+    getActiveProduction.mockResolvedValue({ ...second, linea: 3 });
+    const { result } = renderHook(() => useProduction(), { wrapper });
+    await waitFor(() => expect(result.current.productionReady).toBe(true));
+    expect(result.current.selectedLine).toBe('linea3');
+    expect(getActiveProduction).toHaveBeenCalledWith(3);
+  });
+});

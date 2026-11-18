@@ -1,6 +1,7 @@
 import FormLayout, { FormSection, FormField } from '../../../componentes/FormLayout';
 import React from 'react';
 import { getColorOptionsForSabor } from '../../../utils/productRules';
+import { getLineConfig } from '../../../utils/productionLines';
 import { Gauge, Save, RotateCcw, Clock, Plus, Trash2 } from 'lucide-react';
 
 export default function TorqueForm({
@@ -92,7 +93,7 @@ export default function TorqueForm({
       {/* Dynamic cabezal list */}
       <FormSection number="02" title="Mediciones por cabezal" description="Agregue los cabezales medidos y registre el torque de cada uno." grid={false}>
         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
-          Cabezales ({production.linea === 'linea2' ? '1 a 14' : '1 a 12'}) <span className="required-star">*</span>
+          Cabezales ({`1 a ${getLineConfig(production.linea).cabezales}`}) <span className="required-star">*</span>
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {torqueForm.cabezales.map((cab, idx) => (

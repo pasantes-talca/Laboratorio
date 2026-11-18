@@ -1,4 +1,5 @@
 import { PRODUCT_STANDARDS, findProductStandard } from '../../../data/productStandards';
+import { getLineConfig, lineNumber } from '../../../utils/productionLines';
 
 export const ALL_FLAVORS = 'todos';
 const COLORS = ['#0077B6', '#9D3BB0', '#CA650B', '#247D48', '#B93455', '#3861B7', '#8C661E', '#087F83', '#7948AF', '#B74A26', '#587E21', '#705244', '#407A99', '#A72E7E', '#435F67', '#6D6C1A'];
@@ -16,7 +17,7 @@ function productFor(record) {
 }
 
 export function allFlavorMetrics({ bebidaData, jarabeData, torqueData, selectedLinea, selectedMes, selectedFecha }) {
-  const line = selectedLinea === 'linea1' ? 1 : 2;
+  const line = lineNumber(selectedLinea);
   const matches = record => record.linea === line && record.fecha && (selectedFecha !== 'todas'
     ? record.fecha === selectedFecha : selectedMes === 'todos' || record.fecha.startsWith(selectedMes));
   const chronological = records => [...records].sort((a, b) => `${a.fecha} ${a.hora || ''}`.localeCompare(`${b.fecha} ${b.hora || ''}`) || (a.id || 0) - (b.id || 0));
@@ -49,7 +50,7 @@ export function allFlavorMetrics({ bebidaData, jarabeData, torqueData, selectedL
     }
   }
   const sortedPoints = points => points.sort((a, b) => `${a.record.fecha} ${a.record.hora || ''}`.localeCompare(`${b.record.fecha} ${b.record.hora || ''}`) || (a.record.id || 0) - (b.record.id || 0)).map(({ record: _record, ...rest }) => rest);
-  const heads = line === 1 ? 12 : 14;
+  const heads = getLineConfig(selectedLinea).cabezales;
   const byProduct = new Map();
   for (const record of chronological(torqueData.filter(matches))) {
     const head = Number(record.numero_cabezal);
@@ -60,7 +61,7 @@ export function allFlavorMetrics({ bebidaData, jarabeData, torqueData, selectedL
   }
   const torque = [];
   for (const { product, records } of byProduct.values()) {
-    const limits = product.standard?.[line === 1 ? 'torqueLong' : 'torqueShort'];
+    const limits = product.standard?.[getLineConfig(selectedLinea).finish === 'long' ? 'torqueLong' : 'torqueShort'];
     for (let head = 1; head <= heads; head++) {
       const record = records.get(head);
       torque.push({ ...(record ? point(record, product, limits) : {

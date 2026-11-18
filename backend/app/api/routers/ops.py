@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
+from backend.app.core.load_date import resolve_load_date
 from backend.app.core.time import local_now
 from backend.app.models.ops import ControlPausa, ControlTorque
 from backend.app.models.production import ControlProduccion
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/api", tags=["Operaciones"])
 def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_torque guardando strings directamente."""
     now = local_now()
+    load_date = resolve_load_date(data.fecha, data.hora, today=now.date())
     production = require_production(db, data.linea, data.production_version)
     if data.hora and data.hora.strip():
         try:
@@ -39,7 +41,7 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
         turno_final = turno_final.capitalize()
 
     registro = ControlTorque(
-        fecha=now.date(),
+        fecha=load_date,
         hora=hora_obj,
         turno=turno_final,
         linea=linea_num,
@@ -64,7 +66,7 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
 @router.get("/calidad/controles-torque", include_in_schema=False)
 @router.get("/controles-torque", include_in_schema=False)
 def get_controles_torque(
-    linea: int | None = Query(None, ge=1, le=2),
+    linea: int | None = Query(None, ge=1, le=3),
     limit: int = Query(500, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -115,12 +117,20 @@ def delete_control_torque(control_id: int, db: Session = Depends(get_db)):
 def create_pausa(data: ControlPausaCreate, db: Session = Depends(get_db)):
     """Registra una pausa de línea guardando strings directamente."""
     now = local_now()
+    load_date = resolve_load_date(data.fecha, data.hora, today=now.date())
+    if data.hora and data.hora.strip():
+        try:
+            hora_obj = datetime.strptime(data.hora.strip(), "%H:%M").time()
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM") from exc
+    else:
+        hora_obj = now.time().replace(second=0, microsecond=0)
     linea_num = linea_numero(data.linea)
     turno_val = (data.turno or "").capitalize() if (data.turno or "").lower() in ["mañana", "tarde", "noche"] else data.turno
 
     registro = ControlPausa(
-        fecha=now.date(),
-        hora=now.time().replace(second=0, microsecond=0),
+        fecha=load_date,
+        hora=hora_obj,
         turno=turno_val,
         linea=linea_num,
         motivo=data.motivo,

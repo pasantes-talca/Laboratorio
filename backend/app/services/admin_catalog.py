@@ -183,7 +183,7 @@ OPTIONS = {
     "carac_organolep": ["OK", "NOK", "N/A"],
     "nivel_llenado": ["OK", "NOK"],
     "control_video_jet": ["OK", "NOK"],
-    "cloro_riser_linea": ["Linea 1", "Linea 2"],
+    "cloro_riser_linea": ["Linea 1", "Linea 2", "Linea 3"],
     "tipo_limpieza": ["COP", "CIP"],
 }
 

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.config import MAX_UPLOAD_BYTES
 from backend.app.core.database import get_db
+from backend.app.core.load_date import resolve_load_date
 from backend.app.core.time import local_now
 from backend.app.models.jarabe import (
     ControlJarabe,
@@ -72,16 +73,19 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
 def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_db)):
     """Inserta en la tabla control_jarabe guardando strings directamente."""
     now = local_now()
+    load_date = resolve_load_date(data.fecha, data.hora, today=now.date())
     production = require_production(db, data.linea, data.production_version)
-    hora_str = data.hora if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
+    hora_str = data.hora.strip() if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
     except ValueError:
+        if load_date != now.date():
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM")
         hora_obj = now.time().replace(second=0, microsecond=0)
 
     registro = ControlJarabe(
         turno=production.turno,
-        fecha=now.date(),
+        fecha=load_date,
         hora=hora_obj,
         sabor=production.sabor,
         concentrado=production.concentrado,
@@ -105,7 +109,7 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
 @router.get("/calidad/controles-jarabe", include_in_schema=False)
 @router.get("/controles-jarabe", include_in_schema=False)
 def get_controles_jarabe(
-    linea: int | None = Query(None, ge=1, le=2),
+    linea: int | None = Query(None, ge=1, le=3),
     limit: int = Query(500, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -154,6 +158,14 @@ def delete_control_jarabe(control_id: int, db: Session = Depends(get_db)):
 def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)):
     """Registra una preparación de jarabe simple."""
     now = local_now()
+    load_date = resolve_load_date(data.fecha, data.hora, today=now.date())
+    if data.hora and data.hora.strip():
+        try:
+            hora_obj = datetime.strptime(data.hora.strip(), "%H:%M").time()
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM") from exc
+    else:
+        hora_obj = now.time().replace(tzinfo=None, microsecond=0)
 
     def parse_time(t):
         if t and t.strip():
@@ -164,8 +176,8 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
         return None
 
     registro = JarabeSimple(
-        fecha=now.date(),
-        hora=now.time().replace(tzinfo=None, microsecond=0),
+        fecha=load_date,
+        hora=hora_obj,
         tanque=data.tanque.strip(),
         volcado_numero=data.volcado_numero,
         cantidad_bolsas=data.cantidad_bolsas,

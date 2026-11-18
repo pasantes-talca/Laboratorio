@@ -246,3 +246,54 @@ describe('error propagation for POST submissions', () => {
     await expect(api.submitControlBebida({})).rejects.toThrow('network down');
   });
 });
+
+describe('backdated data entry (load date)', () => {
+  const SERVER_DATED = [
+    ['submitControlBebida', '/calidad/bebidas'],
+    ['submitControlJarabe', '/calidad/jarabe'],
+    ['submitControlTorque', '/calidad/torque'],
+    ['submitControlPausa', '/pausas'],
+    ['submitJarabeSimple', '/jarabe-simple'],
+    ['submitControlFisicoQuimico', '/agua/fisico-quimico'],
+  ];
+  const NO_DATE_SUPPORT = ['submitAnalisisCloro', 'submitOsmosisInversa', 'submitFiltroArena', 'submitSalaSaneado'];
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 18, 12, 0, 0));
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    sessionStorage.clear();
+  });
+
+  it.each(SERVER_DATED)('%s omits fecha when no load date is active', async (fnName) => {
+    const fetchMock = stubFetch(jsonResponse({ id: 1 }));
+    await api[fnName]({ hora: '10:00' });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ hora: '10:00' });
+  });
+
+  it.each(SERVER_DATED)('%s sends fecha when a backdated date is active', async (fnName, endpoint) => {
+    sessionStorage.setItem('load_date_session', JSON.stringify({ date: '2026-11-15', lastActivity: Date.now() }));
+    const fetchMock = stubFetch(jsonResponse({ id: 1 }));
+    await api[fnName]({ hora: '10:00' });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`/api${endpoint}`);
+    expect(JSON.parse(init.body)).toEqual({ hora: '10:00', fecha: '2026-11-15' });
+  });
+
+  it.each(NO_DATE_SUPPORT)('%s refuses to save while backdated instead of using today silently', async (fnName) => {
+    sessionStorage.setItem('load_date_session', JSON.stringify({ date: '2026-11-15', lastActivity: Date.now() }));
+    const fetchMock = stubFetch(jsonResponse({ id: 1 }));
+    await expect(api[fnName]({})).rejects.toThrow('Volver a hoy');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(NO_DATE_SUPPORT)('%s still posts normally when no load date is active', async (fnName) => {
+    const fetchMock = stubFetch(jsonResponse({ id: 1 }));
+    await api[fnName]({ x: 1 });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ x: 1 });
+  });
+});

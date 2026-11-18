@@ -6,6 +6,7 @@ import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { getControlesBebida, getControlesJarabe, getControlesTorque, loadAllPages } from '../api/dashboardApi';
 import ControlChart from '../componentes/ControlChart';
 import { ALL_FLAVORS } from '../hooks/allFlavorMetrics';
+import { getLineConfig } from '../../../utils/productionLines';
 
 export default function DashboardPage() {
   const { production } = useProduction();
@@ -109,6 +110,14 @@ export default function DashboardPage() {
               <span className="dot-indicator" />
               Línea 2 (Short finish · 14 Cab)
             </button>
+            <button
+              type="button"
+              className={`btn-linea-toggle ${selectedLinea === 'linea3' ? 'active-linea3' : ''}`}
+              onClick={() => setSelectedLinea('linea3')}
+            >
+              <span className="dot-indicator" />
+              Línea 3 (Short finish · 14 Cab)
+            </button>
           </div>
 
           <button
@@ -164,6 +173,7 @@ export default function DashboardPage() {
             >
               <option value="linea1">Línea 1 (Long finish · 12 Cab)</option>
               <option value="linea2">Línea 2 (Short finish · 14 Cab)</option>
+              <option value="linea3">Línea 3 (Short finish · 14 Cab)</option>
             </select>
           </div>
 
@@ -344,7 +354,7 @@ export default function DashboardPage() {
               <Gauge size={18} />
             </span>
             <span className="kpi-title">
-              Torque ({selectedLinea === 'linea1' ? 'Long finish' : 'Short finish'})
+              Torque ({getLineConfig(selectedLinea).finishLabel})
             </span>
           </div>
           <div className="kpi-value-row">
@@ -413,7 +423,7 @@ export default function DashboardPage() {
         <div className="chart-card card">
           <ControlChart
             type="cab"
-            title={`Control de Torque por Cabezal (${selectedLinea === 'linea1' ? 'Línea 1 · Long finish' : 'Línea 2 · Short finish'})`}
+            title={`Control de Torque por Cabezal (${getLineConfig(selectedLinea).label} · ${getLineConfig(selectedLinea).finishLabel})`}
             data={torqueChartData}
             byProduct={allProducts}
             staticLimits={torqueLimits}

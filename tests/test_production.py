@@ -174,3 +174,19 @@ def test_bebida_does_not_require_lote_tapa():
     assert response.status_code == 201, response.text
     legacy = client.post("/api/controles", json=beverage)
     assert legacy.status_code == 201, legacy.text
+
+
+def test_line_three_is_supported():
+    client, _ = make_client()
+    assert client.get("/api/calidad/produccion/3").json()["version"] == 0
+    assert client.put("/api/calidad/produccion/3", json=production("Cola")).status_code == 200
+    assert client.get("/api/calidad/produccion/4").status_code == 422
+    beverage = {
+        "linea": "linea3", "production_version": 1, "turno": "Noche",
+        "marca": "Soda", "tipo_concentrado": "TALCA", "tamano": "500ml",
+        "carac_organolep": "OK", "nivel_llenado": "OK", "contenido": 500, "presion": 3,
+        "temperatura": 4, "vol_gas": 3, "brix": 10, "control_videojet": "OK", "responsable": "Operador",
+    }
+    response = client.post("/api/calidad/bebidas", json=beverage)
+    assert response.status_code == 201, response.text
+    assert client.get("/api/calidad/bebidas?linea=3").status_code == 200

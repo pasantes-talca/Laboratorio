@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -18,6 +18,7 @@ class RegistroCalidadCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     # Parámetros del Formulario de Calidad
+    fecha: Optional[date] = None
     hora: Optional[str] = None
     turno: Optional[str] = None
     linea: Optional[str] = None

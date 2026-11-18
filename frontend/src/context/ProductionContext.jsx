@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { getActiveProduction, saveActiveProduction } from '../services/api';
+import { isLineId, lineNumber } from '../utils/productionLines';
 
 const ProductionContext = createContext(null);
 const LINE_KEY = 'calidad_selected_line';
@@ -10,7 +11,8 @@ const EMPTY_PRODUCTION = {
 
 function storedLine() {
   try {
-    return sessionStorage.getItem(LINE_KEY) === 'linea2' ? 'linea2' : 'linea1';
+    const stored = sessionStorage.getItem(LINE_KEY);
+    return isLineId(stored) ? stored : 'linea1';
   } catch {
     return 'linea1';
   }
@@ -37,7 +39,7 @@ export function ProductionProvider({ children }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const selectLine = useCallback((line) => {
-    if (line !== 'linea1' && line !== 'linea2') return;
+    if (!isLineId(line)) return;
     try { sessionStorage.setItem(LINE_KEY, line); } catch {}
     setSelectedLine(line);
   }, []);
@@ -45,7 +47,7 @@ export function ProductionProvider({ children }) {
   const refreshProduction = useCallback(async (line = selectedLine) => {
     setLoadingLine(line);
     try {
-      const record = await getActiveProduction(line === 'linea2' ? 2 : 1);
+      const record = await getActiveProduction(lineNumber(line));
       const normalized = normalize(record, line);
       setByLine((previous) => ({
         ...previous,
@@ -69,7 +71,7 @@ export function ProductionProvider({ children }) {
 
   const saveProduction = useCallback(async (line, form, expectedVersion) => {
     try {
-      const record = await saveActiveProduction(line === 'linea2' ? 2 : 1, {
+      const record = await saveActiveProduction(lineNumber(line), {
         expected_version: expectedVersion,
         turno: form.turno,
         sabor: form.sabor,

@@ -9,6 +9,8 @@ import { useToast } from '../../../context/ToastContext';
 import SidebarInfo from '../../../componentes/SidebarInfo';
 import { getResponsables, getTanques } from '../../../services/api';
 import { getColorBySabor } from '../../../utils/productRules';
+import { getLineConfig } from '../../../utils/productionLines';
+import { resolveHora } from '../../../utils/loadDate';
 import { submitControlBebida, submitControlJarabe, submitControlTorque, submitControlPausa } from '../api/calidadApi';
 
 const loteStorageKey = (linea) => `calidad_lote_tapa_${linea}`;
@@ -80,10 +82,9 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     e.preventDefault();
     if (!productionReady) return;
     try {
-      const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
         ...bebidaForm,
-        hora: bebidaForm.hora && bebidaForm.hora.trim() ? bebidaForm.hora.trim() : nowTime,
+        hora: resolveHora(bebidaForm.hora),
         contenido: parseFloat(bebidaForm.contenido) || 0,
         presion: parseFloat(bebidaForm.presion) || 0,
         temperatura: parseFloat(bebidaForm.temperatura) || 0,
@@ -127,10 +128,9 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     e.preventDefault();
     if (!productionReady) return;
     try {
-      const nowTime = new Date().toTimeString().slice(0, 5);
       const payload = {
         ...jarabeForm,
-        hora: jarabeForm.hora && jarabeForm.hora.trim() ? jarabeForm.hora.trim() : nowTime,
+        hora: resolveHora(jarabeForm.hora),
         bx_patron: parseFloat(jarabeForm.bx_patron) || 0,
         ta: parseFloat(jarabeForm.ta) || 0,
         sabor: production.sabor || 'N/A',
@@ -155,7 +155,7 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
   // ----------------------------------------------------
   // FORM 3: CONTROL DE TORQUE (LISTA DINÁMICA DE CABEZALES)
   // ----------------------------------------------------
-  const maxCabezales = production.linea === 'linea1' ? 12 : 14;
+  const maxCabezales = getLineConfig(production.linea).cabezales;
   const [torqueForm, setTorqueForm] = useState({
     hora: '',
     marca_tapa: '',
@@ -208,8 +208,7 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     e.preventDefault();
     if (!productionReady) return;
     try {
-      const nowTime = new Date().toTimeString().slice(0, 5);
-      const hora = torqueForm.hora && torqueForm.hora.trim() ? torqueForm.hora.trim() : nowTime;
+      const hora = resolveHora(torqueForm.hora);
       // Submit one record per cabezal
       for (const cab of torqueForm.cabezales) {
         const payload = {
@@ -251,6 +250,7 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
   // FORM 4: CONTROL DE PAUSAS
   // ----------------------------------------------------
   const [pausaForm, setPausaForm] = useState({
+    hora: '',
     motivo: '',
     responsable: '',
     observacion: '',
@@ -261,12 +261,13 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
     try {
       const payload = {
         ...pausaForm,
+        hora: resolveHora(pausaForm.hora),
         linea: production.linea,
         turno: production.turno,
       };
       await submitControlPausa(payload);
       showToast('Pausa registrada con éxito', 'success');
-      setPausaForm({ motivo: '', responsable: '', observacion: '' });
+      setPausaForm({ hora: '', motivo: '', responsable: '', observacion: '' });
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -369,6 +370,14 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
             <FormLayout title="Registrar pausa" compact onSubmit={async (e) => { await handlePausaSubmit(e); setShowPausaModal(false); }} style={{ marginTop: '1rem' }}>
               <div className="form-grid">
                 <FormField className="field-container col-span-2">
+                  <label>Hora</label>
+                  <input
+                    type="time"
+                    value={pausaForm.hora}
+                    onChange={(e) => setPausaForm({ ...pausaForm, hora: e.target.value })}
+                  />
+                </FormField>
+                <FormField className="field-container col-span-2">
                   <label>Motivo de la Pausa <span className="required-star">*</span></label>
                   <input
                     type="text"
@@ -405,7 +414,7 @@ export default function CalidadPage({ initialTab = 'bebida' }) {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setPausaForm({ motivo: '', responsable: '', observacion: '' })}
+                  onClick={() => setPausaForm({ hora: '', motivo: '', responsable: '', observacion: '' })}
                 >
                   <RotateCcw size={16} /> Limpiar
                 </button>

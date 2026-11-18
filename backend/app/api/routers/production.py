@@ -30,7 +30,7 @@ def as_response(production: ProduccionActiva | None, linea: int) -> ProduccionAc
 
 
 @router.get("/{linea}", response_model=ProduccionActivaResponse)
-def get_production(linea: int = Path(ge=1, le=2), db: Session = Depends(get_db)):
+def get_production(linea: int = Path(ge=1, le=3), db: Session = Depends(get_db)):
     return as_response(db.get(ProduccionActiva, linea), linea)
 
 
@@ -38,7 +38,7 @@ def get_production(linea: int = Path(ge=1, le=2), db: Session = Depends(get_db))
 def update_production(
     data: ProduccionActivaUpdate,
     request: Request,
-    linea: int = Path(ge=1, le=2),
+    linea: int = Path(ge=1, le=3),
     db: Session = Depends(get_db),
 ):
     values = {

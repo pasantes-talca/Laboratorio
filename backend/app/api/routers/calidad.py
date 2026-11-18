@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.config import BRAND_BOTTLE_COLOR
 from backend.app.core.database import get_db
+from backend.app.core.load_date import resolve_load_date
 from backend.app.core.time import local_now
 from backend.app.models.calidad import ControlBebida, RegistroCalidad
 from backend.app.schemas.calidad import (
@@ -68,6 +69,7 @@ def delete_control(control_id: int, db: Session = Depends(get_db)):
 @router.post("/control-bebida", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
     now = local_now()
+    load_date = resolve_load_date(data.fecha, data.hora, today=now.date())
     production = require_production(db, data.linea, data.production_version)
 
     if data.hora and data.hora.strip():
@@ -88,7 +90,7 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
         tanque=data.tanque if hasattr(data, "tanque") else None,
         linea=linea_num,
         turno=production.turno,
-        fecha=now.date(),
+        fecha=load_date,
         hora=hora_obj,
         carac_organolep=data.carac_organolep,
         nivel_llenado=data.nivel_llenado,
@@ -121,7 +123,7 @@ def create_control_bebida(data: RegistroCalidadCreate, db: Session = Depends(get
 @router.get("/calidad/bebida-terminada", include_in_schema=False)
 @router.get("/control-bebida", include_in_schema=False)
 def get_controles_bebida(
-    linea: int | None = Query(None, ge=1, le=2),
+    linea: int | None = Query(None, ge=1, le=3),
     limit: int = Query(500, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),

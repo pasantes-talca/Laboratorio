@@ -38,3 +38,12 @@ it('offers all flavors, preserves the selection across filters and returns to a 
   expect(screen.queryByText('Todos los sabores:')).not.toBeInTheDocument();
   expect(document.querySelector('svg.control-chart-svg')).not.toBeNull();
 });
+
+it('offers Línea 3 with short finish and 14 heads', async () => {
+  render(<DashboardPage />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Actualizar' })).toBeEnabled());
+  expect(screen.getByRole('button', { name: /Línea 3 \(Short finish · 14 Cab\)/ })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: /Línea 3 \(Short finish · 14 Cab\)/ })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText(/1\. Línea/), { target: { value: 'linea3' } });
+  expect(screen.getByLabelText(/1\. Línea/)).toHaveValue('linea3');
+});

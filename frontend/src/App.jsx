@@ -2,6 +2,8 @@ import React, { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { Menu } from 'lucide-react';
 import { ToastProvider } from './context/ToastContext';
 import { ProductionProvider, useProduction } from './context/ProductionContext';
+import { LoadDateProvider } from './context/LoadDateContext';
+import { LoadDateBanner, LoadDateControl } from './componentes/LoadDateControl';
 import SidebarNav from './componentes/SidebarNav';
 import ProductionModal from './componentes/ProductionModal';
 import { AdminAccess } from './componentes/AuthGate';
@@ -128,8 +130,10 @@ function AppContent() {
               <span className="app-topbar-eyebrow">LABORATORIO TALCA</span>
               <h1>{PAGE_TITLES[activePage]?.split(' - ')[0] || 'Laboratorio de Calidad'}</h1>
             </div>
+            <LoadDateControl />
             <span className="app-topbar-line">{activePage === 'calidad' ? 'Control de procesos' : 'Sistema de calidad'}</span>
           </header>
+          <LoadDateBanner />
 
           <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
             {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
@@ -153,9 +157,11 @@ function AppContent() {
 export default function App() {
   return (
     <ToastProvider>
-      <ProductionProvider>
-        <AppContent />
-      </ProductionProvider>
+      <LoadDateProvider>
+        <ProductionProvider>
+          <AppContent />
+        </ProductionProvider>
+      </LoadDateProvider>
     </ToastProvider>
   );
 }

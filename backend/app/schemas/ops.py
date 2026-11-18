@@ -1,9 +1,11 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
 class ControlTorqueCreate(BaseModel):
+    fecha: Optional[date] = None
     hora: Optional[str] = None
     numero_cabezal: int = Field(ge=1, le=14)
     turno: Optional[str] = None
@@ -28,6 +30,8 @@ class ControlTorqueCreate(BaseModel):
 
 
 class ControlPausaCreate(BaseModel):
+    fecha: Optional[date] = None
+    hora: Optional[str] = None
     motivo: str = Field(min_length=2, max_length=100)
     responsable: str = Field(min_length=2, max_length=100)
     observacion: Optional[str] = None

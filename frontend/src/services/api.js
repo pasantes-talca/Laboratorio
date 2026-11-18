@@ -1,4 +1,5 @@
 import { fetchJson, request } from './httpClient';
+import { assertTodayOnly, withLoadDate } from '../utils/loadDate';
 export { fetchJson } from './httpClient';
 
 // Master Catalogs
@@ -50,7 +51,7 @@ export async function getControlesBebida(params = {}) {
 export async function submitControlBebida(payload) {
   return fetchJson('/calidad/bebidas', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
@@ -62,7 +63,7 @@ export async function getControlesJarabe(params = {}) {
 export async function submitControlJarabe(payload) {
   return fetchJson('/calidad/jarabe', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
@@ -74,7 +75,7 @@ export async function getControlesTorque(params = {}) {
 export async function submitControlTorque(payload) {
   return fetchJson('/calidad/torque', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
@@ -85,7 +86,7 @@ export async function getPausas() {
 export async function submitControlPausa(payload) {
   return fetchJson('/pausas', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
@@ -98,7 +99,7 @@ export async function getJarabeSimples(params = {}) {
 export async function submitJarabeSimple(payload) {
   return fetchJson('/jarabe-simple', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
@@ -140,11 +141,12 @@ export async function parseJarabeExcel(file) {
 export async function submitControlFisicoQuimico(payload) {
   return fetchJson('/agua/fisico-quimico', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withLoadDate(payload)),
   });
 }
 
 export async function submitSalaSaneado(payload) {
+  assertTodayOnly();
   return fetchJson('/saneado/sala-saneado', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -152,6 +154,7 @@ export async function submitSalaSaneado(payload) {
 }
 
 export async function submitAnalisisCloro(payload) {
+  assertTodayOnly();
   return fetchJson('/agua/analisis-cloro', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -159,6 +162,7 @@ export async function submitAnalisisCloro(payload) {
 }
 
 export async function submitOsmosisInversa(payload) {
+  assertTodayOnly();
   return fetchJson('/agua/osmosis-inversa', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -166,6 +170,7 @@ export async function submitOsmosisInversa(payload) {
 }
 
 export async function submitFiltroArena(payload) {
+  assertTodayOnly();
   return fetchJson('/agua/filtro-arena', {
     method: 'POST',
     body: JSON.stringify(payload),

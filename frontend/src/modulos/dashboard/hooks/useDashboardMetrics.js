@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { PRODUCT_STANDARDS, findProductStandard } from '../../../data/productStandards';
 import { ALL_FLAVORS, allFlavorMetrics } from './allFlavorMetrics';
+import { getLineConfig, lineNumber } from '../../../utils/productionLines';
 
 const concentrateOf = (record) => String(record?.concentrado || record?.tipo_concentrado || '').trim();
 
@@ -70,7 +71,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
 
   // Extraer lista de Productos disponibles para la Fecha, Mes y Línea seleccionados
   const availableProducts = useMemo(() => {
-    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+    const lineaNum = lineNumber(selectedLinea);
     const rawProducts = new Map();
 
     const checkItem = (d, checkLinea = true) => {
@@ -139,7 +140,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   // Límites de torque según línea seleccionada
   const torqueLimits = useMemo(() => {
     if (!currentStandard) return null;
-    if (selectedLinea === 'linea1') {
+    if (getLineConfig(selectedLinea).finish === 'long') {
       return currentStandard.torqueLong || { min: 15, max: 20, objetivo: 17.5 };
     }
     return currentStandard.torqueShort || { min: 13, max: 17, objetivo: 15.0 };
@@ -210,7 +211,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   const brixChartData = useMemo(() => {
     if (isSodaOrSifon || !currentStandard?.brix) return [];
 
-    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+    const lineaNum = lineNumber(selectedLinea);
 
     const filteredBebida = bebidaData.filter((item) => {
       if (item.grados_brix === null || item.grados_brix === undefined) return false;
@@ -283,7 +284,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   const taChartData = useMemo(() => {
     if (isSodaOrSifon || !currentStandard?.ta) return [];
 
-    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+    const lineaNum = lineNumber(selectedLinea);
     let filtered = jarabeData.filter((item) => {
       if (item.linea !== lineaNum) return false;
       if (item.ta === null || item.ta === undefined) return false;
@@ -311,7 +312,7 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   const carbonatacionChartData = useMemo(() => {
     if (!currentStandard?.carbonatacion) return [];
 
-    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+    const lineaNum = lineNumber(selectedLinea);
 
     let filtered = bebidaData.filter((item) => {
       if (item.vol_gas === null || item.vol_gas === undefined) return false;
@@ -340,8 +341,8 @@ export function useDashboardMetrics({ bebidaData, jarabeData, torqueData, select
   const torqueChartData = useMemo(() => {
     if (!torqueLimits) return [];
 
-    const totalCabezales = selectedLinea === 'linea1' ? 12 : 14;
-    const lineaNum = selectedLinea === 'linea1' ? 1 : 2;
+    const totalCabezales = getLineConfig(selectedLinea).cabezales;
+    const lineaNum = lineNumber(selectedLinea);
 
     const filtered = torqueData.filter((item) => {
       if (item.linea !== lineaNum) return false;
