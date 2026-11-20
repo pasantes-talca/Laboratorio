@@ -49,6 +49,7 @@ async def security_and_audit_middleware(request: Request, call_next):
         production_setup = path in {
             "/api/calidad/produccion/1",
             "/api/calidad/produccion/2",
+            "/api/calidad/produccion/3",
         }
         restricted = (
             admin_path
