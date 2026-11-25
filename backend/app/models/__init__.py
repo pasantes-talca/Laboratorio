@@ -17,26 +17,28 @@ from backend.app.models.jarabe import (
 )
 from backend.app.models.ops import ControlPausa, ControlTorque
 from backend.app.models.production import ControlProduccion, ProduccionActiva
+from backend.app.models.responsables import Responsable
 
 __all__ = [
+    "AnalisisCloro",
     "AutorRegistro",
-    "CambioRegistro",
     "Base",
-    "metadata",
-    "ProduccionActiva",
-    "ControlProduccion",
-    "RegistroCalidad",
+    "CambioRegistro",
     "ControlBebida",
+    "ControlFisicoQuimico",
     "ControlJarabe",
+    "ControlPausa",
+    "ControlProduccion",
+    "ControlTorque",
+    "FiltroArena",
     "JarabeSimple",
     "JarabeTerminado",
-    "SaneoTanque",
-    "ParteJarabe",
-    "ControlTorque",
-    "ControlPausa",
-    "ControlFisicoQuimico",
-    "SalaSaneado",
-    "AnalisisCloro",
     "OsmosisInversa",
-    "FiltroArena",
+    "ParteJarabe",
+    "ProduccionActiva",
+    "RegistroCalidad",
+    "Responsable",
+    "SalaSaneado",
+    "SaneoTanque",
+    "metadata",
 ]

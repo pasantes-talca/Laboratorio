@@ -27,6 +27,7 @@ from backend.app.models import (
 from backend.app.services import (
     audit as _audit,  # noqa: F401 -- register transaction listeners
 )
+from backend.app.services.responsables import seed_responsables
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -40,6 +41,8 @@ def init_db():
         with engine.begin() as connection:
             connection.execute(text("CREATE SCHEMA IF NOT EXISTS laboratorio"))
     Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_responsables(db)
 
 
 def get_db(request: Request):
@@ -55,25 +58,25 @@ def get_db(request: Request):
 
 
 __all__ = [
-    "engine",
-    "SessionLocal",
-    "init_db",
-    "get_db",
+    "DATABASE_URL",
+    "DB_HOST",
+    "DB_NAME",
+    "DB_PASSWORD",
+    "DB_PORT",
+    "DB_USER",
     "Base",
-    "metadata",
-    "RegistroCalidad",
     "ControlBebida",
     "ControlJarabe",
+    "ControlPausa",
+    "ControlTorque",
     "JarabeSimple",
     "JarabeTerminado",
-    "SaneoTanque",
     "ParteJarabe",
-    "ControlTorque",
-    "ControlPausa",
-    "DB_USER",
-    "DB_PASSWORD",
-    "DB_HOST",
-    "DB_PORT",
-    "DB_NAME",
-    "DATABASE_URL",
+    "RegistroCalidad",
+    "SaneoTanque",
+    "SessionLocal",
+    "engine",
+    "get_db",
+    "init_db",
+    "metadata",
 ]

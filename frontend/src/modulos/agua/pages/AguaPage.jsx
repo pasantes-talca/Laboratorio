@@ -3,7 +3,7 @@ import AnalisisCloroForm from '../componentes/AnalisisCloroForm';
 import React, { useState, useEffect } from 'react';
 import { Save, RotateCcw, Clock, Calendar, Beaker, User } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
-import { getResponsables } from '../../../services/api';
+import { getResponsablesAgua } from '../../../services/api';
 import { submitControlFisicoQuimico, submitOsmosisInversa, submitFiltroArena } from '../api/aguaApi';
 
 export default function AguaPage({ initialTab = 'fisicoQuimico' }) {
@@ -16,7 +16,7 @@ export default function AguaPage({ initialTab = 'fisicoQuimico' }) {
   useEffect(() => {
     async function loadData() {
       try {
-        const r = await getResponsables();
+        const r = await getResponsablesAgua();
         setResponsables(r);
       } catch (err) {
         console.error(err);

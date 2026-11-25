@@ -3,6 +3,7 @@ import { ShieldCheck, Search, X, History, Pencil, Trash2, ArrowLeft, ArrowRight 
 import { useSession } from '../../context/AuthContext';
 import { fetchJson } from '../../services/httpClient';
 import { createExamples, previewCatalogue } from './preview';
+import ResponsablesPanel from './ResponsablesPanel';
 import './administracion.css';
 
 const emptyFilters = { desde: '', hasta: '', responsable: '', usuario: '', q: '' };
@@ -89,6 +90,7 @@ export default function AdminPage({ preview = false }) {
   const [deleting, setDeleting] = useState(null);
   const [revision, setRevision] = useState(0);
   const [catalogAttempt, setCatalogAttempt] = useState(0);
+  const [section, setSection] = useState('registros');
   const [examples, setExamples] = useState(() => preview ? createExamples() : {});
   const form = catalog.find(item => item.id === formId);
   const requestVersion = useRef(0);
@@ -147,6 +149,8 @@ export default function AdminPage({ preview = false }) {
   return <main className="admin-page">
     {preview && <aside className="admin-demo"><strong>Vista de ejemplo</strong><span>Estos datos son ficticios. Los cambios son de prueba y se reinician al recargar la página.</span></aside>}
     <header className="admin-hero"><div className="admin-hero-icon"><ShieldCheck size={27} /></div><div><span className="admin-eyebrow">ADMINISTRACIÓN</span><h1>Registros del laboratorio</h1><p>Consultá las cargas, corregí datos y revisá cada modificación.</p></div><span className="admin-badge">{preview ? 'Datos de ejemplo' : user.username}</span></header>
+    {!preview && <div className="admin-tabs admin-sections" role="tablist" aria-label="Secciones de administración"><button type="button" role="tab" aria-selected={section === 'registros'} onClick={() => setSection('registros')}>Registros</button><button type="button" role="tab" aria-selected={section === 'responsables'} onClick={() => setSection('responsables')}>Responsables</button></div>}
+    {section === 'responsables' && !preview ? <ResponsablesPanel /> : <>
     <section className="admin-card"><div className="admin-section-heading"><span className="admin-step">1</span><div><h2>Elegí qué registros consultar</h2><p>Todos los formularios, en un mismo lugar.</p></div></div>
       <div className="admin-selector-grid"><label className="admin-field"><span>Módulo</span><select value={form?.module || ''} onChange={e => choose(catalog.find(item => item.module === e.target.value).id)}>{[...new Set(catalog.map(item => item.module))].map(module => <option value={module} key={module}>{catalog.find(item => item.module === module).module_label}</option>)}</select></label><label className="admin-field"><span>Formulario</span><select value={formId} onChange={e => choose(e.target.value)}>{catalog.filter(item => item.module === form?.module).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label></div>
       <form className="admin-filters" onSubmit={e => { e.preventDefault(); setOffset(0); setApplied({ ...filters }); }}>
@@ -164,6 +168,7 @@ export default function AdminPage({ preview = false }) {
       </td></tr>)}</tbody></table>{busy ? <p role="status" className="admin-empty">Cargando registros…</p> : !result.items.length && <p className="admin-empty">No hay registros que coincidan con la búsqueda.</p>}</div>
       <footer className="admin-pagination"><span>{result.total ? `${offset + 1}–${Math.min(offset + 25, result.total)} de ${result.total}` : '0 registros'}</span><div><button type="button" className="admin-button" disabled={!offset || busy} onClick={() => setOffset(old => Math.max(0, old - 25))}><ArrowLeft size={16} />Anterior</button><button type="button" className="admin-button" disabled={offset + 25 >= result.total || busy} onClick={() => setOffset(old => old + 25)}>Siguiente<ArrowRight size={16} /></button></div></footer>
     </section><p className="admin-footnote">Los registros anteriores a la identificación de usuarios pueden no tener un autor registrado.</p>
+    </>}
     {record && form && <Editor key={`${formId}-${record.id}`} form={form} record={record} onClose={() => setRecord(null)} onSave={save} preview={preview} />}
   </main>;
 }

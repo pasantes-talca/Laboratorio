@@ -1,11 +1,12 @@
 """Shared administration of explicitly registered laboratory forms."""
 
 from datetime import date, datetime, time
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import DateTime, String, cast, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.app.core.auth import COOKIE_NAME, read_session
@@ -13,6 +14,7 @@ from backend.app.core.database import get_db
 from backend.app.core.time import local_now
 from backend.app.models.auditoria import AutorRegistro, CambioRegistro
 from backend.app.models.production import ControlProduccion
+from backend.app.models.responsables import Responsable
 from backend.app.services.admin_catalog import (
     FORMS,
     catalogue,
@@ -77,6 +79,83 @@ def row_data(db, formulario, record, history=False, author=...):
 @router.get("/catalogo")
 def get_catalogue():
     return catalogue()
+
+
+class NewResponsable(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    modulo: Literal["calidad", "agua", "jarabe"]
+    nombre: str = Field(min_length=1, max_length=100)
+
+
+def responsable_audit(user, record, before, after, reason):
+    return CambioRegistro(
+        formulario="responsables",
+        registro_id=record.id,
+        usuario=user["username"],
+        fecha=local_now(),
+        motivo=reason,
+        anteriores=before,
+        nuevos=after,
+    )
+
+
+@router.get("/responsables")
+def list_responsables(
+    db: DbSession, modulo: Literal["calidad", "agua", "jarabe"] | None = None
+):
+    modules = [modulo] if modulo else ["calidad", "agua", "jarabe"]
+    rows = (
+        db.query(Responsable)
+        .filter(Responsable.modulo.in_(modules))
+        .order_by(Responsable.id)
+        .all()
+    )
+    return {
+        m: [{"id": r.id, "nombre": r.nombre} for r in rows if r.modulo == m]
+        for m in modules
+    }
+
+
+@router.post("/responsables", status_code=201)
+def add_responsable(body: NewResponsable, db: DbSession, user: AdminUser):
+    exists = (
+        db.query(Responsable.id)
+        .filter_by(modulo=body.modulo, nombre=body.nombre)
+        .first()
+    )
+    if exists:
+        raise HTTPException(409, "Esa persona ya figura en la lista de este módulo")
+    record = Responsable(modulo=body.modulo, nombre=body.nombre)
+    db.add(record)
+    try:
+        db.flush()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Esa persona ya figura en la lista de este módulo") from exc
+    db.add(
+        responsable_audit(
+            user, record, {}, {"modulo": body.modulo, "nombre": body.nombre},
+            "Alta de responsable",
+        )
+    )
+    db.commit()
+    return {"id": record.id, "modulo": record.modulo, "nombre": record.nombre}
+
+
+@router.delete("/responsables/{responsable_id}")
+def delete_responsable(responsable_id: int, db: DbSession, user: AdminUser):
+    record = db.get(Responsable, responsable_id)
+    if record is None:
+        raise HTTPException(404, "Responsable no encontrado")
+    db.add(
+        responsable_audit(
+            user, record, {"modulo": record.modulo, "nombre": record.nombre},
+            {"eliminado": True}, "Baja de responsable",
+        )
+    )
+    db.delete(record)
+    db.commit()
+    return {"id": responsable_id, "message": "Responsable eliminado"}
 
 
 @router.get("/{formulario}/registros")

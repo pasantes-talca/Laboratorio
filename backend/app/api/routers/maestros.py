@@ -1,8 +1,14 @@
-from fastapi import APIRouter
+from typing import Annotated
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from backend.app.core.database import get_db
 from backend.app.services.maestros import load_maestros
+from backend.app.services.responsables import maestros_con_responsables
 
 router = APIRouter(prefix="/api", tags=["Maestros"])
+DbSession = Annotated[Session, Depends(get_db)]
 
 
 @router.get("/marcas")
@@ -24,16 +30,23 @@ def get_tamanos():
 
 
 @router.get("/responsables")
-def get_responsables():
-    m = load_maestros()
+def get_responsables(db: DbSession):
+    m = maestros_con_responsables(db)
     return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables", []), 1)]
 
 
 @router.get("/responsables-jarabe")
-def get_responsables_jarabe():
+def get_responsables_jarabe(db: DbSession):
     """Responsables específicos para los formularios de Sala de Jarabe."""
-    m = load_maestros()
+    m = maestros_con_responsables(db)
     return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables_jarabe", []), 1)]
+
+
+@router.get("/responsables-agua")
+def get_responsables_agua(db: DbSession):
+    """Responsables específicos para los formularios de Control de Agua."""
+    m = maestros_con_responsables(db)
+    return [{"id": i, "nombre_completo": v} for i, v in enumerate(m.get("responsables_agua", []), 1)]
 
 
 @router.get("/sabores")

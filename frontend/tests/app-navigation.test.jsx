@@ -10,6 +10,7 @@ vi.mock('../src/services/api', () => ({
     por_dia: [], por_sabor: [], tanques: [],
   }),
   getResponsables: vi.fn().mockResolvedValue([]),
+  getResponsablesAgua: vi.fn().mockResolvedValue([]),
   getMarcas: vi.fn().mockResolvedValue([]),
   getTanques: vi.fn().mockResolvedValue([]),
   getResponsablesJarabe: vi.fn().mockResolvedValue([]),

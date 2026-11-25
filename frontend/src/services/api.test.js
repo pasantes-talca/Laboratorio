@@ -97,6 +97,7 @@ describe('catalog getters hit correct endpoints', () => {
     ['getTamanos', '/tamanos'],
     ['getResponsables', '/responsables'],
     ['getResponsablesJarabe', '/responsables-jarabe'],
+    ['getResponsablesAgua', '/responsables-agua'],
     ['getTanques', '/tanques'],
     ['getSabores', '/sabores'],
   ];

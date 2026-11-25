@@ -21,7 +21,7 @@ def test_baseline_creates_missing_tables_and_preserves_existing_records():
         assert connection.execute(text("SELECT value FROM existing_data")).scalar_one() == "preserved"
         assert "autor_registro" in tables
         assert "cambio_registro" in tables
-        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0005_torque_lote_tapa"
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0006_responsables"
 
 
 def test_rinser_upgrade_preserves_legacy_chlorine_results():

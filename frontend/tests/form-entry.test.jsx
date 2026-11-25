@@ -20,6 +20,7 @@ import {
 
 vi.mock('../src/services/api', () => ({
   getResponsables: vi.fn().mockResolvedValue([{ id: 1, nombre_completo: 'Operador Uno' }]),
+  getResponsablesAgua: vi.fn().mockResolvedValue([{ id: 1, nombre_completo: 'Operador Uno' }]),
   getResponsablesJarabe: vi.fn().mockResolvedValue([{ id: 1, nombre_completo: 'Operador Uno' }]),
   getTanques: vi.fn().mockResolvedValue([{ id: 1, numero: '1' }]),
   getSabores: vi.fn().mockResolvedValue([]),

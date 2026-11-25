@@ -19,6 +19,10 @@ export async function getResponsables() {
   return fetchJson('/responsables');
 }
 
+export async function getResponsablesAgua() {
+  return fetchJson('/responsables-agua');
+}
+
 export async function getResponsablesJarabe() {
   return fetchJson('/responsables-jarabe');
 }
