@@ -7,8 +7,6 @@
 __pycache__
 node_modules
 *.txt
-!requirements.txt
-!requirements-dev.txt
 /env
 *.pyc
 *.md
