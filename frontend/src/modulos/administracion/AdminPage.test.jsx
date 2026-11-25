@@ -37,6 +37,15 @@ it('retains the row when deletion fails and sends its version', async () => {
   await waitFor(() => expect(remove).toBeEnabled());
 });
 
+it('shows the form responsable as the person who entered the record', async () => {
+  const row = { ...createExamples()['agua-cloro'][0], entered_by: 'Juan Perez', created_by: null };
+  fetchJson.mockImplementation(endpoint => Promise.resolve(endpoint === '/admin/catalogo' ? previewCatalogue : { items: [row], total: 1 }));
+  render(<AuthContext.Provider value={{ user: { username: 'admin', role: 'administrador' } }}><AdminPage /></AuthContext.Provider>);
+  const cell = await screen.findByText('Juan Perez', { selector: '.admin-author' });
+  expect(cell).toBeInTheDocument();
+  expect(screen.queryByText('Sin registro de autor')).not.toBeInTheDocument();
+});
+
 it('requires administrator identity before requesting real data', () => {
   render(<AdminPage />);
   expect(screen.getByText(/Ingresá con una cuenta/)).toBeInTheDocument();
