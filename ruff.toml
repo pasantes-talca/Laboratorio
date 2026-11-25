@@ -1,0 +1,36 @@
+target-version = "py312"
+
+[lint]
+# Explicit rule set so upgrading ruff never changes what CI enforces.
+select = [
+    "E4", "E7", "E9", # pycodestyle errors
+    "F",              # pyflakes
+    "I",              # import sorting
+    "UP",             # pyupgrade
+    "B",              # bugbear
+    "C4",             # comprehensions
+    "DTZ",            # naive datetimes
+    "BLE",            # blind except
+    "RUF",            # ruff-specific
+]
+ignore = [
+    # Parsing user-entered "%H:%M" / "%Y-%m-%d" values is intentionally local and naive.
+    "DTZ007",
+]
+
+[lint.flake8-bugbear]
+# FastAPI dependency markers are meant to be called in argument defaults.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+]
+
+[lint.per-file-ignores]
+# Test fixtures build fixed local timestamps on purpose.
+"tests/**" = ["DTZ001"]
