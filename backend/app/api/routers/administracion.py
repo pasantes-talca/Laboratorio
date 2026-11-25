@@ -48,10 +48,18 @@ def model_for(formulario):
 def row_data(db, formulario, record, history=False, author=...):
     if author is ...:
         author = db.get(AutorRegistro, (formulario, record.id))
+    values = serialize(record)
+    created_by = author.creado_por if author else None
+    # Forms are filled without logging in, so the person named in the form is
+    # the one who entered it; the session user is only a fallback.
+    named = values.get("responsable") or values.get("responsables")
+    if isinstance(named, list):
+        named = ", ".join(str(name) for name in named if name)
     result = {
         "id": record.id,
-        "values": serialize(record),
-        "created_by": author.creado_por if author else None,
+        "values": values,
+        "entered_by": named or created_by,
+        "created_by": created_by,
         "created_at": author.creado_en if author else None,
         "version": author.version if author else 0,
     }

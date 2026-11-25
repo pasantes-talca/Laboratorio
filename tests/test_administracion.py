@@ -147,6 +147,25 @@ def test_all_forms_list_edit_and_history(admin, form_id):
     assert len(client.get(f"{url}/{id_}").json()["history"]) == 1
 
 
+@pytest.mark.parametrize("form_id", list(FORMS))
+def test_entered_by_shows_form_responsable(admin, form_id):
+    client, engine = admin
+    id_ = insert(engine, form_id)
+    row = client.get(f"/api/admin/{form_id}/registros").json()["items"][0]
+    columns = FORMS[form_id][2].__table__.columns
+    expected = (
+        "Otro responsable"
+        if "responsable" in columns
+        else "Operador"
+        if "responsables" in columns
+        else "ana"
+    )
+    assert row["entered_by"] == expected
+    assert client.get(f"/api/admin/{form_id}/registros/{id_}").json()[
+        "entered_by"
+    ] == expected
+
+
 @pytest.mark.parametrize("username,status", [(None, 401), ("ana", 403), ("jefe", 403)])
 def test_admin_only_even_with_spoofed_headers(admin, username, status):
     client, _ = admin
