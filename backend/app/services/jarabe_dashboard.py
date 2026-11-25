@@ -6,9 +6,14 @@ from datetime import date
 from fastapi import HTTPException
 from sqlalchemy import Float, String, case, cast, func, literal, select, union_all
 
-from backend.app.models.jarabe import JarabeSimple, JarabeTerminado, ParteJarabe, SaneoTanque
 from backend.app.models.auditoria import AutorRegistro
-from backend.app.services.jarabe_tanques import tank_states, SOURCES
+from backend.app.models.jarabe import (
+    JarabeSimple,
+    JarabeTerminado,
+    ParteJarabe,
+    SaneoTanque,
+)
+from backend.app.services.jarabe_tanques import SOURCES, tank_states
 
 INGREDIENTS = {
     'azucar': 'Azúcar', 'sucralosa': 'Sucralosa', 'reforzado_citrico': 'Reforzado cítrico',

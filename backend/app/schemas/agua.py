@@ -1,5 +1,4 @@
 from datetime import date, time
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -16,8 +15,8 @@ class ControlFisicoQuimicoCreate(AguaBase):
     model_config = ConfigDict(populate_by_name=True)
     
     tipo_agua: str = Field(..., description="Agua de Pozo, Agua Permeada, Agua Tratada")
-    fecha: Optional[date] = None
-    hora: Optional[time] = None
+    fecha: date | None = None
+    hora: time | None = None
     k: float = Field(ge=0)
     dureza: float = Field(ge=0)
     cloruros: float = Field(ge=0)
@@ -35,23 +34,23 @@ class SalaSaneadoCreate(AguaBase):
     tipo_limpieza: str = Field(..., description="COP o CIP")
     responsable: str
     
-    cop_quimico: Optional[str] = None
-    cop_hora_inicio: Optional[time] = None
-    cop_hora_fin: Optional[time] = None
+    cop_quimico: str | None = None
+    cop_hora_inicio: time | None = None
+    cop_hora_fin: time | None = None
     
-    cip_sanitizante_temp: Optional[float] = None
-    cip_sanitizante_inicio: Optional[time] = None
-    cip_sanitizante_fin: Optional[time] = None
+    cip_sanitizante_temp: float | None = None
+    cip_sanitizante_inicio: time | None = None
+    cip_sanitizante_fin: time | None = None
     
-    cip_desinfectante_temp: Optional[float] = None
-    cip_desinfectante_inicio: Optional[time] = None
-    cip_desinfectante_fin: Optional[time] = None
+    cip_desinfectante_temp: float | None = None
+    cip_desinfectante_inicio: time | None = None
+    cip_desinfectante_fin: time | None = None
     
-    cip_enjuague_sanitizante_inicio: Optional[time] = None
-    cip_enjuague_sanitizante_fin: Optional[time] = None
+    cip_enjuague_sanitizante_inicio: time | None = None
+    cip_enjuague_sanitizante_fin: time | None = None
     
-    cip_enjuague_desinfectante_inicio: Optional[time] = None
-    cip_enjuague_desinfectante_fin: Optional[time] = None
+    cip_enjuague_desinfectante_inicio: time | None = None
+    cip_enjuague_desinfectante_fin: time | None = None
 
     @model_validator(mode="after")
     def validate_cleaning_type(self):
@@ -73,21 +72,21 @@ class SalaSaneadoCreate(AguaBase):
 
 
 class AnalisisCloroCreate(AguaBase):
-    hora: Optional[time] = None
+    hora: time | None = None
     tanque_agua_osmosis: float = Field(ge=0)
     filtro_carbon_a: str = Field(min_length=2, max_length=20)
     filtro_carbon_b: str = Field(min_length=2, max_length=20)
     filtro_carbon_c: str = Field(min_length=2, max_length=20)
-    contralavado_tanque_a: Optional[time] = None
-    contralavado_tanque_b: Optional[time] = None
+    contralavado_tanque_a: time | None = None
+    contralavado_tanque_b: time | None = None
     cloro_riser_linea: str = Field(min_length=2, max_length=20)
     cloro_riser_resultado: float = Field(ge=0)
-    acondicionamiento_rinser: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
+    acondicionamiento_rinser: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     responsable: str = Field(min_length=2, max_length=100)
 
 
 class OsmosisInversaCreate(AguaBase):
-    hora: Optional[time] = None
+    hora: time | None = None
     k: float = Field(ge=0)
     h: float = Field(ge=0)
     q_perm: float = Field(ge=0)
@@ -98,7 +97,7 @@ class OsmosisInversaCreate(AguaBase):
 
 
 class FiltroArenaCreate(AguaBase):
-    hora: Optional[time] = None
+    hora: time | None = None
     presion_interno: float = Field(ge=0)
     presion_externo: float = Field(ge=0)
-    fecha_contralavado: Optional[date] = None
+    fecha_contralavado: date | None = None

@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 
 import pytest
 from fastapi import FastAPI, Request
@@ -69,7 +69,7 @@ def sample(form_id, model):
         elif isinstance(c.type, Boolean):
             value = True
         elif isinstance(c.type, DateTime):
-            value = datetime(2026, 10, 20, 8, 30, tzinfo=timezone.utc)
+            value = datetime(2026, 10, 20, 8, 30, tzinfo=UTC)
         elif isinstance(c.type, Date):
             value = date(2026, 10, 20)
         elif isinstance(c.type, Time):

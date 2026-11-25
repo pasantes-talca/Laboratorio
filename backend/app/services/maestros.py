@@ -86,6 +86,6 @@ def load_maestros() -> dict:
     try:
         with open(MAESTROS_PATH, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (OSError, ValueError):
         return DEFAULT_MAESTROS
 

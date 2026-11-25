@@ -2,8 +2,8 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.app.models import Base
-from backend.app.models.auditoria import AutorRegistro, CambioRegistro
 from backend.app.models.agua import AnalisisCloro
+from backend.app.models.auditoria import AutorRegistro, CambioRegistro
 from scripts import eliminar_demo_agua
 
 
@@ -11,7 +11,7 @@ def test_only_marked_records_are_removed_and_audit_is_preserved(monkeypatch):
     engine = create_engine('sqlite://').execution_options(schema_translate_map={'laboratorio': None})
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine)
-    values = dict(tanque_agua_osmosis=0, filtro_carbon_a='Cumple', filtro_carbon_b='Cumple', filtro_carbon_c='Cumple', cloro_riser_linea='Linea 1', cloro_riser_resultado=1, responsable='Operador real')
+    values = {'tanque_agua_osmosis': 0, 'filtro_carbon_a': 'Cumple', 'filtro_carbon_b': 'Cumple', 'filtro_carbon_c': 'Cumple', 'cloro_riser_linea': 'Linea 1', 'cloro_riser_resultado': 1, 'responsable': 'Operador real'}
     with factory.begin() as db:
         real = AnalisisCloro(**values)
         db.add(real)

@@ -146,7 +146,7 @@ def torque_payload(**overrides):
 
 
 def test_torque_requires_lote_tapa_and_lists_it():
-    client, engine = make_client()
+    client, _engine = make_client()
     client.put("/api/calidad/produccion/1", json=production("Cola"))
     for missing in ({"lote_tapa": None}, {"lote_tapa": "   "}, {"lote_tapa": ""}):
         assert client.post("/api/calidad/torque", json=torque_payload(**missing)).status_code == 422

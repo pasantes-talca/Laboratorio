@@ -26,7 +26,10 @@ from backend.app.schemas.jarabe import (
 )
 from backend.app.services.excel_parser import extraer_datos_reporte
 from backend.app.services.jarabe_dashboard import dashboard as jarabe_dashboard
-from backend.app.services.production import attach_control_production, require_production
+from backend.app.services.production import (
+    attach_control_production,
+    require_production,
+)
 
 router = APIRouter(prefix="/api", tags=["Sala de Jarabe"])
 
@@ -59,11 +62,12 @@ async def parse_jarabe_excel(file: UploadFile = File(...)):
         return {"status": "success", "data": datos}
     except HTTPException:
         raise
-    except Exception:
+    # Any parser failure on an uploaded file must surface as a 422, never a 500.
+    except Exception as exc:
         raise HTTPException(
             status_code=422,
             detail="El archivo no tiene el formato esperado de trazabilidad",
-        )
+        ) from exc
 
 
 @router.post("/calidad/jarabe", status_code=status.HTTP_201_CREATED)
@@ -78,9 +82,9 @@ def create_control_jarabe(data: ControlJarabeCreate, db: Session = Depends(get_d
     hora_str = data.hora.strip() if (data.hora and data.hora.strip()) else now.strftime("%H:%M")
     try:
         hora_obj = datetime.strptime(hora_str, "%H:%M").time()
-    except ValueError:
+    except ValueError as exc:
         if load_date != now.date():
-            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM")
+            raise HTTPException(status_code=422, detail="La hora debe tener formato HH:MM") from exc
         hora_obj = now.time().replace(second=0, microsecond=0)
 
     registro = ControlJarabe(
@@ -199,9 +203,9 @@ def create_jarabe_simple(data: JarabeSimpleCreate, db: Session = Depends(get_db)
 
 @router.get("/jarabe-simple")
 def get_jarabe_simples(
-    tanque: str = None,
-    fecha: str = None,
-    sabor: str = None,
+    tanque: str | None = None,
+    fecha: str | None = None,
+    sabor: str | None = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -241,7 +245,7 @@ def create_jarabe_terminado(data: JarabeTerminadoCreate, db: Session = Depends(g
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
-        fecha_obj = datetime.now().date()
+        fecha_obj = local_now().date()
 
     registro = JarabeTerminado(
         fecha=fecha_obj,
@@ -268,7 +272,7 @@ def create_saneo_tanque(data: SaneoTanqueCreate, db: Session = Depends(get_db)):
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
-        fecha_obj = datetime.now().date()
+        fecha_obj = local_now().date()
 
     def parse_time(t):
         if t and t.strip():
@@ -299,7 +303,7 @@ def create_parte_jarabe(data: ParteJarabeCreate, db: Session = Depends(get_db)):
     try:
         fecha_obj = date_type.fromisoformat(data.fecha)
     except ValueError:
-        fecha_obj = datetime.now().date()
+        fecha_obj = local_now().date()
 
     registro = ParteJarabe(
         fecha=fecha_obj,

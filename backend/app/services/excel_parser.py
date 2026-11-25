@@ -39,7 +39,7 @@ class TableParser(HTMLParser):
 
 def extraer_datos_reporte(ruta_o_contenido, es_ruta=True):
     if es_ruta:
-        with open(ruta_o_contenido, "r", encoding="utf-8", errors="ignore") as f:
+        with open(ruta_o_contenido, encoding="utf-8", errors="ignore") as f:
             html_content = f.read()
     else:
         html_content = (

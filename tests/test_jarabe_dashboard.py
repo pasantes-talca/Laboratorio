@@ -11,7 +11,12 @@ from backend.app.api.routers.jarabe import router
 from backend.app.core.database import get_db
 from backend.app.core.security import security_and_audit_middleware
 from backend.app.models import Base
-from backend.app.models.jarabe import JarabeSimple, JarabeTerminado, ParteJarabe, SaneoTanque
+from backend.app.models.jarabe import (
+    JarabeSimple,
+    JarabeTerminado,
+    ParteJarabe,
+    SaneoTanque,
+)
 
 
 @pytest.fixture
@@ -19,7 +24,7 @@ def client():
     engine = create_engine('sqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool).execution_options(schema_translate_map={'laboratorio': None})
     Base.metadata.create_all(engine)
     with Session(engine) as db:
-        common = dict(fecha=date(2026, 10, 22), tanque='1', responsables='["Ana"]')
+        common = {'fecha': date(2026, 10, 22), 'tanque': '1', 'responsables': '["Ana"]'}
         db.add(JarabeSimple(**common, volcado_numero=1, cantidad_bolsas=40, azucar_tipo='Común', azucar_marca='Marca'))
         for volume in (1000, None, 0):
             db.add(JarabeTerminado(**common, sabor='Naranja', concentrado='XQ', unidades=1, volcado_numero='[1]', lts_jarabe_terminado=volume))
@@ -45,7 +50,7 @@ def test_totals_include_entire_period_not_only_history_page(client):
     response = client.get('/api/jarabe/dashboard?mes=2026-10&limit=1')
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body['resumen'] == dict(simple=1, terminado=3, saneo=1, parte=1, bolsas=40, litros=1000, sin_litros=1, total=6)
+    assert body['resumen'] == {'simple': 1, 'terminado': 3, 'saneo': 1, 'parte': 1, 'bolsas': 40, 'litros': 1000, 'sin_litros': 1, 'total': 6}
     assert len(body['historial']['registros']) == 1
     assert body['historial']['total'] == 6
     assert body['por_sabor'][0]['sin_litros'] == 1

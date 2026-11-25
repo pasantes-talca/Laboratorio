@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,7 +12,10 @@ from backend.app.schemas.calidad import (
     RegistroCalidadCreate,
     RegistroCalidadResponse,
 )
-from backend.app.services.production import attach_control_production, require_production
+from backend.app.services.production import (
+    attach_control_production,
+    require_production,
+)
 
 router = APIRouter(prefix="/api", tags=["Calidad"])
 
@@ -23,7 +25,7 @@ def create_control(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
     """Legacy endpoint — still inserts into registro_calidad for backwards compatibility."""
     hora_registro = data.hora
     if not hora_registro or not hora_registro.strip():
-        hora_registro = datetime.now().strftime("%H:%M")
+        hora_registro = local_now().strftime("%H:%M")
 
     db_registro = RegistroCalidad(
         hora=hora_registro,
@@ -48,7 +50,7 @@ def create_control(data: RegistroCalidadCreate, db: Session = Depends(get_db)):
     return db_registro
 
 
-@router.get("/controles", response_model=List[RegistroCalidadResponse])
+@router.get("/controles", response_model=list[RegistroCalidadResponse])
 def get_controles(db: Session = Depends(get_db)):
     return db.query(RegistroCalidad).order_by(RegistroCalidad.id.desc()).all()
 

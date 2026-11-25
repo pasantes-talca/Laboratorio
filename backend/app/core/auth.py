@@ -8,7 +8,12 @@ import re
 import secrets
 import time
 
-from backend.app.core.config import AUTH_USERS, ENVIRONMENT, SESSION_SECONDS, SESSION_SECRET
+from backend.app.core.config import (
+    AUTH_USERS,
+    ENVIRONMENT,
+    SESSION_SECONDS,
+    SESSION_SECRET,
+)
 
 COOKIE_NAME = "laboratorio_session"
 ROLES = {"operador", "supervisor", "administrador"}

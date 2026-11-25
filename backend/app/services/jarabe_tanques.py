@@ -8,7 +8,12 @@ from sqlalchemy import func, or_, select
 from backend.app.core.config import APP_TIMEZONE
 from backend.app.core.time import local_now
 from backend.app.models.auditoria import AutorRegistro
-from backend.app.models.jarabe import JarabeSimple, JarabeTerminado, ParteJarabe, SaneoTanque
+from backend.app.models.jarabe import (
+    JarabeSimple,
+    JarabeTerminado,
+    ParteJarabe,
+    SaneoTanque,
+)
 from backend.app.services.maestros import load_maestros
 
 SOURCES = [('simple', JarabeSimple, 'jarabe-simple'), ('terminado', JarabeTerminado, 'jarabe-terminado'),
@@ -84,7 +89,7 @@ def tank_states(db, catalog=None, now=None):
             item = event(record, kind, author, now)
             if item:
                 grouped[record.tanque.strip()].append(item)
-    names = set(str(value).strip() for value in (catalog if catalog is not None else load_maestros().get('tanques', []))) | set(grouped)
+    names = {str(value).strip() for value in (catalog if catalog is not None else load_maestros().get('tanques', []))} | set(grouped)
     unassigned = {'', 'N/A', 'TALCA'}
     tanks = []
     for name in sorted(names - unassigned, key=lambda value: (not value.isdigit(), int(value) if value.isdigit() else value)):

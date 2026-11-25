@@ -1,13 +1,18 @@
 """Public, read-only water monitoring with server-side aggregation and pagination."""
 import calendar
-from datetime import date, timezone
+from datetime import UTC, date
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from sqlalchemy import String, cast, func, select
 
 from backend.app.core.config import APP_TIMEZONE
-from backend.app.models.agua import AnalisisCloro, ControlFisicoQuimico, FiltroArena, OsmosisInversa
+from backend.app.models.agua import (
+    AnalisisCloro,
+    ControlFisicoQuimico,
+    FiltroArena,
+    OsmosisInversa,
+)
 
 # Units are only included where the input form specifies them.
 FORMS = {
@@ -88,7 +93,7 @@ def dashboard(db, tipo, mes=None, fecha=None, grupo='', limit=25, offset=0):
         if model is ControlFisicoQuimico:
             values['fecha_control'] = row.fecha.isoformat()
         else:
-            values['fecha_control'] = row.fecha_registro.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(APP_TIMEZONE)).date().isoformat()
+            values['fecha_control'] = row.fecha_registro.replace(tzinfo=UTC).astimezone(ZoneInfo(APP_TIMEZONE)).date().isoformat()
         history.append(values)
     groups = sorted(value for value in db.scalars(select(group_column).distinct()) if value) if group_column is not None else []
     return {

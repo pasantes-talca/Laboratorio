@@ -1,22 +1,21 @@
 from datetime import date
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
 class ControlTorqueCreate(BaseModel):
-    fecha: Optional[date] = None
-    hora: Optional[str] = None
+    fecha: date | None = None
+    hora: str | None = None
     numero_cabezal: int = Field(ge=1, le=14)
-    turno: Optional[str] = None
-    noche: Optional[str] = None
-    linea: Optional[str] = None
-    production_version: Optional[int] = Field(default=None, ge=0)
+    turno: str | None = None
+    noche: str | None = None
+    linea: str | None = None
+    production_version: int | None = Field(default=None, ge=0)
     valor: float = Field(ge=0, le=500)
     sabor: str = Field(min_length=2, max_length=100)
-    marca: Optional[str] = None
-    color: Optional[str] = None
-    marca_tapa: Optional[str] = None
+    marca: str | None = None
+    color: str | None = None
+    marca_tapa: str | None = None
     lote_tapa: str = Field(max_length=50)
     responsable: str = Field(min_length=2, max_length=100)
 
@@ -30,10 +29,10 @@ class ControlTorqueCreate(BaseModel):
 
 
 class ControlPausaCreate(BaseModel):
-    fecha: Optional[date] = None
-    hora: Optional[str] = None
+    fecha: date | None = None
+    hora: str | None = None
     motivo: str = Field(min_length=2, max_length=100)
     responsable: str = Field(min_length=2, max_length=100)
-    observacion: Optional[str] = None
-    turno: Optional[str] = None
-    linea: Optional[str] = None
+    observacion: str | None = None
+    turno: str | None = None
+    linea: str | None = None

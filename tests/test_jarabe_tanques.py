@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 
 from backend.app.models import Base
 from backend.app.models.auditoria import AutorRegistro
-from backend.app.models.jarabe import JarabeSimple, JarabeTerminado, ParteJarabe, SaneoTanque
+from backend.app.models.jarabe import (
+    JarabeSimple,
+    JarabeTerminado,
+    ParteJarabe,
+    SaneoTanque,
+)
 from backend.app.services.jarabe_tanques import tank_states
 
 
@@ -20,7 +25,7 @@ def db():
 
 
 def record(db, kind, day, hour=None, finish=None, tank='1'):
-    common = dict(fecha=date(2026, 10, day), tanque=tank, responsables='["Ana"]')
+    common = {'fecha': date(2026, 10, day), 'tanque': tank, 'responsables': '["Ana"]'}
     if kind == 'simple':
         row = JarabeSimple(**common, hora=time(hour) if hour is not None else None, volcado_numero=1, cantidad_bolsas=40, azucar_tipo='Común', azucar_marca='Marca')
     elif kind == 'terminado':

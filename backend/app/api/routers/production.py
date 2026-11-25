@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.core.time import local_now
 from backend.app.models.production import ProduccionActiva
-from backend.app.schemas.production import ProduccionActivaResponse, ProduccionActivaUpdate
+from backend.app.schemas.production import (
+    ProduccionActivaResponse,
+    ProduccionActivaUpdate,
+)
 
 router = APIRouter(prefix="/api/calidad/produccion", tags=["Producción activa"])
 

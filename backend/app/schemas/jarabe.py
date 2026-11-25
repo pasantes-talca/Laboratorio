@@ -1,40 +1,39 @@
 from datetime import date
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class ControlJarabeCreate(BaseModel):
-    fecha: Optional[date] = None
-    hora: Optional[str] = None
-    turno: Optional[str] = None
-    linea: Optional[str] = None
-    production_version: Optional[int] = Field(default=None, ge=0)
+    fecha: date | None = None
+    hora: str | None = None
+    turno: str | None = None
+    linea: str | None = None
+    production_version: int | None = Field(default=None, ge=0)
     sabor: str = Field(min_length=2, max_length=100)
     concentrado: str = Field(min_length=1, max_length=50)
     tanque: str = Field(min_length=1, max_length=20)
     bx_patron: float = Field(ge=0, le=100)
     ta: float = Field(ge=0)
     responsable: str = Field(min_length=2, max_length=100)
-    observacion: Optional[str] = None
-    numero_carga_trilay: Optional[str] = None
+    observacion: str | None = None
+    numero_carga_trilay: str | None = None
 
 
 class JarabeSimpleCreate(BaseModel):
-    fecha: Optional[date] = None
-    hora: Optional[str] = None
+    fecha: date | None = None
+    hora: str | None = None
     tanque: str
     volcado_numero: int = Field(ge=1)
     cantidad_bolsas: int = Field(ge=0)
     azucar_tipo: str
     azucar_marca: str
-    azucar_ntu: Optional[str] = None
-    aux_standard: Optional[float] = None
-    aux_hyflo: Optional[float] = None
-    pasteurizado_desde: Optional[str] = None
-    pasteurizado_hasta: Optional[str] = None
-    pasteurizado_temp: Optional[float] = None
-    responsables: List[str]
+    azucar_ntu: str | None = None
+    aux_standard: float | None = None
+    aux_hyflo: float | None = None
+    pasteurizado_desde: str | None = None
+    pasteurizado_hasta: str | None = None
+    pasteurizado_temp: float | None = None
+    responsables: list[str]
 
 
 class JarabeTerminadoCreate(BaseModel):
@@ -44,11 +43,11 @@ class JarabeTerminadoCreate(BaseModel):
     tanque: str
     unidades: int = Field(ge=0)
     volcado_numero: str
-    tiempo_filtrado: Optional[str] = None
-    be_jarabe_simple: Optional[float] = None
-    vol_jarabe_simple: Optional[float] = None
-    lts_jarabe_terminado: Optional[float] = None
-    responsables: List[str]
+    tiempo_filtrado: str | None = None
+    be_jarabe_simple: float | None = None
+    vol_jarabe_simple: float | None = None
+    lts_jarabe_terminado: float | None = None
+    responsables: list[str]
 
 
 class SaneoTanqueCreate(BaseModel):
@@ -57,8 +56,8 @@ class SaneoTanqueCreate(BaseModel):
     hora_fin: str
     tanque: str
     producto: str
-    responsables: List[str]
-    numero_saneo: Optional[int] = None
+    responsables: list[str]
+    numero_saneo: int | None = None
 
 
 class ParteJarabeCreate(BaseModel):
@@ -66,17 +65,17 @@ class ParteJarabeCreate(BaseModel):
     turno: str
     tanque: str
     numero_carga_trilay: str
-    sabor: Optional[str] = None
-    responsables: List[str]
-    azucar: Optional[float] = None
-    sucralosa: Optional[float] = None
-    reforzado_citrico: Optional[float] = None
-    acesulfame_k: Optional[float] = None
-    benzoato_sodio: Optional[float] = None
-    sorbato_potasio: Optional[float] = None
-    citrato_sodio: Optional[float] = None
-    acido_citrico: Optional[float] = None
-    acido_fosforico: Optional[float] = None
-    acido_ascorbico: Optional[float] = None
-    cafeina: Optional[float] = None
-    colorante_caramelo: Optional[float] = None
+    sabor: str | None = None
+    responsables: list[str]
+    azucar: float | None = None
+    sucralosa: float | None = None
+    reforzado_citrico: float | None = None
+    acesulfame_k: float | None = None
+    benzoato_sodio: float | None = None
+    sorbato_potasio: float | None = None
+    citrato_sodio: float | None = None
+    acido_citrico: float | None = None
+    acido_fosforico: float | None = None
+    acido_ascorbico: float | None = None
+    cafeina: float | None = None
+    colorante_caramelo: float | None = None

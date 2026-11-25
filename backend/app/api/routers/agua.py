@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.core.load_date import resolve_load_date
 from backend.app.core.time import local_now
-from backend.app.services.agua_dashboard import dashboard as agua_dashboard
 from backend.app.models.agua import (
     AnalisisCloro,
     ControlFisicoQuimico,
@@ -21,6 +20,7 @@ from backend.app.schemas.agua import (
     OsmosisInversaCreate,
     SalaSaneadoCreate,
 )
+from backend.app.services.agua_dashboard import dashboard as agua_dashboard
 
 router = APIRouter(prefix="/api/agua", tags=["Agua"])
 

@@ -11,7 +11,12 @@ from backend.app.api.routers.agua import router
 from backend.app.core.database import get_db
 from backend.app.core.security import security_and_audit_middleware
 from backend.app.models import Base
-from backend.app.models.agua import AnalisisCloro, ControlFisicoQuimico, FiltroArena, OsmosisInversa
+from backend.app.models.agua import (
+    AnalisisCloro,
+    ControlFisicoQuimico,
+    FiltroArena,
+    OsmosisInversa,
+)
 
 
 @pytest.fixture

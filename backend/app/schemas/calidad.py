@@ -1,5 +1,4 @@
 from datetime import date, datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -18,11 +17,11 @@ class RegistroCalidadCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     # Parámetros del Formulario de Calidad
-    fecha: Optional[date] = None
-    hora: Optional[str] = None
-    turno: Optional[str] = None
-    linea: Optional[str] = None
-    production_version: Optional[int] = Field(default=None, ge=0)
+    fecha: date | None = None
+    hora: str | None = None
+    turno: str | None = None
+    linea: str | None = None
+    production_version: int | None = Field(default=None, ge=0)
     carac_organolep: str = Field(..., description="okey o no okey")
     nivel_llenado: str
     contenido: float = Field(ge=0)
@@ -38,8 +37,8 @@ class RegistroCalidadCreate(BaseModel):
     tipo_concentrado: str
     tamano: str
     # Legacy field: the cap lot is now recorded in Control de Torque.
-    lote_tapa: Optional[str] = Field(default=None, max_length=50)
-    tanque: Optional[str] = None
+    lote_tapa: str | None = Field(default=None, max_length=50)
+    tanque: str | None = None
 
     @field_validator("responsable", "marca", "tamano")
     @classmethod
@@ -51,7 +50,7 @@ class RegistroCalidadCreate(BaseModel):
 
     @field_validator("lote_tapa")
     @classmethod
-    def optional_lote_tapa(cls, value: Optional[str]) -> Optional[str]:
+    def optional_lote_tapa(cls, value: str | None) -> str | None:
         return (value or "").strip() or None
 
     @model_validator(mode="after")
@@ -85,7 +84,7 @@ class RegistroCalidadResponse(BaseModel):
     marca: str
     tipo_concentrado: str
     tamano: str
-    lote_tapa: Optional[str] = None
+    lote_tapa: str | None = None
 
 
 class ControlBebidaBottleVisual(BaseModel):
@@ -97,4 +96,4 @@ class ControlBebidaBottleVisual(BaseModel):
 class ControlBebidaResponse(BaseModel):
     id: int
     message: str
-    bottle_visual: Optional[ControlBebidaBottleVisual] = None
+    bottle_visual: ControlBebidaBottleVisual | None = None

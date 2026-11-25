@@ -9,14 +9,14 @@ from backend.app.api.routers.saneado import router as saneado_router
 from backend.app.api.routers.spa import router as spa_router
 
 __all__ = [
-    "maestros_router",
+    "agua_router",
     "calidad_router",
     "jarabe_router",
+    "maestros_router",
     "ops_router",
-    "spa_router",
-    "agua_router",
-    "saneado_router",
-    "reportes_router",
     "production_router",
+    "reportes_router",
+    "saneado_router",
+    "spa_router",
 ]
 
