@@ -6,7 +6,6 @@
 .env
 __pycache__
 node_modules
-*.txt
 /env
 *.pyc
 *.md
@@ -16,7 +15,6 @@ node_modules
 !migrations/README.md
 !ESTRUCTURA_PROYECTO.md
 .agents
-.venv/
 .pytest_cache/
 .ruff_cache/
 .tests/
