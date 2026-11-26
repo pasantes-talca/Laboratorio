@@ -2267,9 +2267,7 @@ a:focus-visible {
 }
 
 .load-date-control {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  position: relative;
   margin-left: auto;
 }
 
@@ -2277,10 +2275,51 @@ a:focus-visible {
   margin-left: 0;
 }
 
-.load-date-control label {
+.load-date-toggle {
   display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.load-date-toggle.is-active {
+  border-color: var(--color-alerta);
+  background: var(--color-alerta-bg);
+  color: var(--text-dark);
+}
+
+[data-theme='dark'] .load-date-toggle,
+[data-theme='dark'] .load-date-toggle:hover,
+[data-theme='dark'] .load-date-toggle.is-active {
+  border-color: var(--color-alerta);
+  background: var(--color-alerta);
+  color: #1A202C;
+}
+
+[data-theme='dark'] .load-date-toggle:hover {
+  filter: brightness(1.08);
+}
+
+.load-date-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
   gap: 0.35rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-sm);
+  background: var(--bg-card, #fff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.load-date-panel label {
   color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;

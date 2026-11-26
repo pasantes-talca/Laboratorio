@@ -48,7 +48,7 @@ describe('loadDate helpers', () => {
   });
 
   it('storeLoadDate rejects dates outside the window', () => {
-    expect(storeLoadDate('2026-11-10')).toBe(false);
+    expect(storeLoadDate('2025-12-31')).toBe(false);
     expect(storeLoadDate('2026-11-19')).toBe(false);
     expect(readLoadDate()).toBeNull();
   });

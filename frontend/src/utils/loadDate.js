@@ -2,7 +2,8 @@
 // State lives in sessionStorage (per tab) and never in the shared production record.
 
 export const LOAD_DATE_KEY = 'load_date_session';
-export const MAX_BACKDATE_DAYS = 7;
+// Earliest day the lab accepts backdated records for.
+export const MIN_LOAD_DATE = '2026-01-01';
 export const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 // Used only when sessionStorage throws, so the UI and the API layer still agree.
@@ -15,8 +16,7 @@ export function toIsoDate(date) {
 }
 
 export function loadDateBounds(now = new Date()) {
-  const min = new Date(now.getFullYear(), now.getMonth(), now.getDate() - MAX_BACKDATE_DAYS);
-  return { min: toIsoDate(min), max: toIsoDate(now) };
+  return { min: MIN_LOAD_DATE, max: toIsoDate(now) };
 }
 
 function isValidIso(value) {
@@ -26,7 +26,7 @@ function isValidIso(value) {
   return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
 }
 
-// A selectable backdated date: valid, before today and not older than the window.
+// A selectable backdated date: valid, before today and not before MIN_LOAD_DATE.
 export function isBackdatable(value, now = new Date()) {
   if (!isValidIso(value)) return false;
   const { min, max } = loadDateBounds(now);

@@ -1,0 +1,13 @@
+name: Prueba del runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prueba:
+    runs-on: self-hosted
+    steps:
+      - run: whoami
+      - run: Get-Location
+      - run: git --version
+      - run: python --version
