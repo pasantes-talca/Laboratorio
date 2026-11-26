@@ -8,7 +8,11 @@ from backend.app.core.load_date import resolve_load_date
 from backend.app.core.time import local_now
 from backend.app.models.ops import ControlPausa, ControlTorque
 from backend.app.models.production import ControlProduccion
-from backend.app.schemas.ops import ControlPausaCreate, ControlTorqueCreate
+from backend.app.schemas.ops import (
+    TORQUE_HEADS_BY_LINE,
+    ControlPausaCreate,
+    ControlTorqueCreate,
+)
 from backend.app.services.production import (
     attach_control_production,
     linea_numero,
@@ -36,6 +40,12 @@ def create_control_torque(data: ControlTorqueCreate, db: Session = Depends(get_d
         hora_obj = now.time().replace(second=0, microsecond=0)
 
     linea_num = production.linea
+    max_heads = TORQUE_HEADS_BY_LINE.get(linea_num)
+    if max_heads is not None and data.numero_cabezal > max_heads:
+        raise HTTPException(
+            status_code=422,
+            detail=f"La línea {linea_num} tiene {max_heads} cabezales",
+        )
     turno_final = data.noche if (production.turno.lower() == "noche" and data.noche) else production.turno
     if turno_final and turno_final.lower() in ["mañana", "tarde", "noche"]:
         turno_final = turno_final.capitalize()

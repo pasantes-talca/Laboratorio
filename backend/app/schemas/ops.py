@@ -2,11 +2,14 @@ from datetime import date
 
 from pydantic import BaseModel, Field, field_validator
 
+# Torque heads per production line (line number -> head count).
+TORQUE_HEADS_BY_LINE = {1: 12, 2: 14, 3: 16}
+
 
 class ControlTorqueCreate(BaseModel):
     fecha: date | None = None
     hora: str | None = None
-    numero_cabezal: int = Field(ge=1, le=14)
+    numero_cabezal: int = Field(ge=1, le=max(TORQUE_HEADS_BY_LINE.values()))
     turno: str | None = None
     noche: str | None = None
     linea: str | None = None

@@ -22,7 +22,7 @@ describe('productionLines', () => {
     expect(three.label).toBe('Línea 3');
     expect(three.finish).toBe('short');
     expect(three.finish).toBe(two.finish);
-    expect(three.cabezales).toBe(14);
+    expect(three.cabezales).toBe(16);
     expect(getLineConfig('linea1').cabezales).toBe(12);
   });
 });

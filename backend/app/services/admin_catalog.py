@@ -37,7 +37,11 @@ from backend.app.schemas.jarabe import (
     ParteJarabeCreate,
     SaneoTanqueCreate,
 )
-from backend.app.schemas.ops import ControlPausaCreate, ControlTorqueCreate
+from backend.app.schemas.ops import (
+    TORQUE_HEADS_BY_LINE,
+    ControlPausaCreate,
+    ControlTorqueCreate,
+)
 
 FORMS = {
     "calidad-bebida": (
@@ -388,8 +392,8 @@ def validate_update(form_id, record, changes):
     for key, value in converted.items():
         if key in OPTIONS and value not in OPTIONS[key]:
             raise ValueError(f"{label_for(key)}: seleccione una opción válida")
-    if form_id == "calidad-torque" and values["numero_cabezal"] > (
-        12 if record.linea == 1 else 14
+    if form_id == "calidad-torque" and values["numero_cabezal"] > TORQUE_HEADS_BY_LINE.get(
+        record.linea, 0
     ):
         raise ValueError("El cabezal no corresponde a esta línea")
     for key, value in converted.items():
