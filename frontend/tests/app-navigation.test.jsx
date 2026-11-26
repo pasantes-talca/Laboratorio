@@ -149,3 +149,21 @@ it('cambia de formulario desde el sidebar sin duplicar las pestañas', async () 
   expect(window.location.pathname).toBe('/calidad/torque');
   expect(within(nav).getByRole('button', { name: 'Control de Torque' })).toHaveAttribute('aria-current', 'page');
 });
+
+it.each([
+  ['/calidad/bebida', true],
+  ['/jarabe/simple', true],
+  ['/agua/fisico-quimico', true],
+  ['/saneado/control', true],
+  ['/portal', false],
+  ['/dashboard/calidad', false],
+  ['/dashboard/jarabe', false],
+  ['/dashboard/agua', false],
+  ['/administracion', false],
+])('muestra el botón de fecha de carga en %s: %s', (path, visible) => {
+  window.history.replaceState(null, '', path);
+  render(<App />);
+  const toggle = screen.queryByRole('button', { name: /cargar datos de fecha pasada/i });
+  if (visible) expect(toggle).toBeInTheDocument();
+  else expect(toggle).toBeNull();
+});

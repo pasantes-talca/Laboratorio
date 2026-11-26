@@ -13,7 +13,7 @@ from backend.app.api.routers.jarabe import router as jarabe_router
 from backend.app.api.routers.ops import router as ops_router
 from backend.app.api.routers.production import router as production_router
 from backend.app.core.database import get_db
-from backend.app.core.load_date import MAX_BACKDATE_DAYS, resolve_load_date
+from backend.app.core.load_date import MIN_LOAD_DATE, resolve_load_date
 from backend.app.core.time import local_now
 from backend.app.models.agua import ControlFisicoQuimico
 from backend.app.models.base import Base
@@ -129,20 +129,21 @@ def test_without_fecha_records_today(name):
 
 
 @pytest.mark.parametrize("name", ALL)
-@pytest.mark.parametrize("days_ago", [1, MAX_BACKDATE_DAYS])
-def test_past_fecha_within_window_is_stored(name, days_ago):
+@pytest.mark.parametrize("fecha", [iso(1), iso(30), MIN_LOAD_DATE.isoformat()])
+def test_past_fecha_within_window_is_stored(name, fecha):
     client, engine = make_client()
-    response = post(client, name, fecha=iso(days_ago), hora="08:30")
+    response = post(client, name, fecha=fecha, hora="08:30")
     assert response.status_code == 201, response.text
-    fecha, hora = stored(engine, name, response.json()["id"])
-    assert fecha == local_now().date() - timedelta(days=days_ago)
+    stored_fecha, hora = stored(engine, name, response.json()["id"])
+    assert stored_fecha.isoformat() == fecha
     assert (hora.hour, hora.minute) == (8, 30)
 
 
 @pytest.mark.parametrize("name", ALL)
-def test_fecha_older_than_window_is_rejected(name):
+def test_fecha_before_min_load_date_is_rejected(name):
     client, _ = make_client()
-    response = post(client, name, fecha=iso(MAX_BACKDATE_DAYS + 1), hora="08:30")
+    too_old = (MIN_LOAD_DATE - timedelta(days=1)).isoformat()
+    response = post(client, name, fecha=too_old, hora="08:30")
     assert response.status_code == 422
     assert "anterior" in str(response.json()["detail"])
 
@@ -182,7 +183,8 @@ def test_resolve_load_date_unit_rules():
         with pytest.raises(HTTPException) as error:
             resolve_load_date(date(2026, 11, 17), bad_hora, today=today)
         assert error.value.status_code == 422
+    assert resolve_load_date(date(2026, 1, 1), "10:00", today=today) == date(2026, 1, 1)
     with pytest.raises(HTTPException):
-        resolve_load_date(date(2026, 11, 10), "10:00", today=today)
+        resolve_load_date(date(2025, 12, 31), "10:00", today=today)
     with pytest.raises(HTTPException):
         resolve_load_date(date(2026, 11, 19), "10:00", today=today)

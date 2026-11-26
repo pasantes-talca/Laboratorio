@@ -24,7 +24,7 @@ describe('LoadDateContext', () => {
     const { result } = renderHook(() => useLoadDate(), { wrapper });
     expect(result.current.loadDate).toBeNull();
     expect(result.current.isBackdated).toBe(false);
-    expect(result.current.minDate).toBe('2026-11-11');
+    expect(result.current.minDate).toBe('2026-01-01');
     expect(result.current.maxDate).toBe('2026-11-18');
   });
 
@@ -38,13 +38,13 @@ describe('LoadDateContext', () => {
 
   it('accepts both window edges', () => {
     const { result } = renderHook(() => useLoadDate(), { wrapper });
-    act(() => result.current.setLoadDate('2026-11-11'));
-    expect(result.current.loadDate).toBe('2026-11-11');
+    act(() => result.current.setLoadDate('2026-01-01'));
+    expect(result.current.loadDate).toBe('2026-01-01');
   });
 
   it('ignores dates outside the window or malformed', () => {
     const { result } = renderHook(() => useLoadDate(), { wrapper });
-    act(() => result.current.setLoadDate('2026-11-10'));
+    act(() => result.current.setLoadDate('2025-12-31'));
     expect(result.current.loadDate).toBeNull();
     act(() => result.current.setLoadDate('2026-11-19'));
     expect(result.current.loadDate).toBeNull();
@@ -74,23 +74,21 @@ describe('LoadDateContext', () => {
     expect(result.current.loadDate).toBe('2026-11-14');
   });
 
-  it('drops a stored date that fell outside the window', () => {
-    sessionStorage.setItem(LOAD_DATE_KEY, JSON.stringify({ date: '2026-11-01', lastActivity: NOW.getTime() }));
+  it('drops a stored date before the minimum load date', () => {
+    sessionStorage.setItem(LOAD_DATE_KEY, JSON.stringify({ date: '2025-12-31', lastActivity: NOW.getTime() }));
     const { result } = renderHook(() => useLoadDate(), { wrapper });
     expect(result.current.loadDate).toBeNull();
     expect(sessionStorage.getItem(LOAD_DATE_KEY)).toBeNull();
   });
 
-  it('drops the date when the window moves past it (next day)', () => {
+  it('keeps a past date when the day changes (the minimum is fixed)', () => {
     vi.setSystemTime(new Date(2026, 10, 18, 23, 50, 0));
     const { result } = renderHook(() => useLoadDate(), { wrapper });
-    act(() => result.current.setLoadDate('2026-11-11'));
-    expect(result.current.loadDate).toBe('2026-11-11');
+    act(() => result.current.setLoadDate('2026-01-01'));
     act(() => {
-      // 11 minutes later it is the next day: the oldest allowed date is now 2026-11-12
       vi.advanceTimersByTime(11 * MINUTE);
     });
-    expect(result.current.loadDate).toBeNull();
+    expect(result.current.loadDate).toBe('2026-01-01');
   });
 
   it('expires after 30 minutes without activity', () => {

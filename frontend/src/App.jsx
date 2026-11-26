@@ -56,6 +56,9 @@ const PAGE_TITLES = {
   dashboard: 'Dashboard - Laboratorio Talca',
 };
 
+// Only data-entry modules can register records for a past day.
+const LOAD_DATE_PAGES = new Set(['calidad', 'jarabe', 'agua', 'saneado']);
+
 function getRouteFromPath() {
   if (typeof window === 'undefined') return { page: 'calidad', form: 'bebida' };
   const pathname = window.location.pathname.replace(/\/$/, '') || '/';
@@ -71,6 +74,7 @@ function AppContent() {
   const [route, setRoute] = useState(getRouteFromPath);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { page: activePage, form: activeForm } = route;
+  const showLoadDate = LOAD_DATE_PAGES.has(activePage);
 
   useEffect(() => {
     const onPopState = () => {
@@ -130,10 +134,10 @@ function AppContent() {
               <span className="app-topbar-eyebrow">LABORATORIO TALCA</span>
               <h1>{PAGE_TITLES[activePage]?.split(' - ')[0] || 'Laboratorio de Calidad'}</h1>
             </div>
-            <LoadDateControl />
+            {showLoadDate && <LoadDateControl />}
             <span className="app-topbar-line">{activePage === 'calidad' ? 'Control de procesos' : 'Sistema de calidad'}</span>
           </header>
-          <LoadDateBanner />
+          {showLoadDate && <LoadDateBanner />}
 
           <Suspense fallback={<main className="card" role="status">Cargando módulo…</main>}>
             {activePage === 'portal' && <PortalPage onNavigate={handleNavigate} />}
