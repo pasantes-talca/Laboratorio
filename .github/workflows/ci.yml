@@ -33,3 +33,35 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+  deploy:
+    name: Deploy al servidor
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    concurrency: deploy-produccion
+    defaults:
+      run:
+        shell: powershell
+        working-directory: C:\Users\Usuario\Desktop\Laboratorio
+    steps:
+      - name: Bajar el codigo nuevo
+        run: git pull --autostash origin main
+
+      - name: Instalar dependencias de Python
+        run: py -m pip install -r requirements.txt
+
+      - name: Aplicar migraciones
+        run: py -m alembic upgrade head
+
+      - name: Instalar dependencias del frontend
+        working-directory: C:\Users\Usuario\Desktop\Laboratorio\frontend
+        run: npm ci
+
+      - name: Compilar el frontend
+        working-directory: C:\Users\Usuario\Desktop\Laboratorio\frontend
+        run: npm run build
+
+      - name: Verificar que la app responde
+        run: |
+          Start-Sleep -Seconds 15
+          Invoke-RestMethod http://10.242.4.13:8090/api/health      
